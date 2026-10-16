@@ -17,7 +17,6 @@ import {
   SymbolEntry,
   ImportEntry,
   ExportEntry,
-  CallEdge,
 } from '../core/types/project-index.types';
 import { FileProcessor } from '../scanner/FileProcessor';
 import { FileIdGenerator } from '../core/id/FileIdGenerator';
@@ -28,6 +27,7 @@ import { DependencyExtractorManager } from '../dependencies/DependencyExtractorM
 import { TSPathResolver } from '../dependencies/typescript/TSPathResolver';
 import { resolveProjectImport, PROJECT_PATH_LANGUAGES } from '../pipeline/IndexPipeline';
 import { CallGraphBuilder, TypeGraphBuilder, DependencyGraphBuilder } from '../graphs';
+import { populateSymbolCallReferences } from '../export/symbolCallReferences';
 import { ProjectIndexStore } from './ProjectIndexStore';
 import { DependencyResult, GraphResult, JsonExporter, ProjectEnrichment } from '../export/JsonExporter';
 import { SymbolMetricsCalculator } from '../core/metrics/SymbolMetricsCalculator';
@@ -256,7 +256,7 @@ export class IncrementalEngine {
       graphs,
     });
 
-    const symbolsWithCallRefs = this.populateSymbolCallReferences(
+    const symbolsWithCallRefs = populateSymbolCallReferences(
       projectIndexWithGraphs.symbols,
       projectIndexWithGraphs.graphs.callGraph
     );
@@ -612,42 +612,6 @@ export class IncrementalEngine {
       };
     }
     return { fileId: oldFile.id, dependents: oldDependents, removedSymbolIds };
-  }
-
-  /**
-   * resolve import محلی به fileId.
-   */
-  private populateSymbolCallReferences(
-    symbols: readonly SymbolEntry[],
-    callGraph: readonly CallEdge[]
-  ): SymbolEntry[] {
-    const symbolMap = new Map(symbols.map(s => [s.id, s]));
-    const calls = new Map<string, Set<string>>();
-    const calledBy = new Map<string, Set<string>>();
-
-    for (const edge of callGraph) {
-      const caller = symbolMap.get(edge.caller);
-      const callee = symbolMap.get(edge.callee);
-      if (!caller || !callee) continue;
-
-      const callSet = calls.get(caller.id) ?? new Set<string>();
-      callSet.add(callee.id);
-      calls.set(caller.id, callSet);
-
-      const calledBySet = calledBy.get(callee.id) ?? new Set<string>();
-      calledBySet.add(caller.id);
-      calledBy.set(callee.id, calledBySet);
-    }
-
-    return symbols.map(sym => {
-      const c = Array.from(calls.get(sym.id) ?? []).sort();
-      const cb = Array.from(calledBy.get(sym.id) ?? []).sort();
-      return {
-        ...sym,
-        calls: c,
-        calledBy: cb,
-      };
-    });
   }
 
   private resolveImport(imp: ImportEntry, file: FileEntry): ImportEntry {

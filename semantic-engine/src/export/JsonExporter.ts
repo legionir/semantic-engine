@@ -18,7 +18,6 @@ import {
   FileMetrics,
   ImportEntry,
   ExportEntry,
-  CallEdge,
   VectorChunk,
   IncrementalInfo,
   GitInfo,
@@ -36,6 +35,7 @@ import { AiMetadataGenerator } from '../ai/AiMetadataGenerator';
 import { ILlmClient } from '../ai/llm/LlmClient';
 import { LlmAiMetadataGenerator } from '../ai/llm/LlmAiMetadataGenerator';
 import { sortSymbolsDeterministically } from '../core/utils/symbolSort';
+import { populateSymbolCallReferences } from './symbolCallReferences';
 import { dedupeSymbols } from './symbolDedup';
 import { TestMapper } from '../ai/TestMapper';
 
@@ -176,7 +176,7 @@ export class JsonExporter {
     const sortedSymbols = sortSymbolsDeterministically(dedupedSymbols);
 
     // پر کردن calls / calledBy symbol ها از روی callGraph
-    const symbolsWithCallRefs = this.populateSymbolCallReferences(
+    const symbolsWithCallRefs = populateSymbolCallReferences(
       sortedSymbols,
       graphs.callGraph
     );
@@ -505,38 +505,6 @@ export class JsonExporter {
   }
 
   /**
-   * پر کردن symbol.calls و symbol.calledBy از روی callGraph.
-   * فقط edge هایی که هر دو سر آن‌ها symbol id موجود باشند در نظر گرفته می‌شوند.
-   */
-  private populateSymbolCallReferences(
-    symbols: readonly SymbolEntry[],
-    callGraph: readonly CallEdge[]
-  ): SymbolEntry[] {
-    const symbolMap = new Map(symbols.map(s => [s.id, s]));
-    const calls = new Map<string, Set<string>>();
-    const calledBy = new Map<string, Set<string>>();
-
-    for (const edge of callGraph) {
-      const caller = symbolMap.get(edge.caller);
-      const callee = symbolMap.get(edge.callee);
-      if (!caller || !callee) continue;
-
-      this.addToSetMap(calls, caller.id, callee.id);
-      this.addToSetMap(calledBy, callee.id, caller.id);
-    }
-
-    return symbols.map(sym => {
-      const c = Array.from(calls.get(sym.id) ?? []).sort();
-      const cb = Array.from(calledBy.get(sym.id) ?? []).sort();
-      return {
-        ...sym,
-        calls: c,
-        calledBy: cb,
-      };
-    });
-  }
-
-  /**
    * لینک کردن symbolId برای export entry های عادی (named/default) بر اساس symbols همان فایل.
    */
   private linkExportSymbolIds(
@@ -566,16 +534,6 @@ export class JsonExporter {
       return { ...file, exports: linkedExports };
     });
   }
-
-  private addToSetMap(map: Map<string, Set<string>>, key: string, value: string): void {
-    const set = map.get(key);
-    if (set) {
-      set.add(value);
-    } else {
-      map.set(key, new Set([value]));
-    }
-  }
-
 
   /**
    * محاسبه‌ی file metrics واقعی از روی symbols.
