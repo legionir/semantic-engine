@@ -122,6 +122,7 @@ export class IndexPipeline {
    */
   private retainedBytes = 0;
   private contentReleased = false;
+  private fileReads = 0;
 
   /**
    * بایت‌های متنی که در اوجِ اجرا نگه داشته شده بودند.
@@ -159,14 +160,14 @@ export class IndexPipeline {
     this.report('Scanning workspace');
 
     const contents = new Map<string, string>();
-    let fileReads = 0;
+    this.fileReads = 0;
 
     const scanner = new WorkspaceScanner(
       workspaceRoot,
       this.options.scannerConfig ?? {},
       {
         onContent: (file, content) => {
-          fileReads++;
+          this.fileReads++;
           if (!file.binary) contents.set(file.id, content);
         },
       },
@@ -186,132 +187,13 @@ export class IndexPipeline {
     // ── ۲. symbol و وابستگی، روی محتوای همان گذر ───────────────────────
     this.report('Extracting symbols and dependencies');
 
-    const symbols: SymbolEntry[] = [];
-    const dependencies: DependencyResult[] = [];
     const resolver = new TSPathResolver(workspaceRoot);
-
-    /*
-    | SE-EXP-14: نتیجهٔ استخراج سه چیز دارد — symbolها، پرچم `partial`
-    | و `warnings`. تا امروز فقط اولی برداشته می‌شد. یعنی یک فایل
-    | می‌توانست کاملاً در تجزیه شکست بخورد و در خروجی هیچ ردی نگذارد.
-    | همین بود که SE-SCAN-12 را ماه‌ها پنهان نگه داشت.
-    */
-    const diagnosticsByFile = new Map<string, Diagnostic[]>();
-
-    /*
-    | SE-EXT-03: `configUsages` این‌جا حساب می‌شود، نه در exporter.
-    | فایل همین حالا در دست است؛ نگه داشتنش تا مرحلهٔ ساخت ایندکس
-    | فقط برای این کار، یعنی کل متن مخزن در حافظه.
-    */
-    const configUsageMapper = new ConfigUsageMapper();
-    const configUsagesByFile = new Map<string, readonly ConfigUsageEntry[]>();
-    const addDiagnostic = (fileId: string, diagnostic: Diagnostic): void => {
-      const list = diagnosticsByFile.get(fileId);
-      if (list) list.push(diagnostic);
-      else diagnosticsByFile.set(fileId, [diagnostic]);
-    };
-
-    let processed = 0;
-    const tick = createYielder();
-
-    for (const file of files) {
-      throwIfCancelled(this.token, 'Indexing');
-
-      if (file.binary || !file.language) continue;
-
-      const content = await this.contentOf(file, contents, () => fileReads++);
-      if (content === null) continue;
-
-      const usages = configUsageMapper.extract(file.path, content);
-      if (usages.length > 0) configUsagesByFile.set(file.id, usages);
-
-      if (await this.options.symbolExtractors.hasExtractorFor(file.language)) {
-        const result = await this.options.symbolExtractors
-          .extract(file.id, file.path, content, file.language);
-
-        if (result.ok) {
-          symbols.push(...result.value.symbols);
-          for (const warning of result.value.warnings) {
-            addDiagnostic(file.id, {
-              severity: 'warning',
-              code: 'symbol-extraction',
-              line: 1,
-              message: warning,
-              source: 'symbol-extraction',
-              fileId: file.id,
-            });
-          }
-        } else {
-          this.logger.warn('symbol extraction failed', {
-            file: file.path,
-            reason: result.error.message,
-          });
-          addDiagnostic(file.id, {
-            severity: 'error',
-            code: 'symbol-extraction',
-            line: 1,
-            message: result.error.message,
-            source: 'symbol-extraction',
-            fileId: file.id,
-          });
-        }
-      }
-
-      if (await this.options.dependencyExtractors.hasExtractorFor(file.language)) {
-        const result = await this.options.dependencyExtractors
-          .extract(file.id, file.path, content, file.language);
-
-        if (result.ok) {
-          dependencies.push({
-            fileId: file.id,
-            imports: result.value.imports.map(imp =>
-              imp.type === 'local' || PROJECT_PATH_LANGUAGES.has(file.language ?? '')
-                ? resolveImport(imp, file, files, resolver)
-                : imp
-            ),
-            exports: result.value.exports,
-          });
-          for (const message of result.value.diagnostics ?? []) {
-            addDiagnostic(file.id, {
-              severity: 'warning',
-              code: 'dependency-extraction',
-              line: 1,
-              message,
-              source: 'dependency-extraction',
-            });
-          }
-        } else {
-          this.logger.warn('dependency extraction failed', {
-            file: file.path,
-            reason: result.error.message,
-          });
-          addDiagnostic(file.id, {
-            severity: 'error',
-            code: 'dependency-extraction',
-            line: 1,
-            message: result.error.message,
-            source: 'dependency-extraction',
-            fileId: file.id,
-          });
-        }
-      }
-
-      processed++;
-      if (processed % 25 === 0) {
-        this.report(`Extracting… (${processed}/${files.length})`, (25 / files.length) * 100);
-      }
-
-      /*
-      | SE-PERF-01 — استخراج CPU-bound است و `await`های بالا همگی
-      | microtask هستند، پس بدون این خط صف I/O تا پایان ایندکس
-      | اجرا نمی‌شود و سرور (حتی `/health`) پاسخ نمی‌دهد.
-      */
-      await tick();
-    }
+    const { symbols, dependencies, diagnosticsByFile, configUsagesByFile, addDiagnostic } =
+      await this.extractAll(files, contents, resolver);
 
     // ── ۲.۵ diagnostics از زبان‌سرور (فاز ۳۴) ──────────────────────────
     const diagnosticsRun = await this.collectDiagnostics(
-      files, contents, addDiagnostic, () => fileReads++
+      files, contents, addDiagnostic, () => this.fileReads++
     );
 
     /*
@@ -347,42 +229,9 @@ export class IndexPipeline {
     // ── ۴. re-exportها ────────────────────────────────────────────────
     this.report('Resolving re-exports');
 
-    const reExportEdges: DependencyEdge[] = [];
-    const reExportSymbolIds = new Map<string, string>();
-    const resolved = new ReExportResolver(
-      workspaceRoot,
-      filesWithDependencies,
-      symbols,
-      resolver
-    ).resolve(dependencies);
-
-    for (const item of resolved) {
-      if (item.resolvedFileId) {
-        reExportEdges.push({
-          from: item.fileId,
-          to: item.resolvedFileId,
-          kind: 'import',
-          // re-export از خود کد خوانده شده و مقصدش به فایل resolve شده
-          provenance: provenanceFor('import-resolved', 'typescript-api'),
-        });
-      }
-      if (item.resolvedSymbolId) {
-        reExportSymbolIds.set(`${item.fileId}::${item.export.name}`, item.resolvedSymbolId);
-      }
-    }
-
-    filesWithDependencies = filesWithDependencies.map(file => {
-      if (!file.exports || file.exports.length === 0) return file;
-      return {
-        ...file,
-        exports: file.exports.map(exp => {
-          if (exp.symbolId) return exp;
-          if (exp.kind !== 're-export' && exp.kind !== 'namespace') return exp;
-          const symbolId = reExportSymbolIds.get(`${file.id}::${exp.name}`);
-          return symbolId ? { ...exp, symbolId } : exp;
-        }),
-      };
-    });
+    const reExports = this.resolveReExports(filesWithDependencies, symbols, dependencies, resolver);
+    filesWithDependencies = reExports.files;
+    const reExportEdges = reExports.edges;
 
     // ── ۵. گراف‌ها ────────────────────────────────────────────────────
     this.report('Building graphs');
@@ -482,11 +331,200 @@ export class IndexPipeline {
       filesWithDependencies: dependencies.length,
       vectorChunks: vectorChunks?.length ?? 0,
       durationMs: Date.now() - startedAt,
-      fileReads,
+      fileReads: this.fileReads,
     };
 
     this.logger.info('index built', { ...stats });
     return { projectIndex: finalIndex, stats };
+  }
+
+  /**
+   * مرحلهٔ ۲ — symbol، وابستگی، configUsage و diagnosticهای استخراج برای هر فایل.
+   * همهٔ دادهٔ اولیه را برمی‌گرداند؛ هیچ حالتی جز `fileReads` تغییر نمی‌کند.
+   */
+  private async extractAll(
+    files: readonly FileEntry[],
+    contents: Map<string, string>,
+    resolver: TSPathResolver
+  ): Promise<{
+    readonly symbols: SymbolEntry[];
+    readonly dependencies: DependencyResult[];
+    readonly diagnosticsByFile: Map<string, Diagnostic[]>;
+    readonly configUsagesByFile: Map<string, readonly ConfigUsageEntry[]>;
+    readonly addDiagnostic: (fileId: string, diagnostic: Diagnostic) => void;
+  }> {
+    const symbols: SymbolEntry[] = [];
+    const dependencies: DependencyResult[] = [];
+
+    /*
+    | SE-EXP-14: نتیجهٔ استخراج سه چیز دارد — symbolها، پرچم `partial`
+    | و `warnings`. تا امروز فقط اولی برداشته می‌شد. یعنی یک فایل
+    | می‌توانست کاملاً در تجزیه شکست بخورد و در خروجی هیچ ردی نگذارد.
+    | همین بود که SE-SCAN-12 را ماه‌ها پنهان نگه داشت.
+    */
+    const diagnosticsByFile = new Map<string, Diagnostic[]>();
+
+    /*
+    | SE-EXT-03: `configUsages` این‌جا حساب می‌شود، نه در exporter.
+    | فایل همین حالا در دست است؛ نگه داشتنش تا مرحلهٔ ساخت ایندکس
+    | فقط برای این کار، یعنی کل متن مخزن در حافظه.
+    */
+    const configUsageMapper = new ConfigUsageMapper();
+    const configUsagesByFile = new Map<string, readonly ConfigUsageEntry[]>();
+    const addDiagnostic = (fileId: string, diagnostic: Diagnostic): void => {
+      const list = diagnosticsByFile.get(fileId);
+      if (list) list.push(diagnostic);
+      else diagnosticsByFile.set(fileId, [diagnostic]);
+    };
+
+    let processed = 0;
+    const tick = createYielder();
+
+    for (const file of files) {
+      throwIfCancelled(this.token, 'Indexing');
+
+      if (file.binary || !file.language) continue;
+
+      const content = await this.contentOf(file, contents, () => this.fileReads++);
+      if (content === null) continue;
+
+      const usages = configUsageMapper.extract(file.path, content);
+      if (usages.length > 0) configUsagesByFile.set(file.id, usages);
+
+      if (await this.options.symbolExtractors.hasExtractorFor(file.language)) {
+        const result = await this.options.symbolExtractors
+          .extract(file.id, file.path, content, file.language);
+
+        if (result.ok) {
+          symbols.push(...result.value.symbols);
+          for (const warning of result.value.warnings) {
+            addDiagnostic(file.id, {
+              severity: 'warning',
+              code: 'symbol-extraction',
+              line: 1,
+              message: warning,
+              source: 'symbol-extraction',
+              fileId: file.id,
+            });
+          }
+        } else {
+          this.logger.warn('symbol extraction failed', {
+            file: file.path,
+            reason: result.error.message,
+          });
+          addDiagnostic(file.id, {
+            severity: 'error',
+            code: 'symbol-extraction',
+            line: 1,
+            message: result.error.message,
+            source: 'symbol-extraction',
+            fileId: file.id,
+          });
+        }
+      }
+
+      if (await this.options.dependencyExtractors.hasExtractorFor(file.language)) {
+        const result = await this.options.dependencyExtractors
+          .extract(file.id, file.path, content, file.language);
+
+        if (result.ok) {
+          dependencies.push({
+            fileId: file.id,
+            imports: result.value.imports.map(imp =>
+              imp.type === 'local' || PROJECT_PATH_LANGUAGES.has(file.language ?? '')
+                ? resolveImport(imp, file, files, resolver)
+                : imp
+            ),
+            exports: result.value.exports,
+          });
+          for (const message of result.value.diagnostics ?? []) {
+            addDiagnostic(file.id, {
+              severity: 'warning',
+              code: 'dependency-extraction',
+              line: 1,
+              message,
+              source: 'dependency-extraction',
+            });
+          }
+        } else {
+          this.logger.warn('dependency extraction failed', {
+            file: file.path,
+            reason: result.error.message,
+          });
+          addDiagnostic(file.id, {
+            severity: 'error',
+            code: 'dependency-extraction',
+            line: 1,
+            message: result.error.message,
+            source: 'dependency-extraction',
+            fileId: file.id,
+          });
+        }
+      }
+
+      processed++;
+      if (processed % 25 === 0) {
+        this.report(`Extracting… (${processed}/${files.length})`, (25 / files.length) * 100);
+      }
+
+      /*
+      | SE-PERF-01 — استخراج CPU-bound است و `await`های بالا همگی
+      | microtask هستند، پس بدون این خط صف I/O تا پایان ایندکس
+      | اجرا نمی‌شود و سرور (حتی `/health`) پاسخ نمی‌دهد.
+      */
+      await tick();
+    }
+
+    return { symbols, dependencies, diagnosticsByFile, configUsagesByFile, addDiagnostic };
+  }
+
+  /** مرحلهٔ ۴ — re-exportها: یال‌های import و symbolId مقصدِ هر re-export. */
+  private resolveReExports(
+    inputFiles: readonly FileEntry[],
+    symbols: readonly SymbolEntry[],
+    dependencies: readonly DependencyResult[],
+    resolver: TSPathResolver
+  ): { readonly files: FileEntry[]; readonly edges: DependencyEdge[] } {
+    const { workspaceRoot } = this.options;
+    let files: FileEntry[] = [...inputFiles];
+    const reExportEdges: DependencyEdge[] = [];
+    const reExportSymbolIds = new Map<string, string>();
+    const resolved = new ReExportResolver(
+      workspaceRoot,
+      files,
+      symbols,
+      resolver
+    ).resolve(dependencies);
+
+    for (const item of resolved) {
+      if (item.resolvedFileId) {
+        reExportEdges.push({
+          from: item.fileId,
+          to: item.resolvedFileId,
+          kind: 'import',
+          // re-export از خود کد خوانده شده و مقصدش به فایل resolve شده
+          provenance: provenanceFor('import-resolved', 'typescript-api'),
+        });
+      }
+      if (item.resolvedSymbolId) {
+        reExportSymbolIds.set(`${item.fileId}::${item.export.name}`, item.resolvedSymbolId);
+      }
+    }
+
+    files = files.map(file => {
+      if (!file.exports || file.exports.length === 0) return file;
+      return {
+        ...file,
+        exports: file.exports.map(exp => {
+          if (exp.symbolId) return exp;
+          if (exp.kind !== 're-export' && exp.kind !== 'namespace') return exp;
+          const symbolId = reExportSymbolIds.get(`${file.id}::${exp.name}`);
+          return symbolId ? { ...exp, symbolId } : exp;
+        }),
+      };
+    });
+
+    return { files, edges: reExportEdges };
   }
 
   /**
