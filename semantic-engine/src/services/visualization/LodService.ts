@@ -10,52 +10,13 @@ import {
   DEFAULT_GRAPH_DEPTH,
   DEFAULT_GRAPH_MIN_CONFIDENCE,
 } from '../../graphs/GraphQueryEngine';
-import { WorkflowStep } from '../../core/types/blueprint.types';
-
-/*
-| این مجموعه قبلاً زیرمجموعهٔ کهنه‌ای از واژگانِ basis بود و
-| یال‌های واقعیِ ایندکس — مثلاً basis:'import-resolved' ساختهٔ
-| pipeline — را رد می‌کرد؛ نتیجه معماریِ خالی و fallback به نمای
-| فایل بود. حالا با واژگانِ canonical لایهٔ گراف هم‌تراز است.
-*/
-const GRAPH_BASES = new Set<GraphEdge['metadata']['basis']>([
-  'resolved',
-  'ast',
-  'import-resolved',
-  'declared',
-  'unresolved',
-  'name-match',
-  'transitive',
-  'blueprint',
-  'index',
-]);
-
-function edgeMetadata(provenance: unknown):
-  | { confidence: number; basis: GraphEdge['metadata']['basis'] }
-  | undefined {
-  if (!provenance || typeof provenance !== 'object') return undefined;
-  const value = provenance as { confidence?: unknown; basis?: unknown };
-  if (typeof value.confidence !== 'number' || !Number.isFinite(value.confidence)) return undefined;
-  if (typeof value.basis !== 'string' || !GRAPH_BASES.has(value.basis as GraphEdge['metadata']['basis'])) {
-    return undefined;
-  }
-  return {
-    confidence: value.confidence,
-    basis: value.basis as GraphEdge['metadata']['basis'],
-  };
-}
-
-function summaryForGraph(
-  nodes: readonly GraphNode[],
-  edges: readonly GraphEdge[]
-): SubgraphResponse['summary'] {
-  const confident = edges.filter(e => e.metadata.confidence >= DEFAULT_GRAPH_MIN_CONFIDENCE).length;
-  return {
-    totalNodes: nodes.length,
-    totalEdges: edges.length,
-    confidentRatio: edges.length > 0 ? confident / edges.length : 1,
-  };
-}
+import { edgeMetadata, summaryForGraph, GRAPH_BASES } from './lodShared';
+import {
+  getPathView,
+  getWorkflowView,
+  getBusinessMappingView,
+  getTestIntelligenceView,
+} from './lodAnalysisViews';
 
 export class LodService {
   /**
@@ -487,204 +448,19 @@ export class LodService {
     };
   }
 
-  /**
-   * مسیر دو نود در گراف (Path Finding View).
-   */
   getPathView(project: ManagedProject, fromId: string, toId: string): SubgraphResponse {
-    if (!project.index) {
-      return { level: 'neighborhood', nodes: [], edges: [], summary: { totalNodes: 0, totalEdges: 0, confidentRatio: 1 } };
-    }
-
-    const engine = new GraphQueryEngine(project.index);
-    const pathResult = engine.path(fromId, toId, { depth: 6 });
-
-    const nodes: GraphNode[] = [];
-    const edges: GraphEdge[] = [];
-
-    if (pathResult.path) {
-      for (const step of pathResult.path) {
-        const sym = project.reader?.getSymbolById(step.node);
-        if (sym) {
-          const f = project.reader?.getFileById(sym.fileId);
-          nodes.push(GraphViewModelMapper.fromSymbolEntry(sym, f?.path));
-        } else {
-          nodes.push(GraphViewModelMapper.createNode(step.node, 'function', step.node));
-        }
-
-        if (step.via && GRAPH_BASES.has(step.via.basis as GraphEdge['metadata']['basis'])) {
-          edges.push(
-            GraphViewModelMapper.createEdge(
-              `edge-path-${edges.length}`,
-              step.via.from,
-              step.via.to,
-              'calls',
-              {
-                confidence: step.via.confidence,
-                basis: step.via.basis as GraphEdge['metadata']['basis'],
-                sourceKind: 'compiler',
-              }
-            )
-          );
-        }
-      }
-    }
-
-    return {
-      level: 'neighborhood',
-      nodes,
-      edges,
-      summary: summaryForGraph(nodes, edges),
-    };
+    return getPathView(project, fromId, toId);
   }
 
-  /**
-   * نمای جریان اجرای ورک‌فلو (Workflow Execution View).
-   */
   getWorkflowView(project: ManagedProject, workflowId?: string): SubgraphResponse {
-    const nodes: GraphNode[] = [];
-    const edges: GraphEdge[] = [];
-
-    const workflows = project.blueprint?.blueprint.workflowExecutionMap ?? [];
-    const target = workflowId
-      ? workflows.find(w => w.workflowId === workflowId)
-      : workflows[0];
-
-    if (!target) {
-      return { level: 'workflow', nodes: [], edges: [], summary: { totalNodes: 0, totalEdges: 0, confidentRatio: 1 } };
-    }
-
-    nodes.push(
-      GraphViewModelMapper.createNode(`wf-${target.workflowId}`, 'workflow', target.workflowId, {
-        importance: 95,
-      })
-    );
-
-    let prevNodeId = `wf-${target.workflowId}`;
-
-    for (const [idx, step] of target.steps.entries()) {
-      const stepItem = step as WorkflowStep;
-      const stepNodeId = `step-${idx}-${stepItem.symbolId || idx}`;
-      nodes.push(
-        GraphViewModelMapper.createNode(stepNodeId, 'function', `Step ${stepItem.order || idx + 1}`, {
-          path: stepItem.symbolId,
-          importance: 80,
-        })
-      );
-
-      edges.push(
-        GraphViewModelMapper.createEdge(
-          `wf-edge-${idx}`,
-          prevNodeId,
-          stepNodeId,
-          'executes',
-          { confidence: 100, basis: 'blueprint', sourceKind: 'inferred' }
-        )
-      );
-
-      prevNodeId = stepNodeId;
-    }
-
-    return {
-      level: 'workflow',
-      nodes,
-      edges,
-      summary: summaryForGraph(nodes, edges),
-    };
+    return getWorkflowView(project, workflowId);
   }
 
-  /**
-   * سطح پیشرفته: نگاشت بیزینس به سورس کد (Business -> Code Mapping View).
-   */
   getBusinessMappingView(project: ManagedProject): SubgraphResponse {
-    const nodes: GraphNode[] = [];
-    const edges: GraphEdge[] = [];
-
-    const blueprint = project.blueprint?.blueprint;
-    const entityMappings = blueprint?.entityTechnicalMapping ?? [];
-
-    for (const [idx, em] of entityMappings.entries()) {
-      const bizNodeId = `biz-${em.modelName || em.conceptualEntityId || idx}`;
-      nodes.push(
-        GraphViewModelMapper.createNode(bizNodeId, 'business_entity', em.modelName || `Entity ${idx}`, {
-          role: 'domain-entity',
-          importance: 90,
-        })
-      );
-
-      if (em.symbolId) {
-        const symNodeId = `sym-${em.symbolId}`;
-        nodes.push(
-          GraphViewModelMapper.createNode(symNodeId, 'function', em.symbolId, {
-            path: em.tableOrCollectionName || undefined,
-            importance: 80,
-          })
-        );
-
-        edges.push(
-          GraphViewModelMapper.createEdge(
-            `biz-edge-${edges.length}`,
-            bizNodeId,
-            symNodeId,
-            'implements',
-            { confidence: 95, basis: 'blueprint', sourceKind: 'compiler' }
-          )
-        );
-      }
-    }
-
-    return {
-      level: 'architecture',
-      nodes,
-      edges,
-      summary: summaryForGraph(nodes, edges),
-    };
+    return getBusinessMappingView(project);
   }
 
-  /**
-   * سطح پیشرفته: ماتریس هوش تست‌ها (Test Intelligence Map).
-   */
   getTestIntelligenceView(project: ManagedProject): SubgraphResponse {
-    const nodes: GraphNode[] = [];
-    const edges: GraphEdge[] = [];
-
-    const allFiles = project.reader?.getAllFiles() ?? [];
-    const testFiles = allFiles.filter(f => f.path.includes('.test.') || f.path.includes('.spec.'));
-    const sourceFiles = allFiles.filter(f => !f.path.includes('.test.') && !f.path.includes('.spec.')).slice(0, 40);
-
-    for (const f of sourceFiles) {
-      nodes.push(GraphViewModelMapper.fromFileEntry(f));
-    }
-
-    for (const tf of testFiles.slice(0, 20)) {
-      nodes.push(
-        GraphViewModelMapper.createNode(tf.id, 'file', tf.path, {
-          path: tf.path,
-          role: 'test-suite',
-          importance: 70,
-        })
-      );
-
-      // Link test file to source file if name matches
-      const targetSourcePath = tf.path.replace(/\.(test|spec)\./, '.');
-      const target = sourceFiles.find(s => s.path === targetSourcePath);
-      if (target) {
-        edges.push(
-          GraphViewModelMapper.createEdge(
-            `test-edge-${edges.length}`,
-            tf.id,
-            target.id,
-            'references',
-            { confidence: 100, basis: 'resolved', sourceKind: 'compiler' }
-          )
-        );
-      }
-    }
-
-    return {
-      level: 'file',
-      nodes,
-      edges,
-      summary: summaryForGraph(nodes, edges),
-    };
+    return getTestIntelligenceView(project);
   }
 }
