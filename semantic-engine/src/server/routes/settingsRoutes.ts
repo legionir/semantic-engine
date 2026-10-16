@@ -14,6 +14,43 @@ import {
   modelsDirFor,
   saveGlobalConfig,
 } from '../../core/config/GlobalConfig';
+import { assertResolvedFetchableUrl } from '../../services/providers/EmbeddingProviderService';
+
+/** Endpoints the server will later call; same SSRF rules as the jobs route. */
+const URL_FIELDS: ReadonlyArray<readonly [string, string]> = [
+  ['embedding', 'baseUrl'],
+  ['chat', 'baseUrl'],
+  ['models', 'hubUrl'],
+];
+const ENV_NAME_FIELDS: ReadonlyArray<readonly [string, string]> = [
+  ['embedding', 'apiKeyEnvVar'],
+  ['chat', 'apiKeyEnvVar'],
+];
+const ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function section(body: unknown, name: string): Record<string, unknown> | null {
+  const value = (body as Record<string, unknown> | null | undefined)?.[name];
+  return value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : null;
+}
+
+async function validatePatch(body: unknown): Promise<string | null> {
+  for (const [sec, key] of URL_FIELDS) {
+    const value = section(body, sec)?.[key];
+    if (typeof value !== 'string' || value === '') continue;
+    try {
+      await assertResolvedFetchableUrl(value);
+    } catch (error) {
+      return `${sec}.${key}: ${(error as Error).message}`;
+    }
+  }
+  for (const [sec, key] of ENV_NAME_FIELDS) {
+    const value = section(body, sec)?.[key];
+    if (typeof value === 'string' && value !== '' && !ENV_NAME.test(value)) {
+      return `${sec}.${key} must be an environment variable name`;
+    }
+  }
+  return null;
+}
 
 export function createSettingsRoutes(platformConfig: PlatformConfig): RouteDefinition[] {
   const dataRoot = platformConfig.dataRoot;
@@ -53,6 +90,8 @@ export function createSettingsRoutes(platformConfig: PlatformConfig): RouteDefin
       schema: { type: 'object' },
       handler: async ctx => {
         if (!dataRoot) return unavailable;
+        const invalid = await validatePatch(ctx.body);
+        if (invalid) return { status: 400, json: { error: invalid } };
         const { warnings } = saveGlobalConfig(dataRoot, ctx.body ?? {});
         return { status: 200, json: { saved: true, ...view(), warnings } };
       },

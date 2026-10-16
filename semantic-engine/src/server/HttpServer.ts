@@ -138,9 +138,12 @@ export class HttpServer {
     */
     const userConfig = config.dataRoot ? loadGlobalConfig(config.dataRoot).config : undefined;
     this.localModels = new LocalModelStore({
-      modelsDir: config.dataRoot
-        ? modelsDirFor(config.dataRoot, userConfig)
-        : resolveModelsDir(),
+      /* env > config, the same order the CLI uses (resolveModelsDir). */
+      modelsDir: (process.env['SEMANTIC_ENGINE_MODELS_DIR'] ?? '').trim() !== ''
+        ? process.env['SEMANTIC_ENGINE_MODELS_DIR']!.trim()
+        : config.dataRoot
+          ? modelsDirFor(config.dataRoot, userConfig)
+          : resolveModelsDir(),
       /* A mirror for networks that cannot reach huggingface.co. */
       ...((process.env['SEMANTIC_ENGINE_MODEL_HUB_URL'] || userConfig?.models.hubUrl)
         ? { baseUrl: (process.env['SEMANTIC_ENGINE_MODEL_HUB_URL'] || userConfig!.models.hubUrl).replace(/\/+$/, '') }

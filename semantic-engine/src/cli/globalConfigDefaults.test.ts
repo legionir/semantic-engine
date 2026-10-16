@@ -45,6 +45,13 @@ describe('applyGlobalConfig — flag > env > config.json > default', () => {
     expect(args.options['embeddingProvider']).toBeUndefined();
   });
 
+  it('the shared --port is not shadowed by the configured uiPort on start', () => {
+    saveGlobalConfig(dataRoot, { server: { uiPort: 5100 } });
+    const { args } = applyGlobalConfig(parseArgs(['start', '--port', '5000']), env)!;
+    expect(args.options['uiPort']).toBeUndefined();
+    expect(args.options['port']).toBe('5000');
+  });
+
   it('index does not start building vectors just because the file says so', () => {
     const { args } = applyGlobalConfig(parseArgs(['index']), env)!;
     expect(args.options['vectors']).toBeUndefined();
@@ -55,7 +62,9 @@ describe('applyGlobalConfig — flag > env > config.json > default', () => {
   it('start falls back to hashing, with a notice, when the chosen model is not downloaded', () => {
     saveGlobalConfig(dataRoot, { embedding: { model: 'Xenova/bge-small-en-v1.5', useDefaultModel: false } });
     const { args, notices } = applyGlobalConfig(parseArgs(['start']), env)!;
-    expect(args.options['embeddingModel']).toBeUndefined();
+    /* Spawned children re-read config.json, so the fallback must be an explicit flag. */
+    expect(args.options['embeddingModel']).toBe('hashing-256');
+    expect(args.options['embeddingProvider']).toBe('local');
     expect(args.options['vectors']).toBe(true);
     expect(notices.join(' ')).toMatch(/not downloaded/);
   });

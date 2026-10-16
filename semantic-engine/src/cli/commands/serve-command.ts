@@ -721,6 +721,16 @@ export async function runStart(
     '--skip-initial-index',
   ];
   if (wantsVectors) watchArgs.push('--vectors');
+  /* The watcher re-reads config.json; pass the choices `start` resolved (incl. its fallback). */
+  for (const [flag, name] of [
+    ['--embedding-provider', 'embeddingProvider'],
+    ['--embedding-model', 'embeddingModel'],
+    ['--embedding-base-url', 'embeddingBaseUrl'],
+    ['--embedding-api-key-env', 'embeddingApiKeyEnv'],
+  ] as const) {
+    const value = stringOption(args.options, name);
+    if (wantsVectors && value !== undefined) watchArgs.push(flag, value);
+  }
   if (boolOption(args.options, 'lspDiagnostics', false)) watchArgs.push('--lsp-diagnostics');
   const diagnosticsBudget = stringOption(args.options, 'diagnosticsBudget');
   if (diagnosticsBudget) watchArgs.push('--diagnostics-budget', diagnosticsBudget);
