@@ -1,0 +1,20 @@
+=== CMD: npx jest src/core/codeintel/Phase1Platform.test.ts --runInBand ===
+TIMESTAMP: 2026-09-21T22:00:47Z
+PASS src/core/codeintel/Phase1Platform.test.ts
+  Phase 1 index/platform contracts
+    ✓ reports adapter status without claiming unsupported languages (2 ms)
+    ✓ returns partial outline diagnostics for unclosed syntax and supports CRLF (1 ms)
+    ✓ outline keys are stable when only body text changes (1 ms)
+    ✓ LineIndex preserves UTF-16 offsets for a\nb (1 ms)
+    ✓ LineIndex preserves UTF-16 offsets for a\r\nb (1 ms)
+    ✓ LineIndex preserves UTF-16 offsets for a\rb
+    ✓ LineIndex preserves UTF-16 offsets for فارسی😀\r\nدوم (2 ms)
+    ✓ canonicalization and snapshot id do not depend on input file order
+    ✓ generation ownership uses compare-and-swap and rejects stale writers (25 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        0.245 s, estimated 1 s
+Ran all test suites matching /src\/core\/codeintel\/Phase1Platform.test.ts/i.
+EXIT_CODE:0

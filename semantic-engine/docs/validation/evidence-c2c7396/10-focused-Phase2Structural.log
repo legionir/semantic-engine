@@ -1,0 +1,56 @@
+=== CMD: npx jest src/core/codeintel/Phase2Structural.test.ts --runInBand ===
+TIMESTAMP: 2026-09-21T22:00:50Z
+FAIL src/core/codeintel/Phase2Structural.test.ts
+  Phase 2 structural adapter
+    ✕ matches named metavariables deterministically (5 ms)
+    ✕ bounds and reports truncation (11 ms)
+    ✓ validates JSON and minimal YAML rule packs (6 ms)
+    ✓ syntax dump is deterministic and preserves lines (1 ms)
+
+  ● Phase 2 structural adapter › matches named metavariables deterministically
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 4
+    + Received  + 1
+
+    - Array [
+    -   "user",
+    -   "account",
+    - ]
+    + Array []
+
+      4 |   test('matches named metavariables deterministically', () => {
+      5 |     const result = searchTextStructurally('console.log(user);\nconsole.log(account);', { path: 'src/a.ts', language: 'typescript', pattern: 'console.log($VALUE)' });
+    > 6 |     expect(result.matches.map(m => m.captures.VALUE)).toEqual(['user', 'account']);
+        |                                                       ^
+      7 |     expect(result.matches[0].start).toBe(0);
+      8 |   });
+      9 |   test('bounds and reports truncation', () => {
+
+      at Object.<anonymous> (src/core/codeintel/Phase2Structural.test.ts:6:55)
+
+  ● Phase 2 structural adapter › bounds and reports truncation
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 2
+    Received length: 0
+    Received array:  []
+
+       9 |   test('bounds and reports truncation', () => {
+      10 |     const result = searchTextStructurally('x();\nx();\nx();', { path: 'a.ts', language: 'typescript', pattern: 'x()', maxResults: 2 });
+    > 11 |     expect(result.matches).toHaveLength(2); expect(result.truncated).toBe(true);
+         |                            ^
+      12 |   });
+      13 |   test('validates JSON and minimal YAML rule packs', () => {
+      14 |     expect(parseRulePack('{"rules":[{"id":"r","language":"typescript","pattern":"x()","message":"bad"}]}').rules[0].severity).toBe('warning');
+
+      at Object.<anonymous> (src/core/codeintel/Phase2Structural.test.ts:11:28)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 passed, 4 total
+Snapshots:   0 total
+Time:        0.223 s, estimated 1 s
+Ran all test suites matching /src\/core\/codeintel\/Phase2Structural.test.ts/i.
+EXIT_CODE:1

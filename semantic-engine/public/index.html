@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>structured-ai console</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<!-- Inline icon sprite: every control uses a crisp vector glyph from here.
+     Kept aria-hidden because each icon is decorative next to its label. -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></symbol>
+  <symbol id="i-new" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="12" r="2.4"/><path d="M8 7l8 4M8 17l8-4"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8M16 7h4M4 17h4M12 17h8"/><circle cx="14" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="16 8 13.5 13.5 8 16 10.5 10.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 21 19H3z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 14a2 2 0 0 1-2 2H8l-4 3V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></symbol>
+</svg>
+
+<header class="bar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <strong class="brand-name">structured-ai</strong>
+    <span class="status">
+      <span class="dot" id="statusDot"></span>
+      <span class="muted" id="statusText" role="status" aria-live="polite">connecting</span>
+    </span>
+  </div>
+
+  <div class="bar-tools">
+
+    <div class="bar-group" aria-label="Session context">
+      <span class="chip" id="workspace" title="workspace"></span>
+      <span class="chip" id="model" title="model"></span>
+      <span class="chip" id="turns">0 turns</span>
+    </div>
+
+    <span class="bar-sep" aria-hidden="true"></span>
+
+    <div class="bar-group" aria-label="Run controls">
+      <label class="chip select" title="approval policy">
+        <span class="chip-label">approval</span>
+        <select id="approvalMode">
+          <option value="auto">auto</option>
+          <option value="prompt">prompt</option>
+          <option value="deny">deny</option>
+        </select>
+      </label>
+      <label class="chip toggle" title="keep starting cycles while the plan has open steps">
+        <input type="checkbox" id="autoContinue">
+        <span>until done</span>
+      </label>
+    </div>
+
+    <span class="bar-sep" aria-hidden="true"></span>
+
+    <nav class="bar-group bar-actions" aria-label="Views and panels">
+      <button type="button" id="approvalsButton" class="chip alert has-icon" hidden>
+        <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+        <span>approvals <b id="approvalsCount">0</b></span>
+      </button>
+      <a href="/visualizer.html" class="chip button has-icon" title="Open Code Intelligence Visualizer">
+        <svg class="ic" aria-hidden="true"><use href="#i-compass"/></svg>
+        <span>Visualizer</span>
+      </a>
+      <button type="button" id="historyButton" class="chip button has-icon" title="open saved conversations">
+        <svg class="ic" aria-hidden="true"><use href="#i-history"/></svg>
+        <span>History</span>
+      </button>
+      <button type="button" id="executionButton" class="chip button has-icon" title="open the agent execution tree">
+        <svg class="ic" aria-hidden="true"><use href="#i-tree"/></svg>
+        <span>Execution</span>
+      </button>
+      <button type="button" id="eventsButton" class="chip button has-icon" title="open the event log">
+        <svg class="ic" aria-hidden="true"><use href="#i-bolt"/></svg>
+        <span>Events</span>
+      </button>
+      <button type="button" id="settingsButton" class="chip button has-icon" title="open settings">
+        <svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+  </div>
+</header>
+
+<main>
+
+  <!-- row 1: the conversation, full width -->
+  <section class="row conversation-grid">
+    <div class="panel conversation">
+      <div class="panel-head">
+        <h2><svg class="ic ic-title" aria-hidden="true"><use href="#i-chat"/></svg><span>Conversation</span></h2>
+        <div class="head-tools">
+          <span class="muted" id="sessionTitle"></span>
+        </div>
+      </div>
+
+      <div id="chat" class="chat">
+        <p class="empty">No messages yet. Describe a task to start.</p>
+      </div>
+
+      <form id="taskForm" class="composer">
+        <label class="sr-only" for="task">Task description</label>
+        <textarea id="task" rows="3" placeholder="Describe a task, for example: find the slowest test and explain why"></textarea>
+        <div class="actions">
+          <button type="submit" id="runButton" class="has-icon">
+            <svg class="ic" aria-hidden="true"><use href="#i-play"/></svg><span>Run task</span>
+          </button>
+          <button type="button" id="cancelButton" class="ghost has-icon" disabled>
+            <svg class="ic" aria-hidden="true"><use href="#i-stop"/></svg><span>Cancel</span>
+          </button>
+          <button type="button" id="clearButton" class="ghost has-icon">
+            <svg class="ic" aria-hidden="true"><use href="#i-new"/></svg><span>New conversation</span>
+          </button>
+          <span class="composer-hint grow-right" aria-hidden="true"><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Enter</kbd> to run</span>
+          <span class="muted" id="runTimer"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel plan-panel">
+      <div class="panel-head">
+        <h2><svg class="ic ic-title" aria-hidden="true"><use href="#i-list"/></svg><span>Plan</span></h2>
+        <span class="muted" id="planSummary"></span>
+      </div>
+      <div id="plan" class="plan-view">
+        <p class="empty">No plan yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- row 2: execution and events, hidden; opened as modals from the header -->
+  <section class="row split" id="rowTwo" hidden>
+    <div class="panel scroller execution-panel">
+      <div class="panel-head">
+        <h2><svg class="ic ic-title" aria-hidden="true"><use href="#i-tree"/></svg><span>Execution</span></h2>
+        <span class="muted" id="execSummary"></span>
+      </div>
+      <div class="execution-scroll">
+        <div id="executionArchive" class="execution-archive"></div>
+        <div id="tree" class="tree">
+          <p class="empty">No run yet. Send a task to see the agent tree.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel scroller log-panel">
+      <div class="panel-head">
+        <h2><svg class="ic ic-title" aria-hidden="true"><use href="#i-bolt"/></svg><span>Events</span></h2>
+        <div class="head-tools">
+          <label class="search-field">
+            <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" id="logFilter" class="filter" placeholder="filter" aria-label="filter events">
+          </label>
+          <button type="button" id="clearLog" class="link">clear</button>
+        </div>
+      </div>
+      <ul id="log" class="log" aria-live="polite"></ul>
+    </div>
+  </section>
+
+</main>
+
+<script src="/modal.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,3456 @@
+{
+  "apiMap": [
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "3352be7f37935065",
+      "framework": "express",
+      "handlerName": null,
+      "handlerSymbolId": null,
+      "id": "api-93e52a51e9a4",
+      "line": 8,
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "e32bd0f6103caf96",
+      "framework": "fastify",
+      "handlerName": "placeOrder",
+      "handlerSymbolId": "e0882061b1eb348b",
+      "id": "api-f988e889e5cc",
+      "line": 6,
+      "method": "POST",
+      "path": "/orders"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "e32bd0f6103caf96",
+      "framework": "fastify",
+      "handlerName": "patchOrder",
+      "handlerSymbolId": "7ad6ebbc3833e036",
+      "id": "api-46641da14556",
+      "line": 7,
+      "method": "PATCH",
+      "path": "/orders/:id"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "e32bd0f6103caf96",
+      "framework": "fastify",
+      "handlerName": "pong",
+      "handlerSymbolId": "c02503d09cb9db63",
+      "id": "api-2f3798904fad",
+      "line": 5,
+      "method": "GET",
+      "path": "/ping"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "196c8a2927256128",
+      "framework": "nestjs",
+      "handlerName": "create",
+      "handlerSymbolId": "d986490a54fd4b15",
+      "id": "api-63e3f3c99e2b",
+      "line": 8,
+      "method": "POST",
+      "path": "/users"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "3352be7f37935065",
+      "framework": "express",
+      "handlerName": "createUser",
+      "handlerSymbolId": "acce0c7b98ff26e7",
+      "id": "api-841132da1b50",
+      "line": 9,
+      "method": "POST",
+      "path": "/users"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "3352be7f37935065",
+      "framework": "express",
+      "handlerName": "removeUser",
+      "handlerSymbolId": "1e0ac148284bc2b2",
+      "id": "api-2c0eb0cc05b3",
+      "line": 12,
+      "method": "DELETE",
+      "path": "/users/:id"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "196c8a2927256128",
+      "framework": "nestjs",
+      "handlerName": "findOne",
+      "handlerSymbolId": "a952b76d3a20060c",
+      "id": "api-c90d467b5c1d",
+      "line": 5,
+      "method": "GET",
+      "path": "/users/:id"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "3352be7f37935065",
+      "framework": "express",
+      "handlerName": "getUser",
+      "handlerSymbolId": "9e771bc2950dc57d",
+      "id": "api-9f10e8f22887",
+      "line": 11,
+      "method": "GET",
+      "path": "/users/:id"
+    },
+    {
+      "authRequired": null,
+      "derivedFrom": "static-analysis",
+      "fileId": "3352be7f37935065",
+      "framework": "express",
+      "handlerName": "updateEmail",
+      "handlerSymbolId": "921e969582b64435",
+      "id": "api-5ae8f1d501d1",
+      "line": 13,
+      "method": "PUT",
+      "path": "/users/:id/email"
+    }
+  ],
+  "architectureOverview": {
+    "dataFlow": [
+      {
+        "description": "scripts depends on mod-lib",
+        "from": "mod-scripts",
+        "to": "mod-lib"
+      },
+      {
+        "description": "src depends on mod-src-services",
+        "from": "mod-src",
+        "to": "mod-src-services"
+      },
+      {
+        "description": "src depends on mod-src-util",
+        "from": "mod-src",
+        "to": "mod-src-util"
+      },
+      {
+        "description": "api depends on mod-src-controller",
+        "from": "mod-src-api",
+        "to": "mod-src-controller"
+      },
+      {
+        "description": "api depends on mod-src-model",
+        "from": "mod-src-api",
+        "to": "mod-src-model"
+      },
+      {
+        "description": "controller depends on mod-src-repository",
+        "from": "mod-src-controller",
+        "to": "mod-src-repository"
+      },
+      {
+        "description": "controller depends on mod-src-util",
+        "from": "mod-src-controller",
+        "to": "mod-src-util"
+      },
+      {
+        "description": "middleware depends on mod-src",
+        "from": "mod-src-middleware",
+        "to": "mod-src"
+      },
+      {
+        "description": "repository depends on mod-src-model",
+        "from": "mod-src-repository",
+        "to": "mod-src-model"
+      },
+      {
+        "description": "services depends on mod-src-model",
+        "from": "mod-src-services",
+        "to": "mod-src-model"
+      },
+      {
+        "description": "services depends on mod-src-util",
+        "from": "mod-src-services",
+        "to": "mod-src-util"
+      }
+    ],
+    "layers": [
+      {
+        "derivedFrom": "heuristic",
+        "moduleIds": [
+          "mod-src-api",
+          "mod-src-controller",
+          "mod-src-ui"
+        ],
+        "name": "presentation",
+        "responsibility": "Handles incoming requests and shapes responses"
+      },
+      {
+        "derivedFrom": "heuristic",
+        "moduleIds": [
+          "mod-src-services"
+        ],
+        "name": "application",
+        "responsibility": "Business logic and orchestration"
+      },
+      {
+        "derivedFrom": "heuristic",
+        "moduleIds": [
+          "mod-src-model"
+        ],
+        "name": "domain",
+        "responsibility": "Domain models and entities"
+      },
+      {
+        "derivedFrom": "heuristic",
+        "moduleIds": [
+          "mod-src-repository"
+        ],
+        "name": "data",
+        "responsibility": "Persistence and external data access"
+      },
+      {
+        "derivedFrom": "heuristic",
+        "moduleIds": [
+          "mod-config",
+          "mod-lib",
+          "mod-src-middleware",
+          "mod-src-util"
+        ],
+        "name": "infrastructure",
+        "responsibility": "Cross-cutting technical concerns"
+      }
+    ]
+  },
+  "dependencyGraph": {
+    "edges": [
+      {
+        "from": "1e0bb4ec448995cf",
+        "kind": "imports",
+        "to": "52a81ebf47179edf",
+        "weight": 1
+      },
+      {
+        "from": "5b5b18e10937fee9",
+        "kind": "imports",
+        "to": "52a81ebf47179edf",
+        "weight": 1
+      },
+      {
+        "from": "a992dd64a8c626fe",
+        "kind": "imports",
+        "to": "83d5eff7e322a682",
+        "weight": 1
+      },
+      {
+        "from": "3352be7f37935065",
+        "kind": "imports",
+        "to": "7bafc2ae9961d1cc",
+        "weight": 1
+      },
+      {
+        "from": "3352be7f37935065",
+        "kind": "imports",
+        "to": "1c291ee1dbeaf317",
+        "weight": 1
+      },
+      {
+        "from": "69bbc8bb2b544799",
+        "kind": "imports",
+        "to": "7bafc2ae9961d1cc",
+        "weight": 1
+      },
+      {
+        "from": "841254fe75488c1b",
+        "kind": "imports",
+        "to": "1f1241b6ea5dfe88",
+        "weight": 1
+      },
+      {
+        "from": "841254fe75488c1b",
+        "kind": "imports",
+        "to": "fc8d89e014891ad6",
+        "weight": 1
+      },
+      {
+        "from": "841254fe75488c1b",
+        "kind": "imports",
+        "to": "c3095d5010e65c52",
+        "weight": 1
+      },
+      {
+        "from": "7bafc2ae9961d1cc",
+        "kind": "imports",
+        "to": "ca200b4d6ea180d3",
+        "weight": 1
+      },
+      {
+        "from": "7bafc2ae9961d1cc",
+        "kind": "imports",
+        "to": "1f1241b6ea5dfe88",
+        "weight": 1
+      },
+      {
+        "from": "04bba6a35cad1c79",
+        "kind": "imports",
+        "to": "841254fe75488c1b",
+        "weight": 1
+      },
+      {
+        "from": "7c9deb32aab858df",
+        "kind": "imports",
+        "to": "c3095d5010e65c52",
+        "weight": 1
+      },
+      {
+        "from": "ca200b4d6ea180d3",
+        "kind": "imports",
+        "to": "1c291ee1dbeaf317",
+        "weight": 1
+      },
+      {
+        "from": "dbe10fdaf60cb3f9",
+        "kind": "imports",
+        "to": "1f1241b6ea5dfe88",
+        "weight": 1
+      },
+      {
+        "from": "fc8d89e014891ad6",
+        "kind": "imports",
+        "to": "1f1241b6ea5dfe88",
+        "weight": 1
+      },
+      {
+        "from": "fc8d89e014891ad6",
+        "kind": "imports",
+        "to": "1c291ee1dbeaf317",
+        "weight": 1
+      },
+      {
+        "from": "9f54609c40853dc2",
+        "kind": "imports",
+        "to": "1f1241b6ea5dfe88",
+        "weight": 1
+      },
+      {
+        "from": "a2a171449d862fe2",
+        "kind": "imports",
+        "to": "841254fe75488c1b",
+        "weight": 1
+      },
+      {
+        "from": "a2a171449d862fe2",
+        "kind": "imports",
+        "to": "c3095d5010e65c52",
+        "weight": 1
+      },
+      {
+        "from": "a2a171449d862fe2",
+        "kind": "imports",
+        "to": "1f1241b6ea5dfe88",
+        "weight": 1
+      },
+      {
+        "from": "17577692954f298c",
+        "kind": "imports",
+        "to": "1f1241b6ea5dfe88",
+        "weight": 2
+      },
+      {
+        "from": "17577692954f298c",
+        "kind": "imports",
+        "to": "fd8a8c7cc6657562",
+        "weight": 1
+      }
+    ],
+    "nodes": [
+      {
+        "id": "a3046da0d15a27e8",
+        "kind": "file"
+      },
+      {
+        "id": "bc37d034bad56458",
+        "kind": "file"
+      },
+      {
+        "id": "b335630551682c19",
+        "kind": "file"
+      },
+      {
+        "id": "fb7332445201470d",
+        "kind": "file"
+      },
+      {
+        "id": "cad0442a03487d51",
+        "kind": "file"
+      },
+      {
+        "id": "a965ca9008f0beb6",
+        "kind": "file"
+      },
+      {
+        "id": "980db14c03a9eed0",
+        "kind": "file"
+      },
+      {
+        "id": "6307c0a08191b0db",
+        "kind": "file"
+      },
+      {
+        "id": "9ae711be6ef7125a",
+        "kind": "file"
+      },
+      {
+        "id": "603f5b91896bbebf",
+        "kind": "file"
+      },
+      {
+        "id": "4ac2e66c4754461a",
+        "kind": "file"
+      },
+      {
+        "id": "83b75e8b8121c0ef",
+        "kind": "file"
+      },
+      {
+        "id": "83d5eff7e322a682",
+        "kind": "file"
+      },
+      {
+        "id": "7ae45ad102eab3b6",
+        "kind": "file"
+      },
+      {
+        "id": "0a68334964de39b3",
+        "kind": "file"
+      },
+      {
+        "id": "1e0bb4ec448995cf",
+        "kind": "file"
+      },
+      {
+        "id": "52a81ebf47179edf",
+        "kind": "file"
+      },
+      {
+        "id": "5b5b18e10937fee9",
+        "kind": "file"
+      },
+      {
+        "id": "a695523a199c1519",
+        "kind": "file"
+      },
+      {
+        "id": "de1716d2030fd3db",
+        "kind": "file"
+      },
+      {
+        "id": "a992dd64a8c626fe",
+        "kind": "file"
+      },
+      {
+        "id": "9570d627670dc1a7",
+        "kind": "file"
+      },
+      {
+        "id": "c4c0021442fe03b6",
+        "kind": "file"
+      },
+      {
+        "id": "3352be7f37935065",
+        "kind": "file"
+      },
+      {
+        "id": "e32bd0f6103caf96",
+        "kind": "file"
+      },
+      {
+        "id": "196c8a2927256128",
+        "kind": "file"
+      },
+      {
+        "id": "69bbc8bb2b544799",
+        "kind": "file"
+      },
+      {
+        "id": "841254fe75488c1b",
+        "kind": "file"
+      },
+      {
+        "id": "c3095d5010e65c52",
+        "kind": "file"
+      },
+      {
+        "id": "7bafc2ae9961d1cc",
+        "kind": "file"
+      },
+      {
+        "id": "00ee6a506727e42b",
+        "kind": "file"
+      },
+      {
+        "id": "04bba6a35cad1c79",
+        "kind": "file"
+      },
+      {
+        "id": "a2a171449d862fe2",
+        "kind": "file"
+      },
+      {
+        "id": "7c9deb32aab858df",
+        "kind": "file"
+      },
+      {
+        "id": "1c291ee1dbeaf317",
+        "kind": "file"
+      },
+      {
+        "id": "ca200b4d6ea180d3",
+        "kind": "file"
+      },
+      {
+        "id": "dbe10fdaf60cb3f9",
+        "kind": "file"
+      },
+      {
+        "id": "849bdafa2627bbb4",
+        "kind": "file"
+      },
+      {
+        "id": "fc8d89e014891ad6",
+        "kind": "file"
+      },
+      {
+        "id": "e4a56356571a88e9",
+        "kind": "file"
+      },
+      {
+        "id": "4a938dbe475297f9",
+        "kind": "file"
+      },
+      {
+        "id": "f8c63ea9107f2290",
+        "kind": "file"
+      },
+      {
+        "id": "0c07f25ef331fb3f",
+        "kind": "file"
+      },
+      {
+        "id": "9b7d9941dc981198",
+        "kind": "file"
+      },
+      {
+        "id": "17577692954f298c",
+        "kind": "file"
+      },
+      {
+        "id": "05b8b30ed6c98f99",
+        "kind": "file"
+      },
+      {
+        "id": "9f54609c40853dc2",
+        "kind": "file"
+      },
+      {
+        "id": "1f1241b6ea5dfe88",
+        "kind": "file"
+      },
+      {
+        "id": "447fb805282cd618",
+        "kind": "file"
+      },
+      {
+        "id": "86d8498258acef85",
+        "kind": "file"
+      },
+      {
+        "id": "62ebc1357d05148b",
+        "kind": "file"
+      },
+      {
+        "id": "fd8a8c7cc6657562",
+        "kind": "file"
+      },
+      {
+        "id": "6e8e3a0a37afb0c0",
+        "kind": "file"
+      },
+      {
+        "id": "a05d9167dc9da29b",
+        "kind": "file"
+      },
+      {
+        "id": "b55cdbef4907b704",
+        "kind": "file"
+      },
+      {
+        "id": "8f62b6ced28d3396",
+        "kind": "file"
+      },
+      {
+        "id": "72b7f832f005865e",
+        "kind": "file"
+      },
+      {
+        "id": "mod-root",
+        "kind": "module"
+      },
+      {
+        "id": "mod-assets",
+        "kind": "module"
+      },
+      {
+        "id": "mod-c",
+        "kind": "module"
+      },
+      {
+        "id": "mod-config",
+        "kind": "module"
+      },
+      {
+        "id": "mod-cs",
+        "kind": "module"
+      },
+      {
+        "id": "mod-go",
+        "kind": "module"
+      },
+      {
+        "id": "mod-java",
+        "kind": "module"
+      },
+      {
+        "id": "mod-kt",
+        "kind": "module"
+      },
+      {
+        "id": "mod-lib",
+        "kind": "module"
+      },
+      {
+        "id": "mod-php",
+        "kind": "module"
+      },
+      {
+        "id": "mod-py",
+        "kind": "module"
+      },
+      {
+        "id": "mod-rb",
+        "kind": "module"
+      },
+      {
+        "id": "mod-rust",
+        "kind": "module"
+      },
+      {
+        "id": "mod-scripts",
+        "kind": "module"
+      },
+      {
+        "id": "mod-sh",
+        "kind": "module"
+      },
+      {
+        "id": "mod-sql",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-api",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-controller",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-middleware",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-model",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-repository",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-services",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-ui",
+        "kind": "module"
+      },
+      {
+        "id": "mod-src-util",
+        "kind": "module"
+      },
+      {
+        "id": "mod-swift",
+        "kind": "module"
+      },
+      {
+        "id": "mod-web",
+        "kind": "module"
+      }
+    ]
+  },
+  "entityTechnicalMapping": [
+    {
+      "conceptualEntityId": "entity-Identifiable",
+      "fields": [],
+      "modelName": "Identifiable",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "d807cf929979e8d8",
+      "tableOrCollectionName": null
+    },
+    {
+      "conceptualEntityId": "entity-InMemoryRepository",
+      "fields": [],
+      "modelName": "InMemoryRepository",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "f295017bff330542",
+      "tableOrCollectionName": null
+    },
+    {
+      "conceptualEntityId": "entity-Repository-1ce9ef",
+      "fields": [],
+      "modelName": "Repository",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "a69e3311f6e27bad",
+      "tableOrCollectionName": null
+    },
+    {
+      "conceptualEntityId": "entity-Store",
+      "fields": [
+        {
+          "isPrimaryKey": false,
+          "name": "rows",
+          "nullable": false,
+          "references": null,
+          "type": "unknown"
+        }
+      ],
+      "modelName": "Store",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "1118bd0f314ec4ec",
+      "tableOrCollectionName": null
+    },
+    {
+      "conceptualEntityId": "entity-User-041758",
+      "fields": [],
+      "modelName": "User",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "f64d0f9dec2045a3",
+      "tableOrCollectionName": null
+    },
+    {
+      "conceptualEntityId": "entity-User-3cb96e",
+      "fields": [],
+      "modelName": "User",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "8621281d022b7a75",
+      "tableOrCollectionName": null
+    },
+    {
+      "conceptualEntityId": "entity-User-53f223",
+      "fields": [
+        {
+          "isPrimaryKey": true,
+          "name": "id",
+          "nullable": false,
+          "references": null,
+          "type": "unknown"
+        },
+        {
+          "isPrimaryKey": false,
+          "name": "name",
+          "nullable": false,
+          "references": null,
+          "type": "unknown"
+        }
+      ],
+      "modelName": "User",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "9fb854495231cf75",
+      "tableOrCollectionName": null
+    },
+    {
+      "conceptualEntityId": "entity-UserWithRole",
+      "fields": [],
+      "modelName": "UserWithRole",
+      "ormType": null,
+      "storage": "in-memory",
+      "symbolId": "566fb518c4967c87",
+      "tableOrCollectionName": null
+    }
+  ],
+  "folderStructure": {
+    "children": [
+      {
+        "children": [
+          {
+            "fileId": "fb7332445201470d",
+            "name": "huge.txt",
+            "type": "file"
+          },
+          {
+            "fileId": "90580d12fbd0edac",
+            "name": "logo.png",
+            "type": "file"
+          }
+        ],
+        "name": "assets",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "cad0442a03487d51",
+            "name": "parser.c",
+            "type": "file"
+          }
+        ],
+        "name": "c",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "a965ca9008f0beb6",
+            "name": "app.yaml",
+            "type": "file"
+          },
+          {
+            "fileId": "980db14c03a9eed0",
+            "name": "settings.json",
+            "type": "file"
+          }
+        ],
+        "name": "config",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "6307c0a08191b0db",
+            "name": "Service.cs",
+            "type": "file"
+          }
+        ],
+        "name": "cs",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "9ae711be6ef7125a",
+            "name": "server.go",
+            "type": "file"
+          }
+        ],
+        "name": "go",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "603f5b91896bbebf",
+            "name": "Main.java",
+            "type": "file"
+          }
+        ],
+        "name": "java",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "4ac2e66c4754461a",
+            "name": "Model.kt",
+            "type": "file"
+          }
+        ],
+        "name": "kt",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "83b75e8b8121c0ef",
+            "name": "esm.mjs",
+            "type": "file"
+          },
+          {
+            "fileId": "83d5eff7e322a682",
+            "name": "helpers.js",
+            "type": "file"
+          }
+        ],
+        "name": "lib",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "0a68334964de39b3",
+            "name": "Repository.php",
+            "type": "file"
+          }
+        ],
+        "name": "php",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "1e0bb4ec448995cf",
+            "name": "__init__.py",
+            "type": "file"
+          },
+          {
+            "fileId": "52a81ebf47179edf",
+            "name": "service.py",
+            "type": "file"
+          },
+          {
+            "fileId": "5b5b18e10937fee9",
+            "name": "test_service.py",
+            "type": "file"
+          }
+        ],
+        "name": "py",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "a695523a199c1519",
+            "name": "parser.rb",
+            "type": "file"
+          }
+        ],
+        "name": "rb",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "de1716d2030fd3db",
+            "name": "lib.rs",
+            "type": "file"
+          }
+        ],
+        "name": "rust",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "a992dd64a8c626fe",
+            "name": "build.js",
+            "type": "file"
+          }
+        ],
+        "name": "scripts",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "9570d627670dc1a7",
+            "name": "deploy.sh",
+            "type": "file"
+          }
+        ],
+        "name": "sh",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "c4c0021442fe03b6",
+            "name": "schema.sql",
+            "type": "file"
+          }
+        ],
+        "name": "sql",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "fileId": "3352be7f37935065",
+                "name": "express-app.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "e32bd0f6103caf96",
+                "name": "fastify-app.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "196c8a2927256128",
+                "name": "nest-users.controller.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "69bbc8bb2b544799",
+                "name": "routes.ts",
+                "type": "file"
+              }
+            ],
+            "name": "api",
+            "type": "directory"
+          },
+          {
+            "children": [
+              {
+                "fileId": "7bafc2ae9961d1cc",
+                "name": "user.controller.ts",
+                "type": "file"
+              }
+            ],
+            "name": "controller",
+            "type": "directory"
+          },
+          {
+            "children": [
+              {
+                "fileId": "7c9deb32aab858df",
+                "name": "auth.middleware.ts",
+                "type": "file"
+              }
+            ],
+            "name": "middleware",
+            "type": "directory"
+          },
+          {
+            "children": [
+              {
+                "fileId": "1c291ee1dbeaf317",
+                "name": "user.ts",
+                "type": "file"
+              }
+            ],
+            "name": "model",
+            "type": "directory"
+          },
+          {
+            "children": [
+              {
+                "fileId": "ca200b4d6ea180d3",
+                "name": "user.repository.ts",
+                "type": "file"
+              }
+            ],
+            "name": "repository",
+            "type": "directory"
+          },
+          {
+            "children": [
+              {
+                "fileId": "dbe10fdaf60cb3f9",
+                "name": "order.service.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "849bdafa2627bbb4",
+                "name": "payment.service.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "fc8d89e014891ad6",
+                "name": "user.service.ts",
+                "type": "file"
+              }
+            ],
+            "name": "services",
+            "type": "directory"
+          },
+          {
+            "children": [
+              {
+                "fileId": "e4a56356571a88e9",
+                "name": "Panel.tsx",
+                "type": "file"
+              }
+            ],
+            "name": "ui",
+            "type": "directory"
+          },
+          {
+            "children": [
+              {
+                "fileId": "4a938dbe475297f9",
+                "name": "arrows.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "f8c63ea9107f2290",
+                "name": "bom.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "0c07f25ef331fb3f",
+                "name": "crlf.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "9b7d9941dc981198",
+                "name": "empty.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "17577692954f298c",
+                "name": "index.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "05b8b30ed6c98f99",
+                "name": "large.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "9f54609c40853dc2",
+                "name": "logger.test.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "1f1241b6ea5dfe88",
+                "name": "logger.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "447fb805282cd618",
+                "name": "noeol.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "86d8498258acef85",
+                "name": "overloads.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "62ebc1357d05148b",
+                "name": "shapes.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "fd8a8c7cc6657562",
+                "name": "strings.ts",
+                "type": "file"
+              },
+              {
+                "fileId": "6e8e3a0a37afb0c0",
+                "name": "unicode.ts",
+                "type": "file"
+              }
+            ],
+            "name": "util",
+            "type": "directory"
+          },
+          {
+            "fileId": "841254fe75488c1b",
+            "name": "app.ts",
+            "type": "file"
+          },
+          {
+            "fileId": "c3095d5010e65c52",
+            "name": "config.ts",
+            "type": "file"
+          },
+          {
+            "fileId": "00ee6a506727e42b",
+            "name": "env.ts",
+            "type": "file"
+          },
+          {
+            "fileId": "04bba6a35cad1c79",
+            "name": "extension.ts",
+            "type": "file"
+          },
+          {
+            "fileId": "a2a171449d862fe2",
+            "name": "index.ts",
+            "type": "file"
+          }
+        ],
+        "name": "src",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "a05d9167dc9da29b",
+            "name": "Model.swift",
+            "type": "file"
+          }
+        ],
+        "name": "swift",
+        "type": "directory"
+      },
+      {
+        "children": [
+          {
+            "fileId": "8f62b6ced28d3396",
+            "name": "index.html",
+            "type": "file"
+          },
+          {
+            "fileId": "72b7f832f005865e",
+            "name": "style.css",
+            "type": "file"
+          }
+        ],
+        "name": "web",
+        "type": "directory"
+      },
+      {
+        "fileId": "a3046da0d15a27e8",
+        "name": ".env.example",
+        "type": "file"
+      },
+      {
+        "fileId": "bc37d034bad56458",
+        "name": ".gitignore",
+        "type": "file"
+      },
+      {
+        "fileId": "7ae45ad102eab3b6",
+        "name": "package.json",
+        "type": "file"
+      },
+      {
+        "fileId": "b335630551682c19",
+        "name": "README.md",
+        "type": "file"
+      },
+      {
+        "fileId": "b55cdbef4907b704",
+        "name": "tsconfig.json",
+        "type": "file"
+      }
+    ],
+    "name": ".",
+    "type": "directory"
+  },
+  "meta": {
+    "driftScore": "<volatile>",
+    "generatedAt": "<volatile>",
+    "generatorVersion": "0.1.0",
+    "id": "<volatile>",
+    "lastSyncedCommit": "<volatile>",
+    "projectName": "test-fixture",
+    "sourceProjectIndex": {
+      "fileCountAtSync": 58,
+      "generatedAt": "<volatile>",
+      "schemaVersion": "2.0.0"
+    }
+  },
+  "moduleMap": [
+    {
+      "fileIds": [
+        "7ae45ad102eab3b6",
+        "a3046da0d15a27e8",
+        "b335630551682c19",
+        "b55cdbef4907b704",
+        "bc37d034bad56458"
+      ],
+      "id": "mod-root",
+      "name": "root",
+      "path": ".",
+      "responsibility": "Module root"
+    },
+    {
+      "fileIds": [
+        "fb7332445201470d"
+      ],
+      "id": "mod-assets",
+      "name": "assets",
+      "path": "assets",
+      "responsibility": "Module assets"
+    },
+    {
+      "fileIds": [
+        "cad0442a03487d51"
+      ],
+      "id": "mod-c",
+      "name": "c",
+      "path": "c",
+      "responsibility": "Module c"
+    },
+    {
+      "fileIds": [
+        "980db14c03a9eed0",
+        "a965ca9008f0beb6"
+      ],
+      "id": "mod-config",
+      "name": "config",
+      "path": "config",
+      "responsibility": "Module config"
+    },
+    {
+      "fileIds": [
+        "6307c0a08191b0db"
+      ],
+      "id": "mod-cs",
+      "name": "cs",
+      "path": "cs",
+      "responsibility": "Business logic and orchestration"
+    },
+    {
+      "fileIds": [
+        "9ae711be6ef7125a"
+      ],
+      "id": "mod-go",
+      "name": "go",
+      "path": "go",
+      "responsibility": "Module go"
+    },
+    {
+      "fileIds": [
+        "603f5b91896bbebf"
+      ],
+      "id": "mod-java",
+      "name": "java",
+      "path": "java",
+      "responsibility": "Module java"
+    },
+    {
+      "fileIds": [
+        "4ac2e66c4754461a"
+      ],
+      "id": "mod-kt",
+      "name": "kt",
+      "path": "kt",
+      "responsibility": "Domain models and data structures"
+    },
+    {
+      "fileIds": [
+        "83b75e8b8121c0ef",
+        "83d5eff7e322a682"
+      ],
+      "id": "mod-lib",
+      "name": "lib",
+      "path": "lib",
+      "responsibility": "Module lib"
+    },
+    {
+      "fileIds": [
+        "0a68334964de39b3"
+      ],
+      "id": "mod-php",
+      "name": "php",
+      "path": "php",
+      "responsibility": "Data access and persistence"
+    },
+    {
+      "fileIds": [
+        "1e0bb4ec448995cf",
+        "52a81ebf47179edf",
+        "5b5b18e10937fee9"
+      ],
+      "id": "mod-py",
+      "name": "py",
+      "path": "py",
+      "responsibility": "Business logic and orchestration"
+    },
+    {
+      "fileIds": [
+        "a695523a199c1519"
+      ],
+      "id": "mod-rb",
+      "name": "rb",
+      "path": "rb",
+      "responsibility": "Module rb"
+    },
+    {
+      "fileIds": [
+        "de1716d2030fd3db"
+      ],
+      "id": "mod-rust",
+      "name": "rust",
+      "path": "rust",
+      "responsibility": "Module rust"
+    },
+    {
+      "dependsOnModuleIds": [
+        "mod-lib"
+      ],
+      "fileIds": [
+        "a992dd64a8c626fe"
+      ],
+      "id": "mod-scripts",
+      "name": "scripts",
+      "path": "scripts",
+      "responsibility": "Module scripts"
+    },
+    {
+      "fileIds": [
+        "9570d627670dc1a7"
+      ],
+      "id": "mod-sh",
+      "name": "sh",
+      "path": "sh",
+      "responsibility": "Module sh"
+    },
+    {
+      "fileIds": [
+        "c4c0021442fe03b6"
+      ],
+      "id": "mod-sql",
+      "name": "sql",
+      "path": "sql",
+      "responsibility": "Module sql"
+    },
+    {
+      "dependsOnModuleIds": [
+        "mod-src-services",
+        "mod-src-util"
+      ],
+      "fileIds": [
+        "00ee6a506727e42b",
+        "04bba6a35cad1c79",
+        "841254fe75488c1b",
+        "a2a171449d862fe2",
+        "c3095d5010e65c52"
+      ],
+      "id": "mod-src",
+      "name": "src",
+      "path": "src",
+      "responsibility": "Application entrypoint and core setup"
+    },
+    {
+      "dependsOnModuleIds": [
+        "mod-src-controller",
+        "mod-src-model"
+      ],
+      "fileIds": [
+        "196c8a2927256128",
+        "3352be7f37935065",
+        "69bbc8bb2b544799",
+        "e32bd0f6103caf96"
+      ],
+      "id": "mod-src-api",
+      "name": "api",
+      "path": "src/api",
+      "responsibility": "Handles HTTP/API routing"
+    },
+    {
+      "dependsOnModuleIds": [
+        "mod-src-repository",
+        "mod-src-util"
+      ],
+      "fileIds": [
+        "7bafc2ae9961d1cc"
+      ],
+      "id": "mod-src-controller",
+      "name": "controller",
+      "path": "src/controller",
+      "responsibility": "Handles HTTP/API routing"
+    },
+    {
+      "dependsOnModuleIds": [
+        "mod-src"
+      ],
+      "fileIds": [
+        "7c9deb32aab858df"
+      ],
+      "id": "mod-src-middleware",
+      "name": "middleware",
+      "path": "src/middleware",
+      "responsibility": "Request/response pipeline middleware"
+    },
+    {
+      "fileIds": [
+        "1c291ee1dbeaf317"
+      ],
+      "id": "mod-src-model",
+      "name": "model",
+      "path": "src/model",
+      "responsibility": "Domain models and data structures"
+    },
+    {
+      "dependsOnModuleIds": [
+        "mod-src-model"
+      ],
+      "fileIds": [
+        "ca200b4d6ea180d3"
+      ],
+      "id": "mod-src-repository",
+      "name": "repository",
+      "path": "src/repository",
+      "responsibility": "Data access and persistence"
+    },
+    {
+      "dependsOnModuleIds": [
+        "mod-src-model",
+        "mod-src-util"
+      ],
+      "fileIds": [
+        "849bdafa2627bbb4",
+        "dbe10fdaf60cb3f9",
+        "fc8d89e014891ad6"
+      ],
+      "id": "mod-src-services",
+      "name": "services",
+      "path": "src/services",
+      "responsibility": "Business logic and orchestration"
+    },
+    {
+      "fileIds": [
+        "e4a56356571a88e9"
+      ],
+      "id": "mod-src-ui",
+      "name": "ui",
+      "path": "src/ui",
+      "responsibility": "Module ui"
+    },
+    {
+      "fileIds": [
+        "05b8b30ed6c98f99",
+        "0c07f25ef331fb3f",
+        "17577692954f298c",
+        "1f1241b6ea5dfe88",
+        "447fb805282cd618",
+        "4a938dbe475297f9",
+        "62ebc1357d05148b",
+        "6e8e3a0a37afb0c0",
+        "86d8498258acef85",
+        "9b7d9941dc981198",
+        "9f54609c40853dc2",
+        "f8c63ea9107f2290",
+        "fd8a8c7cc6657562"
+      ],
+      "id": "mod-src-util",
+      "name": "util",
+      "path": "src/util",
+      "responsibility": "Shared utilities and helpers"
+    },
+    {
+      "fileIds": [
+        "a05d9167dc9da29b"
+      ],
+      "id": "mod-swift",
+      "name": "swift",
+      "path": "swift",
+      "responsibility": "Domain models and data structures"
+    },
+    {
+      "fileIds": [
+        "72b7f832f005865e",
+        "8f62b6ced28d3396"
+      ],
+      "id": "mod-web",
+      "name": "web",
+      "path": "web",
+      "responsibility": "Module web"
+    }
+  ],
+  "schemaVersion": "2.0.0",
+  "symbolIndex": [
+    {
+      "fileId": "00ee6a506727e42b",
+      "id": "176f94dff6b62ee4",
+      "importanceScore": 35,
+      "kind": "constant",
+      "line": 1,
+      "name": "PORT",
+      "signature": "PORT()"
+    },
+    {
+      "fileId": "00ee6a506727e42b",
+      "id": "364201cf47c3cd47",
+      "importanceScore": 35,
+      "kind": "constant",
+      "line": 2,
+      "name": "HOST",
+      "signature": "HOST()"
+    },
+    {
+      "fileId": "00ee6a506727e42b",
+      "id": "03eca00bbed8f258",
+      "importanceScore": 35,
+      "kind": "constant",
+      "line": 3,
+      "name": "SECRET",
+      "signature": "SECRET()"
+    },
+    {
+      "fileId": "00ee6a506727e42b",
+      "id": "eb80053e6288a380",
+      "importanceScore": 35,
+      "kind": "constant",
+      "line": 4,
+      "name": "GH",
+      "signature": "GH()"
+    },
+    {
+      "fileId": "00ee6a506727e42b",
+      "id": "5c68540cc268dc7e",
+      "importanceScore": 35,
+      "kind": "constant",
+      "line": 5,
+      "name": "DSN",
+      "signature": "DSN()"
+    },
+    {
+      "fileId": "04bba6a35cad1c79",
+      "id": "fa7e3644cfc6813b",
+      "importanceScore": 28,
+      "kind": "function",
+      "line": 3,
+      "name": "activate",
+      "signature": "activate(): void"
+    },
+    {
+      "fileId": "04bba6a35cad1c79",
+      "id": "2feaf4a8c4494d03",
+      "importanceScore": 28,
+      "kind": "function",
+      "line": 7,
+      "name": "deactivate",
+      "signature": "deactivate(): void"
+    },
+    {
+      "fileId": "05b8b30ed6c98f99",
+      "id": "0be7a703180f1bdb",
+      "importanceScore": 15,
+      "kind": "constant",
+      "line": 1,
+      "name": "LINES",
+      "signature": "LINES()"
+    },
+    {
+      "fileId": "0a68334964de39b3",
+      "id": "5c172e72d9abe8b2",
+      "importanceScore": 36,
+      "kind": "interface",
+      "line": 5,
+      "name": "Storage",
+      "signature": "interface Storage"
+    },
+    {
+      "fileId": "0a68334964de39b3",
+      "id": "9423537c88cff277",
+      "importanceScore": 38,
+      "kind": "method",
+      "line": 7,
+      "name": "get",
+      "signature": "get($id: string)"
+    },
+    {
+      "fileId": "0a68334964de39b3",
+      "id": "bc8c2732b90cee1c",
+      "importanceScore": 36,
+      "kind": "class",
+      "line": 10,
+      "name": "Repository",
+      "signature": "class Repository implements Storage"
+    },
+    {
+      "fileId": "0a68334964de39b3",
+      "id": "5af27d76ebf87c59",
+      "importanceScore": 38,
+      "kind": "method",
+      "line": 14,
+      "name": "get",
+      "signature": "get($id: string)"
+    },
+    {
+      "fileId": "0a68334964de39b3",
+      "id": "0ff8338ea1a71c34",
+      "importanceScore": 46,
+      "kind": "method",
+      "line": 19,
+      "name": "put",
+      "signature": "put($id: string, $value): void"
+    },
+    {
+      "fileId": "0c07f25ef331fb3f",
+      "id": "50b454562358d1cb",
+      "importanceScore": 25,
+      "kind": "constant",
+      "line": 1,
+      "name": "A",
+      "signature": "A()"
+    },
+    {
+      "fileId": "0c07f25ef331fb3f",
+      "id": "78622a7a840a876f",
+      "importanceScore": 25,
+      "kind": "constant",
+      "line": 2,
+      "name": "B",
+      "signature": "B()"
+    },
+    {
+      "fileId": "0c07f25ef331fb3f",
+      "id": "d7f0c338c9885dd4",
+      "importanceScore": 25,
+      "kind": "constant",
+      "line": 3,
+      "name": "C",
+      "signature": "C()"
+    },
+    {
+      "fileId": "196c8a2927256128",
+      "id": "7311c4634ce0fba7",
+      "importanceScore": 21,
+      "kind": "class",
+      "line": 4,
+      "name": "NestUsersController",
+      "signature": "class NestUsersController"
+    },
+    {
+      "fileId": "196c8a2927256128",
+      "id": "a952b76d3a20060c",
+      "importanceScore": 23,
+      "kind": "method",
+      "line": 6,
+      "name": "findOne",
+      "signature": "findOne(id: string)"
+    },
+    {
+      "fileId": "196c8a2927256128",
+      "id": "d986490a54fd4b15",
+      "importanceScore": 23,
+      "kind": "method",
+      "line": 9,
+      "name": "create",
+      "signature": "create()"
+    },
+    {
+      "fileId": "1c291ee1dbeaf317",
+      "id": "f64d0f9dec2045a3",
+      "importanceScore": 55,
+      "kind": "interface",
+      "line": 1,
+      "name": "User",
+      "signature": "interface User"
+    },
+    {
+      "fileId": "1c291ee1dbeaf317",
+      "id": "736405a8e213f92a",
+      "importanceScore": 55,
+      "kind": "enum",
+      "line": 7,
+      "name": "Role",
+      "signature": "enum Role"
+    },
+    {
+      "fileId": "1c291ee1dbeaf317",
+      "id": "d2fa853ceeda029a",
+      "importanceScore": 55,
+      "kind": "constant",
+      "line": 8,
+      "name": "Admin",
+      "signature": "Admin()"
+    },
+    {
+      "fileId": "1c291ee1dbeaf317",
+      "id": "222d95ca2d6de134",
+      "importanceScore": 55,
+      "kind": "constant",
+      "line": 9,
+      "name": "Member",
+      "signature": "Member()"
+    },
+    {
+      "fileId": "1c291ee1dbeaf317",
+      "id": "566fb518c4967c87",
+      "importanceScore": 55,
+      "kind": "type-alias",
+      "line": 12,
+      "name": "UserWithRole",
+      "signature": "type UserWithRole = User & { role: Role }"
+    },
+    {
+      "fileId": "1f1241b6ea5dfe88",
+      "id": "980cd5f5a1385bed",
+      "importanceScore": 68,
+      "kind": "type-alias",
+      "line": 1,
+      "name": "Level",
+      "signature": "type Level = 'debug' | 'info' | 'warn' | 'error'"
+    },
+    {
+      "fileId": "1f1241b6ea5dfe88",
+      "id": "0ae092a0a8e347d1",
+      "importanceScore": 100,
+      "kind": "class",
+      "line": 3,
+      "name": "Logger",
+      "signature": "class Logger"
+    },
+    {
+      "fileId": "1f1241b6ea5dfe88",
+      "id": "14a21323c85855f1",
+      "importanceScore": 70,
+      "kind": "method",
+      "line": 4,
+      "name": "constructor",
+      "signature": "constructor(private readonly scope: string)"
+    },
+    {
+      "fileId": "1f1241b6ea5dfe88",
+      "id": "803fe6663e25e260",
+      "importanceScore": 100,
+      "kind": "method",
+      "line": 6,
+      "name": "info",
+      "signature": "info(message: string): void"
+    },
+    {
+      "fileId": "1f1241b6ea5dfe88",
+      "id": "87d9b8c540018898",
+      "importanceScore": 78,
+      "kind": "method",
+      "line": 10,
+      "name": "warn",
+      "signature": "warn(message: string): void"
+    },
+    {
+      "fileId": "1f1241b6ea5dfe88",
+      "id": "d382063f285e5d86",
+      "importanceScore": 70,
+      "kind": "method",
+      "line": 14,
+      "name": "emit",
+      "signature": "emit(level: Level, message: string): void"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "a81e94c2398bc1e9",
+      "importanceScore": 55,
+      "kind": "constant",
+      "line": 5,
+      "name": "app",
+      "signature": "app()"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "ff0a875a3514cea1",
+      "importanceScore": 55,
+      "kind": "constant",
+      "line": 6,
+      "name": "router",
+      "signature": "router()"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "acce0c7b98ff26e7",
+      "importanceScore": 57,
+      "kind": "function",
+      "line": 22,
+      "name": "createUser",
+      "signature": "createUser(req: unknown, res: unknown)"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "5cb1a9d5e1ec9e92",
+      "importanceScore": 57,
+      "kind": "function",
+      "line": 23,
+      "name": "saveUser",
+      "signature": "saveUser(req: unknown)"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "9a0dc22d242ddfde",
+      "importanceScore": 57,
+      "kind": "function",
+      "line": 24,
+      "name": "persistUser",
+      "signature": "persistUser(req: unknown): User | undefined"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "9e771bc2950dc57d",
+      "importanceScore": 57,
+      "kind": "function",
+      "line": 25,
+      "name": "getUser",
+      "signature": "getUser(req: unknown, res: unknown)"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "1e0ac148284bc2b2",
+      "importanceScore": 57,
+      "kind": "function",
+      "line": 26,
+      "name": "removeUser",
+      "signature": "removeUser(req: unknown, res: unknown)"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "921e969582b64435",
+      "importanceScore": 57,
+      "kind": "function",
+      "line": 27,
+      "name": "updateEmail",
+      "signature": "updateEmail(req: unknown, res: unknown)"
+    },
+    {
+      "fileId": "3352be7f37935065",
+      "id": "563c3212db2c9164",
+      "importanceScore": 57,
+      "kind": "function",
+      "line": 30,
+      "name": "boot",
+      "signature": "boot(c: UserController)"
+    },
+    {
+      "fileId": "447fb805282cd618",
+      "id": "d504d2ccc05c177a",
+      "importanceScore": 15,
+      "kind": "constant",
+      "line": 1,
+      "name": "NO_EOL",
+      "signature": "NO_EOL()"
+    },
+    {
+      "fileId": "4a938dbe475297f9",
+      "id": "b985d1c84145f126",
+      "importanceScore": 25,
+      "kind": "constant",
+      "line": 1,
+      "name": "add",
+      "signature": "add(a: number, b: number): number"
+    },
+    {
+      "fileId": "4a938dbe475297f9",
+      "id": "5cdac4b66abeddf8",
+      "importanceScore": 25,
+      "kind": "constant",
+      "line": 3,
+      "name": "withCallback",
+      "signature": "withCallback(cb: (value: string) => void = > void, retries: number = 3): void"
+    },
+    {
+      "fileId": "4a938dbe475297f9",
+      "id": "e6d9ec96ac3a46ae",
+      "importanceScore": 25,
+      "kind": "variable",
+      "line": 7,
+      "name": "i",
+      "signature": "i()"
+    },
+    {
+      "fileId": "4a938dbe475297f9",
+      "id": "2e925f69567c3293",
+      "importanceScore": 25,
+      "kind": "constant",
+      "line": 12,
+      "name": "noArgs",
+      "signature": "noArgs()"
+    },
+    {
+      "fileId": "4ac2e66c4754461a",
+      "id": "8621281d022b7a75",
+      "importanceScore": 14,
+      "kind": "class",
+      "line": 3,
+      "name": "User",
+      "signature": "data class User(val id: String, val name: String)"
+    },
+    {
+      "fileId": "4ac2e66c4754461a",
+      "id": "a69e3311f6e27bad",
+      "importanceScore": 14,
+      "kind": "interface",
+      "line": 5,
+      "name": "Repository",
+      "signature": "interface Repository"
+    },
+    {
+      "fileId": "4ac2e66c4754461a",
+      "id": "cc6ac7e229b640fe",
+      "importanceScore": 16,
+      "kind": "method",
+      "line": 6,
+      "name": "find",
+      "signature": "find(id: String = id)"
+    },
+    {
+      "fileId": "4ac2e66c4754461a",
+      "id": "f295017bff330542",
+      "importanceScore": 14,
+      "kind": "class",
+      "line": 9,
+      "name": "InMemoryRepository",
+      "signature": "class InMemoryRepository : Repository"
+    },
+    {
+      "fileId": "4ac2e66c4754461a",
+      "id": "4f142afedbac2aab",
+      "importanceScore": 16,
+      "kind": "method",
+      "line": 12,
+      "name": "find",
+      "signature": "find(id: String = id)"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "15a1bfdf94335a9e",
+      "importanceScore": 56,
+      "kind": "class",
+      "line": 8,
+      "name": "UserRepository",
+      "signature": "class UserRepository:"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "f695ce45376cb937",
+      "importanceScore": 58,
+      "kind": "method",
+      "line": 11,
+      "name": "__init__",
+      "signature": "__init__(self, source: str)"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "f9acf507efaffbaa",
+      "importanceScore": 60,
+      "kind": "method",
+      "line": 15,
+      "name": "load",
+      "signature": "load(self): None"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "12e940aad0c7189a",
+      "importanceScore": 62,
+      "kind": "method",
+      "line": 20,
+      "name": "find",
+      "signature": "find(self, user_id: str): Optional[dict]"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "e068129292430625",
+      "importanceScore": 60,
+      "kind": "function",
+      "line": 27,
+      "name": "build_repository",
+      "signature": "build_repository(source: str, eager: bool = False): UserRepository"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "3a56223620ef76d9",
+      "importanceScore": 58,
+      "kind": "function",
+      "line": 38,
+      "name": "fetch_remote",
+      "signature": "fetch_remote(url)"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "d58df094b94e3692",
+      "importanceScore": 60,
+      "kind": "function",
+      "line": 42,
+      "name": "outer",
+      "signature": "outer(values)"
+    },
+    {
+      "fileId": "52a81ebf47179edf",
+      "id": "cbc12bbda60a38f6",
+      "importanceScore": 60,
+      "kind": "function",
+      "line": 46,
+      "name": "inner",
+      "signature": "inner(value)"
+    },
+    {
+      "fileId": "5b5b18e10937fee9",
+      "id": "75acd276170edab8",
+      "importanceScore": 16,
+      "kind": "function",
+      "line": 4,
+      "name": "test_find_returns_none",
+      "signature": "test_find_returns_none()"
+    },
+    {
+      "fileId": "603f5b91896bbebf",
+      "id": "f06574b9ded08f2e",
+      "importanceScore": 60,
+      "kind": "class",
+      "line": 6,
+      "name": "Main",
+      "signature": "public class Main"
+    },
+    {
+      "fileId": "603f5b91896bbebf",
+      "id": "4307d02ce884befd",
+      "importanceScore": 62,
+      "kind": "method",
+      "line": 9,
+      "name": "add",
+      "signature": "add(value: String): void"
+    },
+    {
+      "fileId": "603f5b91896bbebf",
+      "id": "6c9a2cacdb326a6d",
+      "importanceScore": 94,
+      "kind": "method",
+      "line": 13,
+      "name": "get",
+      "signature": "get(index: int): String"
+    },
+    {
+      "fileId": "603f5b91896bbebf",
+      "id": "02c5ba94b2131679",
+      "importanceScore": 62,
+      "kind": "method",
+      "line": 17,
+      "name": "get",
+      "signature": "get(key: String): String"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "319bdc2dcce21c64",
+      "importanceScore": 38,
+      "kind": "class",
+      "line": 1,
+      "name": "Shape",
+      "signature": "abstract class Shape"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "48f44af7839b6fb7",
+      "importanceScore": 40,
+      "kind": "method",
+      "line": 2,
+      "name": "area",
+      "signature": "area(): number"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "5907d7bb4afd3ca0",
+      "importanceScore": 38,
+      "kind": "class",
+      "line": 5,
+      "name": "Circle",
+      "signature": "class Circle extends Shape"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "e1cb4d415596e100",
+      "importanceScore": 40,
+      "kind": "method",
+      "line": 6,
+      "name": "constructor",
+      "signature": "constructor(private readonly r: number)"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "fb5cd59114286ee4",
+      "importanceScore": 40,
+      "kind": "method",
+      "line": 7,
+      "name": "area",
+      "signature": "area(): number"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "25536e98d8f4792d",
+      "importanceScore": 38,
+      "kind": "namespace",
+      "line": 10,
+      "name": "Geometry",
+      "signature": "namespace Geometry"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "2e1c86ccb237b0b5",
+      "importanceScore": 38,
+      "kind": "constant",
+      "line": 11,
+      "name": "ORIGIN",
+      "signature": "ORIGIN()"
+    },
+    {
+      "fileId": "62ebc1357d05148b",
+      "id": "e774518f37588bac",
+      "importanceScore": 40,
+      "kind": "function",
+      "line": 12,
+      "name": "distance",
+      "signature": "distance(a: number, b: number): number"
+    },
+    {
+      "fileId": "6307c0a08191b0db",
+      "id": "7e42e47ef4944b81",
+      "importanceScore": 16,
+      "kind": "namespace",
+      "line": 1,
+      "name": "App",
+      "signature": "namespace App"
+    },
+    {
+      "fileId": "6307c0a08191b0db",
+      "id": "794d8bfa31a8a244",
+      "importanceScore": 16,
+      "kind": "interface",
+      "line": 3,
+      "name": "IService",
+      "signature": "public interface IService"
+    },
+    {
+      "fileId": "6307c0a08191b0db",
+      "id": "60ac960ad6adcbde",
+      "importanceScore": 18,
+      "kind": "method",
+      "line": 5,
+      "name": "Get",
+      "signature": "Get(id: string): string"
+    },
+    {
+      "fileId": "6307c0a08191b0db",
+      "id": "cfcb6b1b0765fabe",
+      "importanceScore": 16,
+      "kind": "class",
+      "line": 8,
+      "name": "Service",
+      "signature": "public class Service : IService"
+    },
+    {
+      "fileId": "6307c0a08191b0db",
+      "id": "08a61ee7982793f0",
+      "importanceScore": 18,
+      "kind": "method",
+      "line": 10,
+      "name": "Get",
+      "signature": "Get(id: string): string"
+    },
+    {
+      "fileId": "6307c0a08191b0db",
+      "id": "af7cb07d110e4501",
+      "importanceScore": 18,
+      "kind": "method",
+      "line": 15,
+      "name": "Get",
+      "signature": "Get(id: int): string"
+    },
+    {
+      "fileId": "69bbc8bb2b544799",
+      "id": "d58814f93979eef4",
+      "importanceScore": 29,
+      "kind": "interface",
+      "line": 3,
+      "name": "Route",
+      "signature": "interface Route"
+    },
+    {
+      "fileId": "69bbc8bb2b544799",
+      "id": "65a16cb1000a75c8",
+      "importanceScore": 29,
+      "kind": "constant",
+      "line": 9,
+      "name": "ROUTES",
+      "signature": "ROUTES()"
+    },
+    {
+      "fileId": "69bbc8bb2b544799",
+      "id": "17ab223acc788e4b",
+      "importanceScore": 31,
+      "kind": "function",
+      "line": 14,
+      "name": "register",
+      "signature": "register(controller: UserController): Route[]"
+    },
+    {
+      "fileId": "6e8e3a0a37afb0c0",
+      "id": "1cf08284acc5bfc6",
+      "importanceScore": 22,
+      "kind": "constant",
+      "line": 2,
+      "name": "مقدار",
+      "signature": "مقدار()"
+    },
+    {
+      "fileId": "6e8e3a0a37afb0c0",
+      "id": "a64c346f6c47d208",
+      "importanceScore": 24,
+      "kind": "function",
+      "line": 4,
+      "name": "计算",
+      "signature": "计算(a: number): number"
+    },
+    {
+      "fileId": "72b7f832f005865e",
+      "id": "f4bafdd15e89145b",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 5,
+      "name": ".panel",
+      "signature": null
+    },
+    {
+      "fileId": "72b7f832f005865e",
+      "id": "96b49671be104291",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 10,
+      "name": ".panel > h2",
+      "signature": null
+    },
+    {
+      "fileId": "72b7f832f005865e",
+      "id": "201ed126fdb9b619",
+      "importanceScore": 10,
+      "kind": "module",
+      "line": 14,
+      "name": "@media",
+      "signature": null
+    },
+    {
+      "fileId": "72b7f832f005865e",
+      "id": "1dc22aa9901e9f29",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 15,
+      "name": ".panel",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "e933f46ecdd3ac36",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 2,
+      "name": "name",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "facb46b19c1d8c07",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 3,
+      "name": "version",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "489036123aedae7a",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 4,
+      "name": "homepage",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "a83826c1635e4dc0",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 5,
+      "name": "repository",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "b17ddc11e5dbfd99",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 6,
+      "name": "type",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "ee4c73df179c4401",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 7,
+      "name": "url",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "a8584efa6cf143a8",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 9,
+      "name": "dependencies",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "4a75dc13f9aaa7a4",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 10,
+      "name": "express",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "bab37fe9c358d2e7",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 12,
+      "name": "scripts",
+      "signature": null
+    },
+    {
+      "fileId": "7ae45ad102eab3b6",
+      "id": "c336544ce45c8452",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 13,
+      "name": "start",
+      "signature": null
+    },
+    {
+      "fileId": "7bafc2ae9961d1cc",
+      "id": "143ab3d1c847770e",
+      "importanceScore": 67,
+      "kind": "function",
+      "line": 10,
+      "name": "route",
+      "signature": "route(_path: string)"
+    },
+    {
+      "fileId": "7bafc2ae9961d1cc",
+      "id": "5b5a1353bce7ca13",
+      "importanceScore": 57,
+      "kind": "class",
+      "line": 14,
+      "name": "UserController",
+      "signature": "class UserController"
+    },
+    {
+      "fileId": "7bafc2ae9961d1cc",
+      "id": "14c3534eda0a5a79",
+      "importanceScore": 57,
+      "kind": "property",
+      "line": 15,
+      "name": "log",
+      "signature": "log()"
+    },
+    {
+      "fileId": "7bafc2ae9961d1cc",
+      "id": "493f3b9f6a031e61",
+      "importanceScore": 59,
+      "kind": "method",
+      "line": 17,
+      "name": "constructor",
+      "signature": "constructor(private readonly repo: UserRepository)"
+    },
+    {
+      "fileId": "7bafc2ae9961d1cc",
+      "id": "1cb5942f69b2c053",
+      "importanceScore": 61,
+      "kind": "method",
+      "line": 20,
+      "name": "get",
+      "signature": "get(id: string)"
+    },
+    {
+      "fileId": "7c9deb32aab858df",
+      "id": "16d3735c85fce631",
+      "importanceScore": 34,
+      "kind": "function",
+      "line": 3,
+      "name": "requireAuth",
+      "signature": "requireAuth(token: string | undefined): boolean"
+    },
+    {
+      "fileId": "7c9deb32aab858df",
+      "id": "6b1658fe5e4c8d6f",
+      "importanceScore": 28,
+      "kind": "constant",
+      "line": 8,
+      "name": "SKIP_PATHS",
+      "signature": "SKIP_PATHS()"
+    },
+    {
+      "fileId": "83b75e8b8121c0ef",
+      "id": "fe53d15ce3702a13",
+      "importanceScore": 32,
+      "kind": "constant",
+      "line": 1,
+      "name": "NAME",
+      "signature": "NAME()"
+    },
+    {
+      "fileId": "83b75e8b8121c0ef",
+      "id": "5f83b451ac581700",
+      "importanceScore": 42,
+      "kind": "function",
+      "line": 3,
+      "name": "load",
+      "signature": "load(url)"
+    },
+    {
+      "fileId": "83b75e8b8121c0ef",
+      "id": "587f48aaf53b2bd6",
+      "importanceScore": 32,
+      "kind": "constant",
+      "line": 4,
+      "name": "response",
+      "signature": "response()"
+    },
+    {
+      "fileId": "83d5eff7e322a682",
+      "id": "85285d6e518dfcb7",
+      "importanceScore": 72,
+      "kind": "constant",
+      "line": 3,
+      "name": "path",
+      "signature": "path()"
+    },
+    {
+      "fileId": "83d5eff7e322a682",
+      "id": "47eb38e0d42cefbd",
+      "importanceScore": 74,
+      "kind": "function",
+      "line": 5,
+      "name": "resolveAll",
+      "signature": "resolveAll(base, names)"
+    },
+    {
+      "fileId": "83d5eff7e322a682",
+      "id": "3d21d57990054f39",
+      "importanceScore": 80,
+      "kind": "class",
+      "line": 9,
+      "name": "Cache",
+      "signature": "class Cache"
+    },
+    {
+      "fileId": "83d5eff7e322a682",
+      "id": "0747965f366f18e3",
+      "importanceScore": 74,
+      "kind": "method",
+      "line": 10,
+      "name": "constructor",
+      "signature": "constructor(limit = 100)"
+    },
+    {
+      "fileId": "83d5eff7e322a682",
+      "id": "840f8e9616805dc7",
+      "importanceScore": 74,
+      "kind": "method",
+      "line": 15,
+      "name": "get",
+      "signature": "get(key)"
+    },
+    {
+      "fileId": "83d5eff7e322a682",
+      "id": "425c15ae555a178f",
+      "importanceScore": 92,
+      "kind": "method",
+      "line": 17,
+      "name": "set",
+      "signature": "set(key, value)"
+    },
+    {
+      "fileId": "841254fe75488c1b",
+      "id": "8f69c6f68ebe4de5",
+      "importanceScore": 100,
+      "kind": "class",
+      "line": 7,
+      "name": "Application",
+      "signature": "class Application"
+    },
+    {
+      "fileId": "841254fe75488c1b",
+      "id": "9a944ee5daaf166a",
+      "importanceScore": 100,
+      "kind": "property",
+      "line": 8,
+      "name": "log",
+      "signature": "log()"
+    },
+    {
+      "fileId": "841254fe75488c1b",
+      "id": "450a82c4c238e3c7",
+      "importanceScore": 100,
+      "kind": "method",
+      "line": 10,
+      "name": "constructor",
+      "signature": "constructor(private readonly users: UserService)"
+    },
+    {
+      "fileId": "841254fe75488c1b",
+      "id": "bd25b602347a98a4",
+      "importanceScore": 100,
+      "kind": "method",
+      "line": 12,
+      "name": "start",
+      "signature": "start(port: number = CONFIG.port): Promise<void>"
+    },
+    {
+      "fileId": "841254fe75488c1b",
+      "id": "e199bbabd46df179",
+      "importanceScore": 100,
+      "kind": "method",
+      "line": 17,
+      "name": "stop",
+      "signature": "stop(): void"
+    },
+    {
+      "fileId": "841254fe75488c1b",
+      "id": "71cc7715dab25058",
+      "importanceScore": 100,
+      "kind": "function",
+      "line": 22,
+      "name": "createApplication",
+      "signature": "createApplication(): Application"
+    },
+    {
+      "fileId": "841254fe75488c1b",
+      "id": "dc4e74ac5cebe2f0",
+      "importanceScore": 100,
+      "kind": "constant",
+      "line": 26,
+      "name": "VERSION",
+      "signature": "VERSION()"
+    },
+    {
+      "fileId": "849bdafa2627bbb4",
+      "id": "89df9a14328922a7",
+      "importanceScore": 17,
+      "kind": "class",
+      "line": 1,
+      "name": "PaymentService",
+      "signature": "class PaymentService"
+    },
+    {
+      "fileId": "849bdafa2627bbb4",
+      "id": "7c793a3a3a134fdf",
+      "importanceScore": 19,
+      "kind": "method",
+      "line": 2,
+      "name": "charge",
+      "signature": "charge(amount: number): Promise<boolean>"
+    },
+    {
+      "fileId": "86d8498258acef85",
+      "id": "60b1f38781faa821",
+      "importanceScore": 36,
+      "kind": "function",
+      "line": 1,
+      "name": "parse",
+      "signature": "parse(value: string): number"
+    },
+    {
+      "fileId": "86d8498258acef85",
+      "id": "30d4a097f626470b",
+      "importanceScore": 36,
+      "kind": "function",
+      "line": 2,
+      "name": "parse",
+      "signature": "parse(value: number): string"
+    },
+    {
+      "fileId": "86d8498258acef85",
+      "id": "ee47d557216cf1c4",
+      "importanceScore": 38,
+      "kind": "function",
+      "line": 3,
+      "name": "parse",
+      "signature": "parse(value: string | number): string | number"
+    },
+    {
+      "fileId": "86d8498258acef85",
+      "id": "be9a43d08f969408",
+      "importanceScore": 34,
+      "kind": "class",
+      "line": 7,
+      "name": "Repo",
+      "signature": "class Repo"
+    },
+    {
+      "fileId": "86d8498258acef85",
+      "id": "4c7c67468be79c4d",
+      "importanceScore": 36,
+      "kind": "method",
+      "line": 8,
+      "name": "get",
+      "signature": "get(id: string): string"
+    },
+    {
+      "fileId": "86d8498258acef85",
+      "id": "1ce62d52849b4b91",
+      "importanceScore": 36,
+      "kind": "method",
+      "line": 9,
+      "name": "get",
+      "signature": "get(id: number): string"
+    },
+    {
+      "fileId": "86d8498258acef85",
+      "id": "16ab8632e04d2f41",
+      "importanceScore": 36,
+      "kind": "method",
+      "line": 10,
+      "name": "get",
+      "signature": "get(id: string | number): string"
+    },
+    {
+      "fileId": "8f62b6ced28d3396",
+      "id": "37b837188a16deb0",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 9,
+      "name": "panel",
+      "signature": null
+    },
+    {
+      "fileId": "8f62b6ced28d3396",
+      "id": "e115f25d1ab561ff",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 9,
+      "name": "root",
+      "signature": null
+    },
+    {
+      "fileId": "8f62b6ced28d3396",
+      "id": "c535b18cd75b9ac0",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 9,
+      "name": "wide",
+      "signature": null
+    },
+    {
+      "fileId": "8f62b6ced28d3396",
+      "id": "965f7786cea4abc8",
+      "importanceScore": 10,
+      "kind": "module",
+      "line": 10,
+      "name": "script",
+      "signature": null
+    },
+    {
+      "fileId": "9570d627670dc1a7",
+      "id": "d698cee7f34b0740",
+      "importanceScore": 16,
+      "kind": "function",
+      "line": 4,
+      "name": "deploy",
+      "signature": "deploy()"
+    },
+    {
+      "fileId": "9570d627670dc1a7",
+      "id": "7e78525bc0950eb5",
+      "importanceScore": 16,
+      "kind": "function",
+      "line": 9,
+      "name": "rollback",
+      "signature": "rollback()"
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "6beb674f799d50e1",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 2,
+      "name": "server",
+      "signature": null
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "f4361a0cb1aaf074",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 3,
+      "name": "host",
+      "signature": null
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "d1908cb53f031f8a",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 4,
+      "name": "port",
+      "signature": null
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "b5260a1951ee3d68",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 6,
+      "name": "database",
+      "signature": null
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "e169be77d44fed60",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 7,
+      "name": "url",
+      "signature": null
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "20cd1108f01d23ff",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 9,
+      "name": "features",
+      "signature": null
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "201b7fe7840b24c9",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 10,
+      "name": "search",
+      "signature": null
+    },
+    {
+      "fileId": "980db14c03a9eed0",
+      "id": "bbf8a21f2f8143f7",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 11,
+      "name": "export",
+      "signature": null
+    },
+    {
+      "fileId": "9ae711be6ef7125a",
+      "id": "4ea1c21c385802fb",
+      "importanceScore": 24,
+      "kind": "interface",
+      "line": 9,
+      "name": "Handler",
+      "signature": "type Handler interface"
+    },
+    {
+      "fileId": "9ae711be6ef7125a",
+      "id": "5fa5136613e36a58",
+      "importanceScore": 24,
+      "kind": "struct",
+      "line": 14,
+      "name": "Server",
+      "signature": "type Server struct"
+    },
+    {
+      "fileId": "9ae711be6ef7125a",
+      "id": "24866b54e020ef1f",
+      "importanceScore": 26,
+      "kind": "property",
+      "line": 15,
+      "name": "addr",
+      "signature": "addr()"
+    },
+    {
+      "fileId": "9ae711be6ef7125a",
+      "id": "4c1e1518cb697518",
+      "importanceScore": 26,
+      "kind": "function",
+      "line": 18,
+      "name": "New",
+      "signature": "New(addr: string): *Server"
+    },
+    {
+      "fileId": "9ae711be6ef7125a",
+      "id": "42888277e8dcdf2e",
+      "importanceScore": 26,
+      "kind": "method",
+      "line": 22,
+      "name": "Serve",
+      "signature": "Serve(ctx: context.Context = context.Context): error"
+    },
+    {
+      "fileId": "9ae711be6ef7125a",
+      "id": "f1f24a6a8b8d0e82",
+      "importanceScore": 26,
+      "kind": "method",
+      "line": 27,
+      "name": "Name",
+      "signature": "Name(): string"
+    },
+    {
+      "fileId": "a05d9167dc9da29b",
+      "id": "d807cf929979e8d8",
+      "importanceScore": 20,
+      "kind": "interface",
+      "line": 3,
+      "name": "Identifiable",
+      "signature": "protocol Identifiable"
+    },
+    {
+      "fileId": "a05d9167dc9da29b",
+      "id": "9fb854495231cf75",
+      "importanceScore": 20,
+      "kind": "struct",
+      "line": 7,
+      "name": "User",
+      "signature": "struct User: Identifiable"
+    },
+    {
+      "fileId": "a05d9167dc9da29b",
+      "id": "3e571e8f2e1e6d98",
+      "importanceScore": 22,
+      "kind": "property",
+      "line": 8,
+      "name": "id",
+      "signature": "id()"
+    },
+    {
+      "fileId": "a05d9167dc9da29b",
+      "id": "4ab42c57a7f92a24",
+      "importanceScore": 22,
+      "kind": "property",
+      "line": 9,
+      "name": "name",
+      "signature": "name()"
+    },
+    {
+      "fileId": "a05d9167dc9da29b",
+      "id": "1118bd0f314ec4ec",
+      "importanceScore": 20,
+      "kind": "class",
+      "line": 12,
+      "name": "Store",
+      "signature": "final class Store"
+    },
+    {
+      "fileId": "a05d9167dc9da29b",
+      "id": "5bc67bf25270d81a",
+      "importanceScore": 22,
+      "kind": "property",
+      "line": 13,
+      "name": "rows",
+      "signature": "rows()"
+    },
+    {
+      "fileId": "a05d9167dc9da29b",
+      "id": "8256b108c21ed6a7",
+      "importanceScore": 22,
+      "kind": "method",
+      "line": 15,
+      "name": "find",
+      "signature": "find()"
+    },
+    {
+      "fileId": "a695523a199c1519",
+      "id": "2b636af0497c3b31",
+      "importanceScore": 16,
+      "kind": "module",
+      "line": 1,
+      "name": "Parsing",
+      "signature": "module Parsing"
+    },
+    {
+      "fileId": "a695523a199c1519",
+      "id": "b4183bb724368f02",
+      "importanceScore": 16,
+      "kind": "class",
+      "line": 2,
+      "name": "Parser",
+      "signature": "class Parser"
+    },
+    {
+      "fileId": "a695523a199c1519",
+      "id": "ba2338e549abc5c6",
+      "importanceScore": 18,
+      "kind": "method",
+      "line": 3,
+      "name": "initialize",
+      "signature": "initialize(source)"
+    },
+    {
+      "fileId": "a695523a199c1519",
+      "id": "5abb43527d530bc8",
+      "importanceScore": 18,
+      "kind": "method",
+      "line": 7,
+      "name": "parse",
+      "signature": "parse()"
+    },
+    {
+      "fileId": "a695523a199c1519",
+      "id": "4c633d4ec1608750",
+      "importanceScore": 18,
+      "kind": "method",
+      "line": 11,
+      "name": "build",
+      "signature": "build(source)"
+    },
+    {
+      "fileId": "a992dd64a8c626fe",
+      "id": "513dee946c4e48d5",
+      "importanceScore": 12,
+      "kind": "constant",
+      "line": 2,
+      "name": "{ Cache }",
+      "signature": "{ Cache }()"
+    },
+    {
+      "fileId": "a992dd64a8c626fe",
+      "id": "a5a8e56356e1b25a",
+      "importanceScore": 12,
+      "kind": "constant",
+      "line": 4,
+      "name": "cache",
+      "signature": "cache()"
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "8a3810a609dd3f84",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 2,
+      "name": "compilerOptions",
+      "signature": null
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "3bbb5e63ed57a85e",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 3,
+      "name": "target",
+      "signature": null
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "6372cce0ca00f397",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 4,
+      "name": "module",
+      "signature": null
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "aec4b021e89ddf8b",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 6,
+      "name": "strict",
+      "signature": null
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "420755d1f2de84b7",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 7,
+      "name": "baseUrl",
+      "signature": null
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "f6119896ac270501",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 8,
+      "name": "@util/*",
+      "signature": null
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "fdecadbaf9ca0bb6",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 8,
+      "name": "paths",
+      "signature": null
+    },
+    {
+      "fileId": "b55cdbef4907b704",
+      "id": "d6fc2fc8525e763a",
+      "importanceScore": 10,
+      "kind": "property",
+      "line": 11,
+      "name": "include",
+      "signature": null
+    },
+    {
+      "fileId": "c3095d5010e65c52",
+      "id": "25e7f4861bfa8726",
+      "importanceScore": 50,
+      "kind": "interface",
+      "line": 1,
+      "name": "AppConfig",
+      "signature": "interface AppConfig"
+    },
+    {
+      "fileId": "c3095d5010e65c52",
+      "id": "6ab65ddcdf89c844",
+      "importanceScore": 50,
+      "kind": "constant",
+      "line": 7,
+      "name": "CONFIG",
+      "signature": "CONFIG()"
+    },
+    {
+      "fileId": "ca200b4d6ea180d3",
+      "id": "2b61a6910c922e66",
+      "importanceScore": 41,
+      "kind": "class",
+      "line": 3,
+      "name": "UserRepository",
+      "signature": "class UserRepository"
+    },
+    {
+      "fileId": "ca200b4d6ea180d3",
+      "id": "f9bf02c432558fdd",
+      "importanceScore": 41,
+      "kind": "property",
+      "line": 4,
+      "name": "rows",
+      "signature": "rows()"
+    },
+    {
+      "fileId": "ca200b4d6ea180d3",
+      "id": "ee7c59c8061dc82d",
+      "importanceScore": 51,
+      "kind": "method",
+      "line": 6,
+      "name": "findById",
+      "signature": "findById(id: string): User | undefined"
+    },
+    {
+      "fileId": "ca200b4d6ea180d3",
+      "id": "ea9f3c98ff1594e8",
+      "importanceScore": 43,
+      "kind": "method",
+      "line": 10,
+      "name": "save",
+      "signature": "save(user: User): void"
+    },
+    {
+      "fileId": "cad0442a03487d51",
+      "id": "2a5ed11e9a820689",
+      "importanceScore": 24,
+      "kind": "struct",
+      "line": 4,
+      "name": "Token",
+      "signature": "struct Token"
+    },
+    {
+      "fileId": "cad0442a03487d51",
+      "id": "122df5e2f8c0537b",
+      "importanceScore": 30,
+      "kind": "function",
+      "line": 9,
+      "name": "count_tokens",
+      "signature": "count_tokens(const char *source)"
+    },
+    {
+      "fileId": "cad0442a03487d51",
+      "id": "1d1198a643d719fe",
+      "importanceScore": 28,
+      "kind": "function",
+      "line": 17,
+      "name": "parse",
+      "signature": "parse(const char *source, struct Token *out)"
+    },
+    {
+      "fileId": "dbe10fdaf60cb3f9",
+      "id": "32e991e0afe84f64",
+      "importanceScore": 26,
+      "kind": "interface",
+      "line": 3,
+      "name": "Order",
+      "signature": "interface Order"
+    },
+    {
+      "fileId": "dbe10fdaf60cb3f9",
+      "id": "74ffd013123d28ec",
+      "importanceScore": 26,
+      "kind": "class",
+      "line": 8,
+      "name": "OrderService",
+      "signature": "class OrderService"
+    },
+    {
+      "fileId": "dbe10fdaf60cb3f9",
+      "id": "f4fcbc553f2e0c2e",
+      "importanceScore": 26,
+      "kind": "property",
+      "line": 9,
+      "name": "log",
+      "signature": "log()"
+    },
+    {
+      "fileId": "dbe10fdaf60cb3f9",
+      "id": "7ced2d5edb905e08",
+      "importanceScore": 30,
+      "kind": "method",
+      "line": 11,
+      "name": "checkout",
+      "signature": "checkout(order: Order): boolean"
+    },
+    {
+      "fileId": "de1716d2030fd3db",
+      "id": "377dc23b7e5f34a4",
+      "importanceScore": 18,
+      "kind": "struct",
+      "line": 1,
+      "name": "Config",
+      "signature": "pub struct Config"
+    },
+    {
+      "fileId": "de1716d2030fd3db",
+      "id": "403ba7f2dc0973cb",
+      "importanceScore": 20,
+      "kind": "property",
+      "line": 2,
+      "name": "port",
+      "signature": "port()"
+    },
+    {
+      "fileId": "de1716d2030fd3db",
+      "id": "16e22c32ae45433f",
+      "importanceScore": 18,
+      "kind": "trait",
+      "line": 5,
+      "name": "Handler",
+      "signature": "pub trait Handler"
+    },
+    {
+      "fileId": "de1716d2030fd3db",
+      "id": "88cbad30afa11117",
+      "importanceScore": 20,
+      "kind": "method",
+      "line": 6,
+      "name": "handle",
+      "signature": "handle(self = self, input: &str): String"
+    },
+    {
+      "fileId": "de1716d2030fd3db",
+      "id": "09e810a4013dba16",
+      "importanceScore": 18,
+      "kind": "struct",
+      "line": 9,
+      "name": "Echo",
+      "signature": "pub struct Echo"
+    },
+    {
+      "fileId": "de1716d2030fd3db",
+      "id": "31f09b35bcd422c2",
+      "importanceScore": 20,
+      "kind": "method",
+      "line": 12,
+      "name": "handle",
+      "signature": "handle(self = self, input: &str): String"
+    },
+    {
+      "fileId": "de1716d2030fd3db",
+      "id": "e62106855f13cac9",
+      "importanceScore": 20,
+      "kind": "function",
+      "line": 17,
+      "name": "build",
+      "signature": "build(port: u16): Config"
+    },
+    {
+      "fileId": "e32bd0f6103caf96",
+      "id": "14dea7a92662f72d",
+      "importanceScore": 38,
+      "kind": "constant",
+      "line": 3,
+      "name": "fastify",
+      "signature": "fastify()"
+    },
+    {
+      "fileId": "e32bd0f6103caf96",
+      "id": "c02503d09cb9db63",
+      "importanceScore": 40,
+      "kind": "function",
+      "line": 9,
+      "name": "pong",
+      "signature": "pong()"
+    },
+    {
+      "fileId": "e32bd0f6103caf96",
+      "id": "e0882061b1eb348b",
+      "importanceScore": 40,
+      "kind": "function",
+      "line": 10,
+      "name": "placeOrder",
+      "signature": "placeOrder()"
+    },
+    {
+      "fileId": "e32bd0f6103caf96",
+      "id": "7ad6ebbc3833e036",
+      "importanceScore": 40,
+      "kind": "function",
+      "line": 11,
+      "name": "patchOrder",
+      "signature": "patchOrder()"
+    },
+    {
+      "fileId": "e4a56356571a88e9",
+      "id": "7bbaf743d9f09e55",
+      "importanceScore": 27,
+      "kind": "interface",
+      "line": 3,
+      "name": "PanelProps",
+      "signature": "interface PanelProps"
+    },
+    {
+      "fileId": "e4a56356571a88e9",
+      "id": "da35acd4540194d6",
+      "importanceScore": 27,
+      "kind": "constant",
+      "line": 8,
+      "name": "Panel",
+      "signature": "Panel({ title, onClose })"
+    },
+    {
+      "fileId": "f8c63ea9107f2290",
+      "id": "d2087de07a0df3e6",
+      "importanceScore": 15,
+      "kind": "constant",
+      "line": 1,
+      "name": "WITH_BOM",
+      "signature": "WITH_BOM()"
+    },
+    {
+      "fileId": "fc8d89e014891ad6",
+      "id": "91f7f0c18487ab79",
+      "importanceScore": 50,
+      "kind": "class",
+      "line": 4,
+      "name": "BaseService",
+      "signature": "abstract class BaseService<T>"
+    },
+    {
+      "fileId": "fc8d89e014891ad6",
+      "id": "153b82d5e0fa9e42",
+      "importanceScore": 50,
+      "kind": "property",
+      "line": 5,
+      "name": "items",
+      "signature": "items()"
+    },
+    {
+      "fileId": "fc8d89e014891ad6",
+      "id": "b8bdf35f88470a35",
+      "importanceScore": 52,
+      "kind": "method",
+      "line": 6,
+      "name": "load",
+      "signature": "load(source: string): Promise<void>"
+    },
+    {
+      "fileId": "fc8d89e014891ad6",
+      "id": "377a47bfdf03fc7c",
+      "importanceScore": 58,
+      "kind": "class",
+      "line": 9,
+      "name": "UserService",
+      "signature": "class UserService extends BaseService<User>"
+    },
+    {
+      "fileId": "fc8d89e014891ad6",
+      "id": "ba72243ed297f516",
+      "importanceScore": 50,
+      "kind": "property",
+      "line": 10,
+      "name": "log",
+      "signature": "log()"
+    },
+    {
+      "fileId": "fc8d89e014891ad6",
+      "id": "0fc4a7130649ec46",
+      "importanceScore": 52,
+      "kind": "method",
+      "line": 12,
+      "name": "load",
+      "signature": "load(source: string): Promise<void>"
+    },
+    {
+      "fileId": "fc8d89e014891ad6",
+      "id": "e414d8ed12c51e31",
+      "importanceScore": 52,
+      "kind": "method",
+      "line": 17,
+      "name": "find",
+      "signature": "find(id: string): User | undefined"
+    },
+    {
+      "fileId": "fd8a8c7cc6657562",
+      "id": "354583c9bde86e6e",
+      "importanceScore": 34,
+      "kind": "function",
+      "line": 1,
+      "name": "slugify",
+      "signature": "slugify(value: string): string"
+    },
+    {
+      "fileId": "fd8a8c7cc6657562",
+      "id": "6983e1a1b0eaa408",
+      "importanceScore": 32,
+      "kind": "constant",
+      "line": 5,
+      "name": "EMPTY",
+      "signature": "EMPTY()"
+    }
+  ],
+  "technicalConstraints": [
+    {
+      "description": "Modules should respect directory-level separation of concerns (services, controllers, repositories, etc.).",
+      "enforcement": "code-review",
+      "id": "tc-layered-architecture",
+      "pattern": "Layered Architecture"
+    },
+    {
+      "description": "File-level import cycles should be avoided to keep coupling low.",
+      "enforcement": "ci-check",
+      "id": "tc-no-circular-dependencies",
+      "pattern": "No Circular Dependencies"
+    }
+  ],
+  "workflowExecutionMap": [
+    {
+      "steps": [
+        {
+          "condition": null,
+          "order": 0,
+          "symbolId": "acce0c7b98ff26e7"
+        },
+        {
+          "condition": null,
+          "order": 1,
+          "symbolId": "5cb1a9d5e1ec9e92"
+        },
+        {
+          "condition": null,
+          "order": 2,
+          "symbolId": "9a0dc22d242ddfde"
+        }
+      ],
+      "workflowId": "wf-POST-/users"
+    }
+  ]
+}

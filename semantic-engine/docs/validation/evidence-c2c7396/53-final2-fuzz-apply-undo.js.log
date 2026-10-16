@@ -1,0 +1,4 @@
+=== CMD: node docs/validation/scripts/fuzz-apply-undo.js 1500 (final-2 tree) ===
+TIMESTAMP: 2026-09-21T22:37:14Z
+{"cycles":1500,"applied":1495,"skippedNoop":5,"byteExact":true,"elapsedMs":3317}
+EXIT_CODE:0

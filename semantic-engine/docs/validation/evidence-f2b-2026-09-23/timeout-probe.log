@@ -1,0 +1,286 @@
+web console
+[F-2b-timeout +140ms] ok the console serves its own page and assets 140ms api=+0 state=+0 429=+0 totalApi=0 total429=0
+  ok   the console serves its own page and assets
+[F-2b-timeout +141ms] ok static serving cannot escape the public directory 1ms api=+0 state=+0 429=+0 totalApi=0 total429=0
+  ok   static serving cannot escape the public directory
+[F-2b-timeout +143ms] ok the API refuses requests without the console token 2ms api=+1 state=+1 429=+0 totalApi=1 total429=0
+  ok   the API refuses requests without the console token
+[F-2b-timeout +161ms] ok the state endpoint describes the runtime 18ms api=+1 state=+1 429=+0 totalApi=2 total429=0
+  ok   the state endpoint describes the runtime
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one file, console renderer"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +368ms] ok a task streams events and produces an answer 207ms api=+3 state=+1 429=+0 totalApi=5 total429=0
+  ok   a task streams events and produces an answer
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "saw 2 user messages"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +472ms] ok a second task continues the same conversation 104ms api=+3 state=+2 429=+0 totalApi=8 total429=0
+  ok   a second task continues the same conversation
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +653ms] ok a tool graph reports its shape, its waves and who ran it 181ms api=+2 state=+0 429=+0 totalApi=10 total429=0
+  ok   a tool graph reports its shape, its waves and who ran it
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "read it"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +776ms] ok a heavy result is streamed as a preview and fetched in full 123ms api=+5 state=+0 429=+0 totalApi=15 total429=0
+  ok   a heavy result is streamed as a preview and fetched in full
+[F-2b-timeout +948ms] ok a loop is reported as an event, not only as a log line 172ms api=+2 state=+0 429=+0 totalApi=17 total429=0
+  ok   a loop is reported as an event, not only as a log line
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "written"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +1163ms] ok an approval is streamed and honoured when approved 215ms api=+8 state=+4 429=+0 totalApi=25 total429=0
+  ok   an approval is streamed and honoured when approved
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "could not write"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +1338ms] ok a denied approval stops the tool 175ms api=+7 state=+4 429=+0 totalApi=32 total429=0
+  ok   a denied approval stops the tool
+[F-2b-timeout +1354ms] ok the approval mode can be switched from the console 16ms api=+4 state=+1 429=+0 totalApi=36 total429=0
+  ok   the approval mode can be switched from the console
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "aggregated"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +1535ms] ok delegation is reported as a tree 181ms api=+3 state=+0 429=+0 totalApi=39 total429=0
+  ok   delegation is reported as a tree
+[F-2b-timeout +1644ms] ok every event reaches the console exactly once 109ms api=+4 state=+0 429=+0 totalApi=43 total429=0
+  ok   every event reaches the console exactly once
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "slow"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +1750ms] ok a second task is refused while one is running 106ms api=+5 state=+2 429=+0 totalApi=48 total429=0
+  ok   a second task is refused while one is running
+[F-2b-timeout +1752ms] ok an empty task is rejected 2ms api=+1 state=+0 429=+0 totalApi=49 total429=0
+  ok   an empty task is rejected
+[F-2b-timeout +1772ms] ok settings are listed with their source and can be changed live 20ms api=+4 state=+1 429=+0 totalApi=53 total429=0
+  ok   settings are listed with their source and can be changed live
+[F-2b-timeout +1776ms] ok an invalid or fixed setting is refused 4ms api=+2 state=+0 429=+0 totalApi=55 total429=0
+  ok   an invalid or fixed setting is refused
+[F-2b-timeout +1882ms] ok a settings change is streamed to every console 106ms api=+3 state=+0 429=+0 totalApi=58 total429=0
+  ok   a settings change is streamed to every console
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "there is one file"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +1989ms] ok a conversation is stored with its events and calls 107ms api=+6 state=+3 429=+0 totalApi=64 total429=0
+  ok   a conversation is stored with its events and calls
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "saw 2 user messages"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +2101ms] ok a stored conversation can be reopened and continued 112ms api=+10 state=+5 429=+0 totalApi=74 total429=0
+  ok   a stored conversation can be reopened and continued
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+[F-2b-timeout +2234ms] ok reasoning reaches a live console, not only the history 133ms api=+4 state=+1 429=+0 totalApi=78 total429=0
+  ok   reasoning reaches a live console, not only the history
+[F-2b-timeout +2789ms] ok the project file remembers this workspace's settings 555ms api=+1 state=+0 429=+0 totalApi=79 total429=0
+  ok   the project file remembers this workspace's settings
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[F-2b-timeout +3086ms] ok the console can keep cycling until the plan is done 297ms api=+12 state=+6 429=+0 totalApi=91 total429=0
+  ok   the console can keep cycling until the plan is done
+[F-2b-timeout +3091ms] ok statistics report what the runtime executed 5ms api=+1 state=+0 429=+0 totalApi=92 total429=0
+  ok   statistics report what the runtime executed
+
+discussion
+[F-2b-timeout +3092ms] ok the discussion endpoint lists the selectable personas 1ms api=+1 state=+0 429=+0 totalApi=93 total429=0
+  ok   the discussion endpoint lists the selectable personas
+[F-2b-timeout +3097ms] ok the discussion endpoint validates its request 5ms api=+3 state=+0 429=+0 totalApi=96 total429=0
+  ok   the discussion endpoint validates its request
+[F-2b-timeout +3237ms] ok a discussion runs, streams its rounds, and reports 140ms api=+5 state=+3 429=+0 totalApi=101 total429=0
+  ok   a discussion runs, streams its rounds, and reports
+
+28/28 passed
+[F-2b-timeout +3239ms] summary api=101 state=35 events=10 tasks=15 clear=7 sessions=5 429=0 other={"/api/calls/main_agent%7Cgraph_3%7Cread_big":1,"/api/calls":1,"/api/calls/nope":1,"/api/approvals/approval_1_1790115098298":1,"/api/approvals/approval_1_1790115098454":1,"/api/approval-mode":4,"/api/settings":13,"/api/calls/main_agent%7Cgraph_10%7Ccall_1":1,"/api/stats":1,"/api/discussion/personas":1,"/api/discussion":4} tests=28

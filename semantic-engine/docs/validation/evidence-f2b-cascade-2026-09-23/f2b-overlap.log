@@ -1,0 +1,25 @@
+[Overlap +168ms] POST /api/tasks -> 202
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "overlap answer"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+[Overlap +209ms] status=done at +209ms; gitReport present? false
+[Overlap +215ms] POST /api/clear -> 200 (expected 200 if overlap allowed)
+[Overlap +225ms] after clear: status=idle messages=0 events=1
+[Overlap +3737ms] after git window: messages=1 gitMsgs=1 events=4 gitEvents=1
+[Overlap +3737ms] POLLUTION: git-report message content="0 files changed, 0 new files, 0 files removed" branch=arena/01a0cb47-semantic-engine-structured-ai
+[Overlap +3737ms] POLLUTION: git:report event text="0 files changed, 0 new files, 0 files removed"
+[Overlap +3737ms] RESULT: OVERLAP HARMFUL (new session polluted by old finally)
+OVERLAP_VERDICT polluted=true doneAtMs=209 gitDelayMs=2000

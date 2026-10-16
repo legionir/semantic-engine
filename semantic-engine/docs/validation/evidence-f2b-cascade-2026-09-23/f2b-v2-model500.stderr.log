@@ -1,0 +1,1714 @@
+[F2bV2 +0ms] armed limitOverride=none modelDelay=500ms gitDelay=0ms
+[F2bV2 +3ms] RateLimiter patched via /home/user/semantic-engine-structured-ai/structured-ai/web/server/Middleware.js
+[F2bV2 +128ms] ok #1 the console serves its own page and assets 128ms api=+0 state=+0 429=+0 totalApi=0 total429=0
+[F2bV2 +129ms] ok #2 static serving cannot escape the public directory 1ms api=+0 state=+0 429=+0 totalApi=0 total429=0
+[F2bV2 +131ms] 401 /api/state totalApi=1
+[F2bV2 +132ms] state-poll -> ERROR 401 console authentication required
+[F2bV2 +132ms] ok #3 the API refuses requests without the console token 3ms api=+1 state=+1 429=+0 totalApi=1 total429=0
+[F2bV2 +148ms] state-poll -> status=idle pending=0 gitReport=false
+[F2bV2 +149ms] ok #4 the state endpoint describes the runtime 17ms api=+1 state=+1 429=+0 totalApi=2 total429=0
+[F2bV2 +1309ms] git launch #1
+[F2bV2 +1330ms] git completion #1 dur=21ms (+delay 0ms)
+[F2bV2 +1390ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +1395ms] ok #5 a task streams events and produces an answer 1246ms api=+3 state=+1 429=+0 totalApi=5 total429=0
+[F2bV2 +1450ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1516ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1580ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1642ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1706ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1769ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1835ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1898ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +1983ms] git launch #2
+[F2bV2 +1988ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +2001ms] git completion #2 dur=18ms (+delay 0ms)
+[F2bV2 +2052ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +2054ms] ok #6 a second task continues the same conversation 659ms api=+11 state=+10 429=+0 totalApi=16 total429=0
+[F2bV2 +3181ms] git launch #3
+[F2bV2 +3194ms] git completion #3 dur=13ms (+delay 0ms)
+[F2bV2 +3244ms] ok #7 a tool graph reports its shape, its waves and who ran it 1189ms api=+2 state=+0 429=+0 totalApi=18 total429=0
+[F2bV2 +4357ms] git launch #4
+[F2bV2 +4368ms] git completion #4 dur=11ms (+delay 0ms)
+[F2bV2 +4378ms] 404 /api/calls/nope totalApi=23
+[F2bV2 +4378ms] ok #8 a heavy result is streamed as a preview and fetched in full 1135ms api=+5 state=+0 429=+0 totalApi=23 total429=0
+[F2bV2 +6538ms] git launch #5
+[F2bV2 +6550ms] git completion #5 dur=12ms (+delay 0ms)
+[F2bV2 +6592ms] ok #9 a loop is reported as an event, not only as a log line 2214ms api=+2 state=+0 429=+0 totalApi=25 total429=0
+[F2bV2 +6711ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +6773ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +6832ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +6890ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +6949ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7009ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7069ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7129ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7191ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7250ms] state-poll -> status=running pending=1 gitReport=false
+[F2bV2 +7261ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7318ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7376ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7435ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7494ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7552ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7611ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7669ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7730ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +7785ms] git launch #6
+[F2bV2 +7796ms] state-poll -> status=done pending=0 gitReport=false
+[F2bV2 +7798ms] ok #10 an approval is streamed and honoured when approved 1206ms api=+24 state=+20 429=+0 totalApi=49 total429=0
+[F2bV2 +7803ms] git completion #6 dur=18ms (+delay 0ms)
+[F2bV2 +7841ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +7899ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +7958ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8021ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8081ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8139ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8197ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8254ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8312ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8370ms] state-poll -> status=running pending=1 gitReport=true
+[F2bV2 +8386ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8444ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8501ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8559ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8617ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8675ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8733ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8790ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8849ms] state-poll -> status=running pending=0 gitReport=true
+[F2bV2 +8899ms] git launch #7
+[F2bV2 +8916ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +8917ms] ok #11 a denied approval stops the tool 1119ms api=+23 state=+20 429=+0 totalApi=72 total429=0
+[F2bV2 +8918ms] git completion #7 dur=19ms (+delay 0ms)
+[F2bV2 +8930ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +8933ms] 400 /api/approval-mode totalApi=75
+[F2bV2 +8935ms] ok #12 the approval mode can be switched from the console 18ms api=+4 state=+1 429=+0 totalApi=76 total429=0
+[F2bV2 +9012ms] FAIL #13 delegation is reported as a tree 77ms api=+3 state=+0 429=+0 totalApi=79 total429=0
+[F2bV2 +9068ms] 409 /api/clear total409=1 totalApi=83 testsDone=13
+[F2bV2 +10586ms] git launch #8
+[F2bV2 +10602ms] git completion #8 dur=16ms (+delay 0ms)
+[F2bV2 +17085ms] FAIL #14 every event reaches the console exactly once 8073ms api=+4 state=+0 429=+0 totalApi=83 total429=0
+[F2bV2 +17126ms] 409 /api/tasks total409=2 totalApi=86 testsDone=14
+[F2bV2 +17126ms] admission /api/tasks -> 409
+[F2bV2 +17141ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17200ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17258ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17316ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17375ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17437ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17497ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17555ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17613ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17657ms] git launch #9
+[F2bV2 +17671ms] state-poll -> status=done pending=0 gitReport=false
+[F2bV2 +17672ms] ok #15 a second task is refused while one is running 587ms api=+13 state=+10 429=+0 totalApi=96 total429=0
+[F2bV2 +17673ms] git completion #9 dur=16ms (+delay 0ms)
+[F2bV2 +17676ms] 400 /api/tasks totalApi=97
+[F2bV2 +17676ms] admission /api/tasks -> 400
+[F2bV2 +17676ms] ok #16 an empty task is rejected 4ms api=+1 state=+0 429=+0 totalApi=97 total429=0
+[F2bV2 +17688ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +17692ms] ok #17 settings are listed with their source and can be changed live 16ms api=+4 state=+1 429=+0 totalApi=101 total429=0
+[F2bV2 +17695ms] 400 /api/settings totalApi=102
+[F2bV2 +17697ms] 400 /api/settings totalApi=103
+[F2bV2 +17697ms] ok #18 an invalid or fixed setting is refused 5ms api=+2 state=+0 429=+0 totalApi=103 total429=0
+[F2bV2 +17805ms] ok #19 a settings change is streamed to every console 108ms api=+3 state=+0 429=+0 totalApi=106 total429=0
+[F2bV2 +17854ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17913ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +17972ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18032ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18092ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18155ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18216ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18274ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18333ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18392ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18450ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18509ms] state-poll -> status=running pending=0 gitReport=false
+[F2bV2 +18561ms] LIMITER-DENY count=121 limit=120 resetIn=41569ms totalApi=121 testsDone=19
+[F2bV2 +18562ms] 429 /api/state total429=1 totalApi=121 testsDone=19
+[F2bV2 +18562ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18613ms] LIMITER-DENY count=122 limit=120 resetIn=41517ms totalApi=122 testsDone=19
+[F2bV2 +18614ms] 429 /api/state total429=2 totalApi=122 testsDone=19
+[F2bV2 +18614ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18665ms] LIMITER-DENY count=123 limit=120 resetIn=41465ms totalApi=123 testsDone=19
+[F2bV2 +18665ms] 429 /api/state total429=3 totalApi=123 testsDone=19
+[F2bV2 +18666ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18717ms] LIMITER-DENY count=124 limit=120 resetIn=41413ms totalApi=124 testsDone=19
+[F2bV2 +18717ms] 429 /api/state total429=4 totalApi=124 testsDone=19
+[F2bV2 +18718ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18769ms] LIMITER-DENY count=125 limit=120 resetIn=41361ms totalApi=125 testsDone=19
+[F2bV2 +18770ms] 429 /api/state total429=5 totalApi=125 testsDone=19
+[F2bV2 +18770ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18821ms] LIMITER-DENY count=126 limit=120 resetIn=41309ms totalApi=126 testsDone=19
+[F2bV2 +18822ms] 429 /api/state total429=6 totalApi=126 testsDone=19
+[F2bV2 +18822ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18885ms] git launch #10
+[F2bV2 +18888ms] LIMITER-DENY count=127 limit=120 resetIn=41242ms totalApi=127 testsDone=19
+[F2bV2 +18889ms] 429 /api/state total429=7 totalApi=127 testsDone=19
+[F2bV2 +18889ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18895ms] git completion #10 dur=10ms (+delay 0ms)
+[F2bV2 +18941ms] LIMITER-DENY count=128 limit=120 resetIn=41189ms totalApi=128 testsDone=19
+[F2bV2 +18942ms] 429 /api/state total429=8 totalApi=128 testsDone=19
+[F2bV2 +18942ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +18993ms] LIMITER-DENY count=129 limit=120 resetIn=41137ms totalApi=129 testsDone=19
+[F2bV2 +18994ms] 429 /api/state total429=9 totalApi=129 testsDone=19
+[F2bV2 +18994ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19045ms] LIMITER-DENY count=130 limit=120 resetIn=41085ms totalApi=130 testsDone=19
+[F2bV2 +19046ms] 429 /api/state total429=10 totalApi=130 testsDone=19
+[F2bV2 +19046ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19097ms] LIMITER-DENY count=131 limit=120 resetIn=41033ms totalApi=131 testsDone=19
+[F2bV2 +19097ms] 429 /api/state total429=11 totalApi=131 testsDone=19
+[F2bV2 +19098ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19149ms] LIMITER-DENY count=132 limit=120 resetIn=40981ms totalApi=132 testsDone=19
+[F2bV2 +19149ms] 429 /api/state total429=12 totalApi=132 testsDone=19
+[F2bV2 +19150ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19201ms] LIMITER-DENY count=133 limit=120 resetIn=40929ms totalApi=133 testsDone=19
+[F2bV2 +19201ms] 429 /api/state total429=13 totalApi=133 testsDone=19
+[F2bV2 +19202ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19252ms] LIMITER-DENY count=134 limit=120 resetIn=40878ms totalApi=134 testsDone=19
+[F2bV2 +19253ms] 429 /api/state total429=14 totalApi=134 testsDone=19
+[F2bV2 +19253ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19304ms] LIMITER-DENY count=135 limit=120 resetIn=40826ms totalApi=135 testsDone=19
+[F2bV2 +19305ms] 429 /api/state total429=15 totalApi=135 testsDone=19
+[F2bV2 +19305ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19356ms] LIMITER-DENY count=136 limit=120 resetIn=40774ms totalApi=136 testsDone=19
+[F2bV2 +19356ms] 429 /api/state total429=16 totalApi=136 testsDone=19
+[F2bV2 +19356ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19406ms] LIMITER-DENY count=137 limit=120 resetIn=40724ms totalApi=137 testsDone=19
+[F2bV2 +19407ms] 429 /api/state total429=17 totalApi=137 testsDone=19
+[F2bV2 +19407ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19458ms] LIMITER-DENY count=138 limit=120 resetIn=40672ms totalApi=138 testsDone=19
+[F2bV2 +19459ms] 429 /api/state total429=18 totalApi=138 testsDone=19
+[F2bV2 +19459ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19510ms] LIMITER-DENY count=139 limit=120 resetIn=40620ms totalApi=139 testsDone=19
+[F2bV2 +19511ms] 429 /api/state total429=19 totalApi=139 testsDone=19
+[F2bV2 +19512ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19563ms] LIMITER-DENY count=140 limit=120 resetIn=40567ms totalApi=140 testsDone=19
+[F2bV2 +19563ms] 429 /api/state total429=20 totalApi=140 testsDone=19
+[F2bV2 +19563ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19613ms] LIMITER-DENY count=141 limit=120 resetIn=40517ms totalApi=141 testsDone=19
+[F2bV2 +19614ms] 429 /api/state total429=21 totalApi=141 testsDone=19
+[F2bV2 +19614ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19665ms] LIMITER-DENY count=142 limit=120 resetIn=40465ms totalApi=142 testsDone=19
+[F2bV2 +19666ms] 429 /api/state total429=22 totalApi=142 testsDone=19
+[F2bV2 +19666ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19717ms] LIMITER-DENY count=143 limit=120 resetIn=40413ms totalApi=143 testsDone=19
+[F2bV2 +19718ms] 429 /api/state total429=23 totalApi=143 testsDone=19
+[F2bV2 +19718ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19769ms] LIMITER-DENY count=144 limit=120 resetIn=40361ms totalApi=144 testsDone=19
+[F2bV2 +19769ms] 429 /api/state total429=24 totalApi=144 testsDone=19
+[F2bV2 +19770ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19821ms] LIMITER-DENY count=145 limit=120 resetIn=40309ms totalApi=145 testsDone=19
+[F2bV2 +19822ms] 429 /api/state total429=25 totalApi=145 testsDone=19
+[F2bV2 +19822ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19873ms] LIMITER-DENY count=146 limit=120 resetIn=40257ms totalApi=146 testsDone=19
+[F2bV2 +19874ms] 429 /api/state total429=26 totalApi=146 testsDone=19
+[F2bV2 +19874ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19925ms] LIMITER-DENY count=147 limit=120 resetIn=40205ms totalApi=147 testsDone=19
+[F2bV2 +19925ms] 429 /api/state total429=27 totalApi=147 testsDone=19
+[F2bV2 +19926ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +19977ms] LIMITER-DENY count=148 limit=120 resetIn=40153ms totalApi=148 testsDone=19
+[F2bV2 +19977ms] 429 /api/state total429=28 totalApi=148 testsDone=19
+[F2bV2 +19977ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20027ms] LIMITER-DENY count=149 limit=120 resetIn=40103ms totalApi=149 testsDone=19
+[F2bV2 +20028ms] 429 /api/state total429=29 totalApi=149 testsDone=19
+[F2bV2 +20028ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20079ms] LIMITER-DENY count=150 limit=120 resetIn=40051ms totalApi=150 testsDone=19
+[F2bV2 +20080ms] 429 /api/state total429=30 totalApi=150 testsDone=19
+[F2bV2 +20080ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20131ms] LIMITER-DENY count=151 limit=120 resetIn=39999ms totalApi=151 testsDone=19
+[F2bV2 +20132ms] 429 /api/state total429=31 totalApi=151 testsDone=19
+[F2bV2 +20133ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20184ms] LIMITER-DENY count=152 limit=120 resetIn=39946ms totalApi=152 testsDone=19
+[F2bV2 +20184ms] 429 /api/state total429=32 totalApi=152 testsDone=19
+[F2bV2 +20184ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20236ms] LIMITER-DENY count=153 limit=120 resetIn=39894ms totalApi=153 testsDone=19
+[F2bV2 +20236ms] 429 /api/state total429=33 totalApi=153 testsDone=19
+[F2bV2 +20236ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20286ms] LIMITER-DENY count=154 limit=120 resetIn=39844ms totalApi=154 testsDone=19
+[F2bV2 +20287ms] 429 /api/state total429=34 totalApi=154 testsDone=19
+[F2bV2 +20287ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20337ms] LIMITER-DENY count=155 limit=120 resetIn=39793ms totalApi=155 testsDone=19
+[F2bV2 +20338ms] 429 /api/state total429=35 totalApi=155 testsDone=19
+[F2bV2 +20338ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20389ms] LIMITER-DENY count=156 limit=120 resetIn=39741ms totalApi=156 testsDone=19
+[F2bV2 +20390ms] 429 /api/state total429=36 totalApi=156 testsDone=19
+[F2bV2 +20390ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20441ms] LIMITER-DENY count=157 limit=120 resetIn=39689ms totalApi=157 testsDone=19
+[F2bV2 +20441ms] 429 /api/state total429=37 totalApi=157 testsDone=19
+[F2bV2 +20442ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20493ms] LIMITER-DENY count=158 limit=120 resetIn=39638ms totalApi=158 testsDone=19
+[F2bV2 +20493ms] 429 /api/state total429=38 totalApi=158 testsDone=19
+[F2bV2 +20493ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20543ms] LIMITER-DENY count=159 limit=120 resetIn=39587ms totalApi=159 testsDone=19
+[F2bV2 +20544ms] 429 /api/state total429=39 totalApi=159 testsDone=19
+[F2bV2 +20544ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20595ms] LIMITER-DENY count=160 limit=120 resetIn=39535ms totalApi=160 testsDone=19
+[F2bV2 +20596ms] 429 /api/state total429=40 totalApi=160 testsDone=19
+[F2bV2 +20596ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20647ms] LIMITER-DENY count=161 limit=120 resetIn=39483ms totalApi=161 testsDone=19
+[F2bV2 +20648ms] 429 /api/state total429=41 totalApi=161 testsDone=19
+[F2bV2 +20648ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20699ms] LIMITER-DENY count=162 limit=120 resetIn=39431ms totalApi=162 testsDone=19
+[F2bV2 +20699ms] 429 /api/state total429=42 totalApi=162 testsDone=19
+[F2bV2 +20700ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20750ms] LIMITER-DENY count=163 limit=120 resetIn=39380ms totalApi=163 testsDone=19
+[F2bV2 +20751ms] 429 /api/state total429=43 totalApi=163 testsDone=19
+[F2bV2 +20751ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20802ms] LIMITER-DENY count=164 limit=120 resetIn=39328ms totalApi=164 testsDone=19
+[F2bV2 +20803ms] 429 /api/state total429=44 totalApi=164 testsDone=19
+[F2bV2 +20803ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20853ms] LIMITER-DENY count=165 limit=120 resetIn=39277ms totalApi=165 testsDone=19
+[F2bV2 +20854ms] 429 /api/state total429=45 totalApi=165 testsDone=19
+[F2bV2 +20854ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20905ms] LIMITER-DENY count=166 limit=120 resetIn=39225ms totalApi=166 testsDone=19
+[F2bV2 +20905ms] 429 /api/state total429=46 totalApi=166 testsDone=19
+[F2bV2 +20906ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +20957ms] LIMITER-DENY count=167 limit=120 resetIn=39173ms totalApi=167 testsDone=19
+[F2bV2 +20957ms] 429 /api/state total429=47 totalApi=167 testsDone=19
+[F2bV2 +20957ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21008ms] LIMITER-DENY count=168 limit=120 resetIn=39122ms totalApi=168 testsDone=19
+[F2bV2 +21009ms] 429 /api/state total429=48 totalApi=168 testsDone=19
+[F2bV2 +21009ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21060ms] LIMITER-DENY count=169 limit=120 resetIn=39070ms totalApi=169 testsDone=19
+[F2bV2 +21061ms] 429 /api/state total429=49 totalApi=169 testsDone=19
+[F2bV2 +21061ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21112ms] LIMITER-DENY count=170 limit=120 resetIn=39018ms totalApi=170 testsDone=19
+[F2bV2 +21113ms] 429 /api/state total429=50 totalApi=170 testsDone=19
+[F2bV2 +21113ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21164ms] LIMITER-DENY count=171 limit=120 resetIn=38966ms totalApi=171 testsDone=19
+[F2bV2 +21164ms] 429 /api/state total429=51 totalApi=171 testsDone=19
+[F2bV2 +21165ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21216ms] LIMITER-DENY count=172 limit=120 resetIn=38914ms totalApi=172 testsDone=19
+[F2bV2 +21217ms] 429 /api/state total429=52 totalApi=172 testsDone=19
+[F2bV2 +21217ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21268ms] LIMITER-DENY count=173 limit=120 resetIn=38862ms totalApi=173 testsDone=19
+[F2bV2 +21269ms] 429 /api/state total429=53 totalApi=173 testsDone=19
+[F2bV2 +21269ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21320ms] LIMITER-DENY count=174 limit=120 resetIn=38810ms totalApi=174 testsDone=19
+[F2bV2 +21321ms] 429 /api/state total429=54 totalApi=174 testsDone=19
+[F2bV2 +21321ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21372ms] LIMITER-DENY count=175 limit=120 resetIn=38758ms totalApi=175 testsDone=19
+[F2bV2 +21372ms] 429 /api/state total429=55 totalApi=175 testsDone=19
+[F2bV2 +21372ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21422ms] LIMITER-DENY count=176 limit=120 resetIn=38708ms totalApi=176 testsDone=19
+[F2bV2 +21423ms] 429 /api/state total429=56 totalApi=176 testsDone=19
+[F2bV2 +21423ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21474ms] LIMITER-DENY count=177 limit=120 resetIn=38656ms totalApi=177 testsDone=19
+[F2bV2 +21475ms] 429 /api/state total429=57 totalApi=177 testsDone=19
+[F2bV2 +21475ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21526ms] LIMITER-DENY count=178 limit=120 resetIn=38604ms totalApi=178 testsDone=19
+[F2bV2 +21526ms] 429 /api/state total429=58 totalApi=178 testsDone=19
+[F2bV2 +21526ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21577ms] LIMITER-DENY count=179 limit=120 resetIn=38553ms totalApi=179 testsDone=19
+[F2bV2 +21578ms] 429 /api/state total429=59 totalApi=179 testsDone=19
+[F2bV2 +21578ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21629ms] LIMITER-DENY count=180 limit=120 resetIn=38501ms totalApi=180 testsDone=19
+[F2bV2 +21630ms] 429 /api/state total429=60 totalApi=180 testsDone=19
+[F2bV2 +21630ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21681ms] LIMITER-DENY count=181 limit=120 resetIn=38449ms totalApi=181 testsDone=19
+[F2bV2 +21681ms] 429 /api/state total429=61 totalApi=181 testsDone=19
+[F2bV2 +21682ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21732ms] LIMITER-DENY count=182 limit=120 resetIn=38398ms totalApi=182 testsDone=19
+[F2bV2 +21733ms] 429 /api/state total429=62 totalApi=182 testsDone=19
+[F2bV2 +21733ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21784ms] LIMITER-DENY count=183 limit=120 resetIn=38346ms totalApi=183 testsDone=19
+[F2bV2 +21785ms] 429 /api/state total429=63 totalApi=183 testsDone=19
+[F2bV2 +21785ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21836ms] LIMITER-DENY count=184 limit=120 resetIn=38294ms totalApi=184 testsDone=19
+[F2bV2 +21837ms] 429 /api/state total429=64 totalApi=184 testsDone=19
+[F2bV2 +21837ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21888ms] LIMITER-DENY count=185 limit=120 resetIn=38242ms totalApi=185 testsDone=19
+[F2bV2 +21888ms] 429 /api/state total429=65 totalApi=185 testsDone=19
+[F2bV2 +21888ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21939ms] LIMITER-DENY count=186 limit=120 resetIn=38191ms totalApi=186 testsDone=19
+[F2bV2 +21940ms] 429 /api/state total429=66 totalApi=186 testsDone=19
+[F2bV2 +21940ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +21991ms] LIMITER-DENY count=187 limit=120 resetIn=38139ms totalApi=187 testsDone=19
+[F2bV2 +21991ms] 429 /api/state total429=67 totalApi=187 testsDone=19
+[F2bV2 +21992ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22042ms] LIMITER-DENY count=188 limit=120 resetIn=38088ms totalApi=188 testsDone=19
+[F2bV2 +22043ms] 429 /api/state total429=68 totalApi=188 testsDone=19
+[F2bV2 +22043ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22094ms] LIMITER-DENY count=189 limit=120 resetIn=38036ms totalApi=189 testsDone=19
+[F2bV2 +22095ms] 429 /api/state total429=69 totalApi=189 testsDone=19
+[F2bV2 +22095ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22146ms] LIMITER-DENY count=190 limit=120 resetIn=37984ms totalApi=190 testsDone=19
+[F2bV2 +22146ms] 429 /api/state total429=70 totalApi=190 testsDone=19
+[F2bV2 +22147ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22198ms] LIMITER-DENY count=191 limit=120 resetIn=37932ms totalApi=191 testsDone=19
+[F2bV2 +22198ms] 429 /api/state total429=71 totalApi=191 testsDone=19
+[F2bV2 +22198ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22248ms] LIMITER-DENY count=192 limit=120 resetIn=37882ms totalApi=192 testsDone=19
+[F2bV2 +22249ms] 429 /api/state total429=72 totalApi=192 testsDone=19
+[F2bV2 +22249ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22300ms] LIMITER-DENY count=193 limit=120 resetIn=37830ms totalApi=193 testsDone=19
+[F2bV2 +22301ms] 429 /api/state total429=73 totalApi=193 testsDone=19
+[F2bV2 +22301ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22352ms] LIMITER-DENY count=194 limit=120 resetIn=37778ms totalApi=194 testsDone=19
+[F2bV2 +22352ms] 429 /api/state total429=74 totalApi=194 testsDone=19
+[F2bV2 +22353ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22404ms] LIMITER-DENY count=195 limit=120 resetIn=37726ms totalApi=195 testsDone=19
+[F2bV2 +22404ms] 429 /api/state total429=75 totalApi=195 testsDone=19
+[F2bV2 +22404ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22454ms] LIMITER-DENY count=196 limit=120 resetIn=37676ms totalApi=196 testsDone=19
+[F2bV2 +22455ms] 429 /api/state total429=76 totalApi=196 testsDone=19
+[F2bV2 +22455ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22506ms] LIMITER-DENY count=197 limit=120 resetIn=37624ms totalApi=197 testsDone=19
+[F2bV2 +22507ms] 429 /api/state total429=77 totalApi=197 testsDone=19
+[F2bV2 +22507ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22558ms] LIMITER-DENY count=198 limit=120 resetIn=37572ms totalApi=198 testsDone=19
+[F2bV2 +22558ms] 429 /api/state total429=78 totalApi=198 testsDone=19
+[F2bV2 +22559ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22610ms] LIMITER-DENY count=199 limit=120 resetIn=37520ms totalApi=199 testsDone=19
+[F2bV2 +22610ms] 429 /api/state total429=79 totalApi=199 testsDone=19
+[F2bV2 +22610ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22660ms] LIMITER-DENY count=200 limit=120 resetIn=37470ms totalApi=200 testsDone=19
+[F2bV2 +22661ms] 429 /api/state total429=80 totalApi=200 testsDone=19
+[F2bV2 +22661ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22712ms] LIMITER-DENY count=201 limit=120 resetIn=37418ms totalApi=201 testsDone=19
+[F2bV2 +22713ms] 429 /api/state total429=81 totalApi=201 testsDone=19
+[F2bV2 +22713ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22764ms] LIMITER-DENY count=202 limit=120 resetIn=37366ms totalApi=202 testsDone=19
+[F2bV2 +22765ms] 429 /api/state total429=82 totalApi=202 testsDone=19
+[F2bV2 +22765ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22816ms] LIMITER-DENY count=203 limit=120 resetIn=37314ms totalApi=203 testsDone=19
+[F2bV2 +22817ms] 429 /api/state total429=83 totalApi=203 testsDone=19
+[F2bV2 +22817ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22868ms] LIMITER-DENY count=204 limit=120 resetIn=37262ms totalApi=204 testsDone=19
+[F2bV2 +22869ms] 429 /api/state total429=84 totalApi=204 testsDone=19
+[F2bV2 +22869ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22920ms] LIMITER-DENY count=205 limit=120 resetIn=37210ms totalApi=205 testsDone=19
+[F2bV2 +22921ms] 429 /api/state total429=85 totalApi=205 testsDone=19
+[F2bV2 +22921ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +22972ms] LIMITER-DENY count=206 limit=120 resetIn=37158ms totalApi=206 testsDone=19
+[F2bV2 +22973ms] 429 /api/state total429=86 totalApi=206 testsDone=19
+[F2bV2 +22973ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23024ms] LIMITER-DENY count=207 limit=120 resetIn=37106ms totalApi=207 testsDone=19
+[F2bV2 +23025ms] 429 /api/state total429=87 totalApi=207 testsDone=19
+[F2bV2 +23025ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23076ms] LIMITER-DENY count=208 limit=120 resetIn=37054ms totalApi=208 testsDone=19
+[F2bV2 +23076ms] 429 /api/state total429=88 totalApi=208 testsDone=19
+[F2bV2 +23077ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23128ms] LIMITER-DENY count=209 limit=120 resetIn=37002ms totalApi=209 testsDone=19
+[F2bV2 +23128ms] 429 /api/state total429=89 totalApi=209 testsDone=19
+[F2bV2 +23129ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23180ms] LIMITER-DENY count=210 limit=120 resetIn=36950ms totalApi=210 testsDone=19
+[F2bV2 +23180ms] 429 /api/state total429=90 totalApi=210 testsDone=19
+[F2bV2 +23181ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23232ms] LIMITER-DENY count=211 limit=120 resetIn=36898ms totalApi=211 testsDone=19
+[F2bV2 +23232ms] 429 /api/state total429=91 totalApi=211 testsDone=19
+[F2bV2 +23233ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23284ms] LIMITER-DENY count=212 limit=120 resetIn=36846ms totalApi=212 testsDone=19
+[F2bV2 +23284ms] 429 /api/state total429=92 totalApi=212 testsDone=19
+[F2bV2 +23284ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23335ms] LIMITER-DENY count=213 limit=120 resetIn=36795ms totalApi=213 testsDone=19
+[F2bV2 +23336ms] 429 /api/state total429=93 totalApi=213 testsDone=19
+[F2bV2 +23336ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23387ms] LIMITER-DENY count=214 limit=120 resetIn=36743ms totalApi=214 testsDone=19
+[F2bV2 +23387ms] 429 /api/state total429=94 totalApi=214 testsDone=19
+[F2bV2 +23388ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23439ms] LIMITER-DENY count=215 limit=120 resetIn=36691ms totalApi=215 testsDone=19
+[F2bV2 +23439ms] 429 /api/state total429=95 totalApi=215 testsDone=19
+[F2bV2 +23440ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23491ms] LIMITER-DENY count=216 limit=120 resetIn=36639ms totalApi=216 testsDone=19
+[F2bV2 +23491ms] 429 /api/state total429=96 totalApi=216 testsDone=19
+[F2bV2 +23491ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23541ms] LIMITER-DENY count=217 limit=120 resetIn=36589ms totalApi=217 testsDone=19
+[F2bV2 +23542ms] 429 /api/state total429=97 totalApi=217 testsDone=19
+[F2bV2 +23542ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23593ms] LIMITER-DENY count=218 limit=120 resetIn=36537ms totalApi=218 testsDone=19
+[F2bV2 +23594ms] 429 /api/state total429=98 totalApi=218 testsDone=19
+[F2bV2 +23594ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23644ms] LIMITER-DENY count=219 limit=120 resetIn=36486ms totalApi=219 testsDone=19
+[F2bV2 +23645ms] 429 /api/state total429=99 totalApi=219 testsDone=19
+[F2bV2 +23645ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23696ms] LIMITER-DENY count=220 limit=120 resetIn=36434ms totalApi=220 testsDone=19
+[F2bV2 +23697ms] 429 /api/state total429=100 totalApi=220 testsDone=19
+[F2bV2 +23697ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23748ms] LIMITER-DENY count=221 limit=120 resetIn=36382ms totalApi=221 testsDone=19
+[F2bV2 +23749ms] 429 /api/state total429=101 totalApi=221 testsDone=19
+[F2bV2 +23749ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23800ms] LIMITER-DENY count=222 limit=120 resetIn=36330ms totalApi=222 testsDone=19
+[F2bV2 +23800ms] 429 /api/state total429=102 totalApi=222 testsDone=19
+[F2bV2 +23801ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23852ms] LIMITER-DENY count=223 limit=120 resetIn=36278ms totalApi=223 testsDone=19
+[F2bV2 +23852ms] 429 /api/state total429=103 totalApi=223 testsDone=19
+[F2bV2 +23853ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23904ms] LIMITER-DENY count=224 limit=120 resetIn=36226ms totalApi=224 testsDone=19
+[F2bV2 +23904ms] 429 /api/state total429=104 totalApi=224 testsDone=19
+[F2bV2 +23904ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +23955ms] LIMITER-DENY count=225 limit=120 resetIn=36175ms totalApi=225 testsDone=19
+[F2bV2 +23955ms] 429 /api/state total429=105 totalApi=225 testsDone=19
+[F2bV2 +23955ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24006ms] LIMITER-DENY count=226 limit=120 resetIn=36124ms totalApi=226 testsDone=19
+[F2bV2 +24007ms] 429 /api/state total429=106 totalApi=226 testsDone=19
+[F2bV2 +24007ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24058ms] LIMITER-DENY count=227 limit=120 resetIn=36072ms totalApi=227 testsDone=19
+[F2bV2 +24058ms] 429 /api/state total429=107 totalApi=227 testsDone=19
+[F2bV2 +24059ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24109ms] LIMITER-DENY count=228 limit=120 resetIn=36021ms totalApi=228 testsDone=19
+[F2bV2 +24110ms] 429 /api/state total429=108 totalApi=228 testsDone=19
+[F2bV2 +24110ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24160ms] LIMITER-DENY count=229 limit=120 resetIn=35970ms totalApi=229 testsDone=19
+[F2bV2 +24161ms] 429 /api/state total429=109 totalApi=229 testsDone=19
+[F2bV2 +24161ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24211ms] LIMITER-DENY count=230 limit=120 resetIn=35919ms totalApi=230 testsDone=19
+[F2bV2 +24212ms] 429 /api/state total429=110 totalApi=230 testsDone=19
+[F2bV2 +24212ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24263ms] LIMITER-DENY count=231 limit=120 resetIn=35867ms totalApi=231 testsDone=19
+[F2bV2 +24264ms] 429 /api/state total429=111 totalApi=231 testsDone=19
+[F2bV2 +24264ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24315ms] LIMITER-DENY count=232 limit=120 resetIn=35815ms totalApi=232 testsDone=19
+[F2bV2 +24315ms] 429 /api/state total429=112 totalApi=232 testsDone=19
+[F2bV2 +24316ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24367ms] LIMITER-DENY count=233 limit=120 resetIn=35763ms totalApi=233 testsDone=19
+[F2bV2 +24367ms] 429 /api/state total429=113 totalApi=233 testsDone=19
+[F2bV2 +24368ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24419ms] LIMITER-DENY count=234 limit=120 resetIn=35711ms totalApi=234 testsDone=19
+[F2bV2 +24419ms] 429 /api/state total429=114 totalApi=234 testsDone=19
+[F2bV2 +24419ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24469ms] LIMITER-DENY count=235 limit=120 resetIn=35661ms totalApi=235 testsDone=19
+[F2bV2 +24470ms] 429 /api/state total429=115 totalApi=235 testsDone=19
+[F2bV2 +24470ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24521ms] LIMITER-DENY count=236 limit=120 resetIn=35609ms totalApi=236 testsDone=19
+[F2bV2 +24522ms] 429 /api/state total429=116 totalApi=236 testsDone=19
+[F2bV2 +24522ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24573ms] LIMITER-DENY count=237 limit=120 resetIn=35557ms totalApi=237 testsDone=19
+[F2bV2 +24573ms] 429 /api/state total429=117 totalApi=237 testsDone=19
+[F2bV2 +24574ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24625ms] LIMITER-DENY count=238 limit=120 resetIn=35505ms totalApi=238 testsDone=19
+[F2bV2 +24625ms] 429 /api/state total429=118 totalApi=238 testsDone=19
+[F2bV2 +24626ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24676ms] LIMITER-DENY count=239 limit=120 resetIn=35454ms totalApi=239 testsDone=19
+[F2bV2 +24677ms] 429 /api/state total429=119 totalApi=239 testsDone=19
+[F2bV2 +24677ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24728ms] LIMITER-DENY count=240 limit=120 resetIn=35402ms totalApi=240 testsDone=19
+[F2bV2 +24729ms] 429 /api/state total429=120 totalApi=240 testsDone=19
+[F2bV2 +24729ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24780ms] LIMITER-DENY count=241 limit=120 resetIn=35350ms totalApi=241 testsDone=19
+[F2bV2 +24781ms] 429 /api/state total429=121 totalApi=241 testsDone=19
+[F2bV2 +24781ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24832ms] LIMITER-DENY count=242 limit=120 resetIn=35298ms totalApi=242 testsDone=19
+[F2bV2 +24832ms] 429 /api/state total429=122 totalApi=242 testsDone=19
+[F2bV2 +24833ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24884ms] LIMITER-DENY count=243 limit=120 resetIn=35246ms totalApi=243 testsDone=19
+[F2bV2 +24884ms] 429 /api/state total429=123 totalApi=243 testsDone=19
+[F2bV2 +24885ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24936ms] LIMITER-DENY count=244 limit=120 resetIn=35194ms totalApi=244 testsDone=19
+[F2bV2 +24936ms] 429 /api/state total429=124 totalApi=244 testsDone=19
+[F2bV2 +24937ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +24988ms] LIMITER-DENY count=245 limit=120 resetIn=35142ms totalApi=245 testsDone=19
+[F2bV2 +24988ms] 429 /api/state total429=125 totalApi=245 testsDone=19
+[F2bV2 +24988ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25038ms] LIMITER-DENY count=246 limit=120 resetIn=35092ms totalApi=246 testsDone=19
+[F2bV2 +25039ms] 429 /api/state total429=126 totalApi=246 testsDone=19
+[F2bV2 +25039ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25090ms] LIMITER-DENY count=247 limit=120 resetIn=35040ms totalApi=247 testsDone=19
+[F2bV2 +25091ms] 429 /api/state total429=127 totalApi=247 testsDone=19
+[F2bV2 +25091ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25142ms] LIMITER-DENY count=248 limit=120 resetIn=34988ms totalApi=248 testsDone=19
+[F2bV2 +25142ms] 429 /api/state total429=128 totalApi=248 testsDone=19
+[F2bV2 +25143ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25194ms] LIMITER-DENY count=249 limit=120 resetIn=34936ms totalApi=249 testsDone=19
+[F2bV2 +25194ms] 429 /api/state total429=129 totalApi=249 testsDone=19
+[F2bV2 +25194ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25246ms] LIMITER-DENY count=250 limit=120 resetIn=34884ms totalApi=250 testsDone=19
+[F2bV2 +25246ms] 429 /api/state total429=130 totalApi=250 testsDone=19
+[F2bV2 +25246ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25296ms] LIMITER-DENY count=251 limit=120 resetIn=34834ms totalApi=251 testsDone=19
+[F2bV2 +25297ms] 429 /api/state total429=131 totalApi=251 testsDone=19
+[F2bV2 +25297ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25348ms] LIMITER-DENY count=252 limit=120 resetIn=34782ms totalApi=252 testsDone=19
+[F2bV2 +25349ms] 429 /api/state total429=132 totalApi=252 testsDone=19
+[F2bV2 +25349ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25400ms] LIMITER-DENY count=253 limit=120 resetIn=34730ms totalApi=253 testsDone=19
+[F2bV2 +25401ms] 429 /api/state total429=133 totalApi=253 testsDone=19
+[F2bV2 +25401ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25452ms] LIMITER-DENY count=254 limit=120 resetIn=34678ms totalApi=254 testsDone=19
+[F2bV2 +25452ms] 429 /api/state total429=134 totalApi=254 testsDone=19
+[F2bV2 +25453ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25504ms] LIMITER-DENY count=255 limit=120 resetIn=34626ms totalApi=255 testsDone=19
+[F2bV2 +25504ms] 429 /api/state total429=135 totalApi=255 testsDone=19
+[F2bV2 +25504ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25556ms] LIMITER-DENY count=256 limit=120 resetIn=34574ms totalApi=256 testsDone=19
+[F2bV2 +25556ms] 429 /api/state total429=136 totalApi=256 testsDone=19
+[F2bV2 +25556ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25606ms] LIMITER-DENY count=257 limit=120 resetIn=34524ms totalApi=257 testsDone=19
+[F2bV2 +25607ms] 429 /api/state total429=137 totalApi=257 testsDone=19
+[F2bV2 +25607ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25657ms] LIMITER-DENY count=258 limit=120 resetIn=34473ms totalApi=258 testsDone=19
+[F2bV2 +25658ms] 429 /api/state total429=138 totalApi=258 testsDone=19
+[F2bV2 +25658ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25709ms] LIMITER-DENY count=259 limit=120 resetIn=34421ms totalApi=259 testsDone=19
+[F2bV2 +25710ms] 429 /api/state total429=139 totalApi=259 testsDone=19
+[F2bV2 +25710ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25761ms] LIMITER-DENY count=260 limit=120 resetIn=34369ms totalApi=260 testsDone=19
+[F2bV2 +25761ms] 429 /api/state total429=140 totalApi=260 testsDone=19
+[F2bV2 +25762ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25813ms] LIMITER-DENY count=261 limit=120 resetIn=34317ms totalApi=261 testsDone=19
+[F2bV2 +25813ms] 429 /api/state total429=141 totalApi=261 testsDone=19
+[F2bV2 +25814ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25865ms] LIMITER-DENY count=262 limit=120 resetIn=34265ms totalApi=262 testsDone=19
+[F2bV2 +25865ms] 429 /api/state total429=142 totalApi=262 testsDone=19
+[F2bV2 +25866ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +25866ms] FAIL #20 a conversation is stored with its events and calls 8061ms api=+156 state=+154 429=+142 totalApi=262 total429=142
+[F2bV2 +25867ms] LIMITER-DENY count=263 limit=120 resetIn=34263ms totalApi=263 testsDone=20
+[F2bV2 +25867ms] 429 /api/sessions total429=143 totalApi=263 testsDone=20
+[F2bV2 +25868ms] LIMITER-DENY count=264 limit=120 resetIn=34262ms totalApi=264 testsDone=20
+[F2bV2 +25868ms] 429 /api/sessions total429=144 totalApi=264 testsDone=20
+[F2bV2 +25869ms] FAIL #21 a stored conversation can be reopened and continued 3ms api=+2 state=+0 429=+2 totalApi=264 total429=144
+[F2bV2 +25870ms] LIMITER-DENY count=265 limit=120 resetIn=34260ms totalApi=265 testsDone=21
+[F2bV2 +25870ms] 429 /api/sessions total429=145 totalApi=265 testsDone=21
+[F2bV2 +25871ms] LIMITER-DENY count=266 limit=120 resetIn=34259ms totalApi=266 testsDone=21
+[F2bV2 +25871ms] 429 /api/events total429=146 totalApi=266 testsDone=21
+[F2bV2 +33914ms] FAIL #22 reasoning reaches a live console, not only the history 8045ms api=+2 state=+0 429=+2 totalApi=266 total429=146
+[F2bV2 +33917ms] LIMITER-DENY count=267 limit=120 resetIn=26213ms totalApi=267 testsDone=22
+[F2bV2 +33917ms] 429 /api/settings total429=147 totalApi=267 testsDone=22
+[F2bV2 +41918ms] FAIL #23 the project file remembers this workspace's settings 8004ms api=+1 state=+0 429=+1 totalApi=267 total429=147
+[F2bV2 +41920ms] LIMITER-DENY count=268 limit=120 resetIn=18210ms totalApi=268 testsDone=23
+[F2bV2 +41921ms] 429 /api/clear total429=148 totalApi=268 testsDone=23
+[F2bV2 +41922ms] LIMITER-DENY count=269 limit=120 resetIn=18208ms totalApi=269 testsDone=23
+[F2bV2 +41923ms] 429 /api/settings total429=149 totalApi=269 testsDone=23
+[F2bV2 +41923ms] LIMITER-DENY count=270 limit=120 resetIn=18207ms totalApi=270 testsDone=23
+[F2bV2 +41924ms] 429 /api/settings total429=150 totalApi=270 testsDone=23
+[F2bV2 +41924ms] LIMITER-DENY count=271 limit=120 resetIn=18206ms totalApi=271 testsDone=23
+[F2bV2 +41925ms] 429 /api/tasks total429=151 totalApi=271 testsDone=23
+[F2bV2 +41925ms] admission /api/tasks -> 429
+[F2bV2 +41925ms] LIMITER-DENY count=272 limit=120 resetIn=18205ms totalApi=272 testsDone=23
+[F2bV2 +41926ms] 429 /api/state total429=152 totalApi=272 testsDone=23
+[F2bV2 +41926ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +41977ms] LIMITER-DENY count=273 limit=120 resetIn=18153ms totalApi=273 testsDone=23
+[F2bV2 +41978ms] 429 /api/state total429=153 totalApi=273 testsDone=23
+[F2bV2 +41978ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42028ms] LIMITER-DENY count=274 limit=120 resetIn=18102ms totalApi=274 testsDone=23
+[F2bV2 +42029ms] 429 /api/state total429=154 totalApi=274 testsDone=23
+[F2bV2 +42029ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42080ms] LIMITER-DENY count=275 limit=120 resetIn=18050ms totalApi=275 testsDone=23
+[F2bV2 +42081ms] 429 /api/state total429=155 totalApi=275 testsDone=23
+[F2bV2 +42081ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42132ms] LIMITER-DENY count=276 limit=120 resetIn=17998ms totalApi=276 testsDone=23
+[F2bV2 +42132ms] 429 /api/state total429=156 totalApi=276 testsDone=23
+[F2bV2 +42133ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42183ms] LIMITER-DENY count=277 limit=120 resetIn=17947ms totalApi=277 testsDone=23
+[F2bV2 +42184ms] 429 /api/state total429=157 totalApi=277 testsDone=23
+[F2bV2 +42184ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42234ms] LIMITER-DENY count=278 limit=120 resetIn=17896ms totalApi=278 testsDone=23
+[F2bV2 +42235ms] 429 /api/state total429=158 totalApi=278 testsDone=23
+[F2bV2 +42235ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42285ms] LIMITER-DENY count=279 limit=120 resetIn=17845ms totalApi=279 testsDone=23
+[F2bV2 +42286ms] 429 /api/state total429=159 totalApi=279 testsDone=23
+[F2bV2 +42286ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42337ms] LIMITER-DENY count=280 limit=120 resetIn=17793ms totalApi=280 testsDone=23
+[F2bV2 +42337ms] 429 /api/state total429=160 totalApi=280 testsDone=23
+[F2bV2 +42338ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42388ms] LIMITER-DENY count=281 limit=120 resetIn=17742ms totalApi=281 testsDone=23
+[F2bV2 +42389ms] 429 /api/state total429=161 totalApi=281 testsDone=23
+[F2bV2 +42389ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42440ms] LIMITER-DENY count=282 limit=120 resetIn=17690ms totalApi=282 testsDone=23
+[F2bV2 +42441ms] 429 /api/state total429=162 totalApi=282 testsDone=23
+[F2bV2 +42441ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42492ms] LIMITER-DENY count=283 limit=120 resetIn=17638ms totalApi=283 testsDone=23
+[F2bV2 +42492ms] 429 /api/state total429=163 totalApi=283 testsDone=23
+[F2bV2 +42492ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42543ms] LIMITER-DENY count=284 limit=120 resetIn=17587ms totalApi=284 testsDone=23
+[F2bV2 +42544ms] 429 /api/state total429=164 totalApi=284 testsDone=23
+[F2bV2 +42544ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42595ms] LIMITER-DENY count=285 limit=120 resetIn=17535ms totalApi=285 testsDone=23
+[F2bV2 +42595ms] 429 /api/state total429=165 totalApi=285 testsDone=23
+[F2bV2 +42596ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42646ms] LIMITER-DENY count=286 limit=120 resetIn=17484ms totalApi=286 testsDone=23
+[F2bV2 +42647ms] 429 /api/state total429=166 totalApi=286 testsDone=23
+[F2bV2 +42648ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42699ms] LIMITER-DENY count=287 limit=120 resetIn=17431ms totalApi=287 testsDone=23
+[F2bV2 +42700ms] 429 /api/state total429=167 totalApi=287 testsDone=23
+[F2bV2 +42700ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42751ms] LIMITER-DENY count=288 limit=120 resetIn=17379ms totalApi=288 testsDone=23
+[F2bV2 +42751ms] 429 /api/state total429=168 totalApi=288 testsDone=23
+[F2bV2 +42752ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42802ms] LIMITER-DENY count=289 limit=120 resetIn=17328ms totalApi=289 testsDone=23
+[F2bV2 +42803ms] 429 /api/state total429=169 totalApi=289 testsDone=23
+[F2bV2 +42803ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42854ms] LIMITER-DENY count=290 limit=120 resetIn=17276ms totalApi=290 testsDone=23
+[F2bV2 +42854ms] 429 /api/state total429=170 totalApi=290 testsDone=23
+[F2bV2 +42855ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42905ms] LIMITER-DENY count=291 limit=120 resetIn=17225ms totalApi=291 testsDone=23
+[F2bV2 +42906ms] 429 /api/state total429=171 totalApi=291 testsDone=23
+[F2bV2 +42906ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +42957ms] LIMITER-DENY count=292 limit=120 resetIn=17173ms totalApi=292 testsDone=23
+[F2bV2 +42958ms] 429 /api/state total429=172 totalApi=292 testsDone=23
+[F2bV2 +42958ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43009ms] LIMITER-DENY count=293 limit=120 resetIn=17121ms totalApi=293 testsDone=23
+[F2bV2 +43009ms] 429 /api/state total429=173 totalApi=293 testsDone=23
+[F2bV2 +43009ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43060ms] LIMITER-DENY count=294 limit=120 resetIn=17070ms totalApi=294 testsDone=23
+[F2bV2 +43061ms] 429 /api/state total429=174 totalApi=294 testsDone=23
+[F2bV2 +43061ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43111ms] LIMITER-DENY count=295 limit=120 resetIn=17019ms totalApi=295 testsDone=23
+[F2bV2 +43112ms] 429 /api/state total429=175 totalApi=295 testsDone=23
+[F2bV2 +43112ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43163ms] LIMITER-DENY count=296 limit=120 resetIn=16967ms totalApi=296 testsDone=23
+[F2bV2 +43164ms] 429 /api/state total429=176 totalApi=296 testsDone=23
+[F2bV2 +43164ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43215ms] LIMITER-DENY count=297 limit=120 resetIn=16915ms totalApi=297 testsDone=23
+[F2bV2 +43216ms] 429 /api/state total429=177 totalApi=297 testsDone=23
+[F2bV2 +43216ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43267ms] LIMITER-DENY count=298 limit=120 resetIn=16863ms totalApi=298 testsDone=23
+[F2bV2 +43267ms] 429 /api/state total429=178 totalApi=298 testsDone=23
+[F2bV2 +43268ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43319ms] LIMITER-DENY count=299 limit=120 resetIn=16811ms totalApi=299 testsDone=23
+[F2bV2 +43319ms] 429 /api/state total429=179 totalApi=299 testsDone=23
+[F2bV2 +43320ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43371ms] LIMITER-DENY count=300 limit=120 resetIn=16759ms totalApi=300 testsDone=23
+[F2bV2 +43372ms] 429 /api/state total429=180 totalApi=300 testsDone=23
+[F2bV2 +43372ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43423ms] LIMITER-DENY count=301 limit=120 resetIn=16707ms totalApi=301 testsDone=23
+[F2bV2 +43423ms] 429 /api/state total429=181 totalApi=301 testsDone=23
+[F2bV2 +43423ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43474ms] LIMITER-DENY count=302 limit=120 resetIn=16656ms totalApi=302 testsDone=23
+[F2bV2 +43475ms] 429 /api/state total429=182 totalApi=302 testsDone=23
+[F2bV2 +43475ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43526ms] LIMITER-DENY count=303 limit=120 resetIn=16604ms totalApi=303 testsDone=23
+[F2bV2 +43527ms] 429 /api/state total429=183 totalApi=303 testsDone=23
+[F2bV2 +43527ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43578ms] LIMITER-DENY count=304 limit=120 resetIn=16552ms totalApi=304 testsDone=23
+[F2bV2 +43579ms] 429 /api/state total429=184 totalApi=304 testsDone=23
+[F2bV2 +43579ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43630ms] LIMITER-DENY count=305 limit=120 resetIn=16500ms totalApi=305 testsDone=23
+[F2bV2 +43630ms] 429 /api/state total429=185 totalApi=305 testsDone=23
+[F2bV2 +43631ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43681ms] LIMITER-DENY count=306 limit=120 resetIn=16449ms totalApi=306 testsDone=23
+[F2bV2 +43682ms] 429 /api/state total429=186 totalApi=306 testsDone=23
+[F2bV2 +43682ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43732ms] LIMITER-DENY count=307 limit=120 resetIn=16398ms totalApi=307 testsDone=23
+[F2bV2 +43733ms] 429 /api/state total429=187 totalApi=307 testsDone=23
+[F2bV2 +43733ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43784ms] LIMITER-DENY count=308 limit=120 resetIn=16346ms totalApi=308 testsDone=23
+[F2bV2 +43784ms] 429 /api/state total429=188 totalApi=308 testsDone=23
+[F2bV2 +43785ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43836ms] LIMITER-DENY count=309 limit=120 resetIn=16294ms totalApi=309 testsDone=23
+[F2bV2 +43836ms] 429 /api/state total429=189 totalApi=309 testsDone=23
+[F2bV2 +43836ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43893ms] LIMITER-DENY count=310 limit=120 resetIn=16237ms totalApi=310 testsDone=23
+[F2bV2 +43894ms] 429 /api/state total429=190 totalApi=310 testsDone=23
+[F2bV2 +43894ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43945ms] LIMITER-DENY count=311 limit=120 resetIn=16185ms totalApi=311 testsDone=23
+[F2bV2 +43945ms] 429 /api/state total429=191 totalApi=311 testsDone=23
+[F2bV2 +43946ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +43997ms] LIMITER-DENY count=312 limit=120 resetIn=16133ms totalApi=312 testsDone=23
+[F2bV2 +43998ms] 429 /api/state total429=192 totalApi=312 testsDone=23
+[F2bV2 +43998ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44049ms] LIMITER-DENY count=313 limit=120 resetIn=16081ms totalApi=313 testsDone=23
+[F2bV2 +44052ms] 429 /api/state total429=193 totalApi=313 testsDone=23
+[F2bV2 +44052ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44103ms] LIMITER-DENY count=314 limit=120 resetIn=16027ms totalApi=314 testsDone=23
+[F2bV2 +44103ms] 429 /api/state total429=194 totalApi=314 testsDone=23
+[F2bV2 +44104ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44155ms] LIMITER-DENY count=315 limit=120 resetIn=15975ms totalApi=315 testsDone=23
+[F2bV2 +44156ms] 429 /api/state total429=195 totalApi=315 testsDone=23
+[F2bV2 +44156ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44207ms] LIMITER-DENY count=316 limit=120 resetIn=15923ms totalApi=316 testsDone=23
+[F2bV2 +44207ms] 429 /api/state total429=196 totalApi=316 testsDone=23
+[F2bV2 +44208ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44259ms] LIMITER-DENY count=317 limit=120 resetIn=15871ms totalApi=317 testsDone=23
+[F2bV2 +44259ms] 429 /api/state total429=197 totalApi=317 testsDone=23
+[F2bV2 +44260ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44311ms] LIMITER-DENY count=318 limit=120 resetIn=15819ms totalApi=318 testsDone=23
+[F2bV2 +44311ms] 429 /api/state total429=198 totalApi=318 testsDone=23
+[F2bV2 +44312ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44363ms] LIMITER-DENY count=319 limit=120 resetIn=15767ms totalApi=319 testsDone=23
+[F2bV2 +44363ms] 429 /api/state total429=199 totalApi=319 testsDone=23
+[F2bV2 +44364ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44415ms] LIMITER-DENY count=320 limit=120 resetIn=15715ms totalApi=320 testsDone=23
+[F2bV2 +44415ms] 429 /api/state total429=200 totalApi=320 testsDone=23
+[F2bV2 +44416ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44467ms] LIMITER-DENY count=321 limit=120 resetIn=15663ms totalApi=321 testsDone=23
+[F2bV2 +44468ms] 429 /api/state total429=201 totalApi=321 testsDone=23
+[F2bV2 +44468ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44519ms] LIMITER-DENY count=322 limit=120 resetIn=15611ms totalApi=322 testsDone=23
+[F2bV2 +44520ms] 429 /api/state total429=202 totalApi=322 testsDone=23
+[F2bV2 +44520ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44571ms] LIMITER-DENY count=323 limit=120 resetIn=15559ms totalApi=323 testsDone=23
+[F2bV2 +44572ms] 429 /api/state total429=203 totalApi=323 testsDone=23
+[F2bV2 +44572ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44623ms] LIMITER-DENY count=324 limit=120 resetIn=15507ms totalApi=324 testsDone=23
+[F2bV2 +44623ms] 429 /api/state total429=204 totalApi=324 testsDone=23
+[F2bV2 +44623ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44673ms] LIMITER-DENY count=325 limit=120 resetIn=15457ms totalApi=325 testsDone=23
+[F2bV2 +44674ms] 429 /api/state total429=205 totalApi=325 testsDone=23
+[F2bV2 +44674ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44725ms] LIMITER-DENY count=326 limit=120 resetIn=15405ms totalApi=326 testsDone=23
+[F2bV2 +44726ms] 429 /api/state total429=206 totalApi=326 testsDone=23
+[F2bV2 +44726ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44777ms] LIMITER-DENY count=327 limit=120 resetIn=15353ms totalApi=327 testsDone=23
+[F2bV2 +44778ms] 429 /api/state total429=207 totalApi=327 testsDone=23
+[F2bV2 +44778ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44829ms] LIMITER-DENY count=328 limit=120 resetIn=15301ms totalApi=328 testsDone=23
+[F2bV2 +44830ms] 429 /api/state total429=208 totalApi=328 testsDone=23
+[F2bV2 +44830ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44881ms] LIMITER-DENY count=329 limit=120 resetIn=15249ms totalApi=329 testsDone=23
+[F2bV2 +44881ms] 429 /api/state total429=209 totalApi=329 testsDone=23
+[F2bV2 +44882ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44933ms] LIMITER-DENY count=330 limit=120 resetIn=15197ms totalApi=330 testsDone=23
+[F2bV2 +44933ms] 429 /api/state total429=210 totalApi=330 testsDone=23
+[F2bV2 +44933ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +44983ms] LIMITER-DENY count=331 limit=120 resetIn=15147ms totalApi=331 testsDone=23
+[F2bV2 +44984ms] 429 /api/state total429=211 totalApi=331 testsDone=23
+[F2bV2 +44984ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45035ms] LIMITER-DENY count=332 limit=120 resetIn=15095ms totalApi=332 testsDone=23
+[F2bV2 +45036ms] 429 /api/state total429=212 totalApi=332 testsDone=23
+[F2bV2 +45036ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45087ms] LIMITER-DENY count=333 limit=120 resetIn=15043ms totalApi=333 testsDone=23
+[F2bV2 +45087ms] 429 /api/state total429=213 totalApi=333 testsDone=23
+[F2bV2 +45088ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45139ms] LIMITER-DENY count=334 limit=120 resetIn=14991ms totalApi=334 testsDone=23
+[F2bV2 +45139ms] 429 /api/state total429=214 totalApi=334 testsDone=23
+[F2bV2 +45140ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45190ms] LIMITER-DENY count=335 limit=120 resetIn=14940ms totalApi=335 testsDone=23
+[F2bV2 +45191ms] 429 /api/state total429=215 totalApi=335 testsDone=23
+[F2bV2 +45191ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45242ms] LIMITER-DENY count=336 limit=120 resetIn=14888ms totalApi=336 testsDone=23
+[F2bV2 +45242ms] 429 /api/state total429=216 totalApi=336 testsDone=23
+[F2bV2 +45243ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45294ms] LIMITER-DENY count=337 limit=120 resetIn=14836ms totalApi=337 testsDone=23
+[F2bV2 +45294ms] 429 /api/state total429=217 totalApi=337 testsDone=23
+[F2bV2 +45294ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45345ms] LIMITER-DENY count=338 limit=120 resetIn=14785ms totalApi=338 testsDone=23
+[F2bV2 +45346ms] 429 /api/state total429=218 totalApi=338 testsDone=23
+[F2bV2 +45346ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45397ms] LIMITER-DENY count=339 limit=120 resetIn=14733ms totalApi=339 testsDone=23
+[F2bV2 +45397ms] 429 /api/state total429=219 totalApi=339 testsDone=23
+[F2bV2 +45398ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45449ms] LIMITER-DENY count=340 limit=120 resetIn=14681ms totalApi=340 testsDone=23
+[F2bV2 +45449ms] 429 /api/state total429=220 totalApi=340 testsDone=23
+[F2bV2 +45449ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45500ms] LIMITER-DENY count=341 limit=120 resetIn=14630ms totalApi=341 testsDone=23
+[F2bV2 +45501ms] 429 /api/state total429=221 totalApi=341 testsDone=23
+[F2bV2 +45501ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45552ms] LIMITER-DENY count=342 limit=120 resetIn=14578ms totalApi=342 testsDone=23
+[F2bV2 +45553ms] 429 /api/state total429=222 totalApi=342 testsDone=23
+[F2bV2 +45553ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45604ms] LIMITER-DENY count=343 limit=120 resetIn=14526ms totalApi=343 testsDone=23
+[F2bV2 +45604ms] 429 /api/state total429=223 totalApi=343 testsDone=23
+[F2bV2 +45604ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45655ms] LIMITER-DENY count=344 limit=120 resetIn=14475ms totalApi=344 testsDone=23
+[F2bV2 +45656ms] 429 /api/state total429=224 totalApi=344 testsDone=23
+[F2bV2 +45656ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45707ms] LIMITER-DENY count=345 limit=120 resetIn=14423ms totalApi=345 testsDone=23
+[F2bV2 +45708ms] 429 /api/state total429=225 totalApi=345 testsDone=23
+[F2bV2 +45708ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45759ms] LIMITER-DENY count=346 limit=120 resetIn=14371ms totalApi=346 testsDone=23
+[F2bV2 +45759ms] 429 /api/state total429=226 totalApi=346 testsDone=23
+[F2bV2 +45760ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45811ms] LIMITER-DENY count=347 limit=120 resetIn=14319ms totalApi=347 testsDone=23
+[F2bV2 +45811ms] 429 /api/state total429=227 totalApi=347 testsDone=23
+[F2bV2 +45811ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45862ms] LIMITER-DENY count=348 limit=120 resetIn=14268ms totalApi=348 testsDone=23
+[F2bV2 +45863ms] 429 /api/state total429=228 totalApi=348 testsDone=23
+[F2bV2 +45863ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45914ms] LIMITER-DENY count=349 limit=120 resetIn=14216ms totalApi=349 testsDone=23
+[F2bV2 +45915ms] 429 /api/state total429=229 totalApi=349 testsDone=23
+[F2bV2 +45915ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +45966ms] LIMITER-DENY count=350 limit=120 resetIn=14164ms totalApi=350 testsDone=23
+[F2bV2 +45967ms] 429 /api/state total429=230 totalApi=350 testsDone=23
+[F2bV2 +45967ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46018ms] LIMITER-DENY count=351 limit=120 resetIn=14112ms totalApi=351 testsDone=23
+[F2bV2 +46019ms] 429 /api/state total429=231 totalApi=351 testsDone=23
+[F2bV2 +46019ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46070ms] LIMITER-DENY count=352 limit=120 resetIn=14060ms totalApi=352 testsDone=23
+[F2bV2 +46070ms] 429 /api/state total429=232 totalApi=352 testsDone=23
+[F2bV2 +46071ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46122ms] LIMITER-DENY count=353 limit=120 resetIn=14008ms totalApi=353 testsDone=23
+[F2bV2 +46122ms] 429 /api/state total429=233 totalApi=353 testsDone=23
+[F2bV2 +46122ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46173ms] LIMITER-DENY count=354 limit=120 resetIn=13957ms totalApi=354 testsDone=23
+[F2bV2 +46174ms] 429 /api/state total429=234 totalApi=354 testsDone=23
+[F2bV2 +46174ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46225ms] LIMITER-DENY count=355 limit=120 resetIn=13905ms totalApi=355 testsDone=23
+[F2bV2 +46226ms] 429 /api/state total429=235 totalApi=355 testsDone=23
+[F2bV2 +46226ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46277ms] LIMITER-DENY count=356 limit=120 resetIn=13853ms totalApi=356 testsDone=23
+[F2bV2 +46277ms] 429 /api/state total429=236 totalApi=356 testsDone=23
+[F2bV2 +46278ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46329ms] LIMITER-DENY count=357 limit=120 resetIn=13801ms totalApi=357 testsDone=23
+[F2bV2 +46329ms] 429 /api/state total429=237 totalApi=357 testsDone=23
+[F2bV2 +46329ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46380ms] LIMITER-DENY count=358 limit=120 resetIn=13750ms totalApi=358 testsDone=23
+[F2bV2 +46381ms] 429 /api/state total429=238 totalApi=358 testsDone=23
+[F2bV2 +46381ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46432ms] LIMITER-DENY count=359 limit=120 resetIn=13698ms totalApi=359 testsDone=23
+[F2bV2 +46432ms] 429 /api/state total429=239 totalApi=359 testsDone=23
+[F2bV2 +46433ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46484ms] LIMITER-DENY count=360 limit=120 resetIn=13646ms totalApi=360 testsDone=23
+[F2bV2 +46484ms] 429 /api/state total429=240 totalApi=360 testsDone=23
+[F2bV2 +46484ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46534ms] LIMITER-DENY count=361 limit=120 resetIn=13596ms totalApi=361 testsDone=23
+[F2bV2 +46535ms] 429 /api/state total429=241 totalApi=361 testsDone=23
+[F2bV2 +46535ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46585ms] LIMITER-DENY count=362 limit=120 resetIn=13545ms totalApi=362 testsDone=23
+[F2bV2 +46586ms] 429 /api/state total429=242 totalApi=362 testsDone=23
+[F2bV2 +46586ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46637ms] LIMITER-DENY count=363 limit=120 resetIn=13493ms totalApi=363 testsDone=23
+[F2bV2 +46638ms] 429 /api/state total429=243 totalApi=363 testsDone=23
+[F2bV2 +46638ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46689ms] LIMITER-DENY count=364 limit=120 resetIn=13441ms totalApi=364 testsDone=23
+[F2bV2 +46690ms] 429 /api/state total429=244 totalApi=364 testsDone=23
+[F2bV2 +46690ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46741ms] LIMITER-DENY count=365 limit=120 resetIn=13389ms totalApi=365 testsDone=23
+[F2bV2 +46741ms] 429 /api/state total429=245 totalApi=365 testsDone=23
+[F2bV2 +46742ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46793ms] LIMITER-DENY count=366 limit=120 resetIn=13337ms totalApi=366 testsDone=23
+[F2bV2 +46793ms] 429 /api/state total429=246 totalApi=366 testsDone=23
+[F2bV2 +46794ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46845ms] LIMITER-DENY count=367 limit=120 resetIn=13285ms totalApi=367 testsDone=23
+[F2bV2 +46845ms] 429 /api/state total429=247 totalApi=367 testsDone=23
+[F2bV2 +46846ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46896ms] LIMITER-DENY count=368 limit=120 resetIn=13234ms totalApi=368 testsDone=23
+[F2bV2 +46897ms] 429 /api/state total429=248 totalApi=368 testsDone=23
+[F2bV2 +46897ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +46948ms] LIMITER-DENY count=369 limit=120 resetIn=13182ms totalApi=369 testsDone=23
+[F2bV2 +46949ms] 429 /api/state total429=249 totalApi=369 testsDone=23
+[F2bV2 +46949ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47000ms] LIMITER-DENY count=370 limit=120 resetIn=13130ms totalApi=370 testsDone=23
+[F2bV2 +47001ms] 429 /api/state total429=250 totalApi=370 testsDone=23
+[F2bV2 +47001ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47052ms] LIMITER-DENY count=371 limit=120 resetIn=13078ms totalApi=371 testsDone=23
+[F2bV2 +47053ms] 429 /api/state total429=251 totalApi=371 testsDone=23
+[F2bV2 +47053ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47103ms] LIMITER-DENY count=372 limit=120 resetIn=13027ms totalApi=372 testsDone=23
+[F2bV2 +47104ms] 429 /api/state total429=252 totalApi=372 testsDone=23
+[F2bV2 +47104ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47155ms] LIMITER-DENY count=373 limit=120 resetIn=12975ms totalApi=373 testsDone=23
+[F2bV2 +47156ms] 429 /api/state total429=253 totalApi=373 testsDone=23
+[F2bV2 +47156ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47207ms] LIMITER-DENY count=374 limit=120 resetIn=12923ms totalApi=374 testsDone=23
+[F2bV2 +47208ms] 429 /api/state total429=254 totalApi=374 testsDone=23
+[F2bV2 +47208ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47259ms] LIMITER-DENY count=375 limit=120 resetIn=12871ms totalApi=375 testsDone=23
+[F2bV2 +47259ms] 429 /api/state total429=255 totalApi=375 testsDone=23
+[F2bV2 +47260ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47311ms] LIMITER-DENY count=376 limit=120 resetIn=12819ms totalApi=376 testsDone=23
+[F2bV2 +47311ms] 429 /api/state total429=256 totalApi=376 testsDone=23
+[F2bV2 +47311ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47362ms] LIMITER-DENY count=377 limit=120 resetIn=12768ms totalApi=377 testsDone=23
+[F2bV2 +47363ms] 429 /api/state total429=257 totalApi=377 testsDone=23
+[F2bV2 +47363ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47414ms] LIMITER-DENY count=378 limit=120 resetIn=12716ms totalApi=378 testsDone=23
+[F2bV2 +47414ms] 429 /api/state total429=258 totalApi=378 testsDone=23
+[F2bV2 +47415ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47466ms] LIMITER-DENY count=379 limit=120 resetIn=12664ms totalApi=379 testsDone=23
+[F2bV2 +47466ms] 429 /api/state total429=259 totalApi=379 testsDone=23
+[F2bV2 +47466ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47516ms] LIMITER-DENY count=380 limit=120 resetIn=12614ms totalApi=380 testsDone=23
+[F2bV2 +47517ms] 429 /api/state total429=260 totalApi=380 testsDone=23
+[F2bV2 +47517ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47568ms] LIMITER-DENY count=381 limit=120 resetIn=12562ms totalApi=381 testsDone=23
+[F2bV2 +47569ms] 429 /api/state total429=261 totalApi=381 testsDone=23
+[F2bV2 +47569ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47620ms] LIMITER-DENY count=382 limit=120 resetIn=12510ms totalApi=382 testsDone=23
+[F2bV2 +47621ms] 429 /api/state total429=262 totalApi=382 testsDone=23
+[F2bV2 +47621ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47672ms] LIMITER-DENY count=383 limit=120 resetIn=12458ms totalApi=383 testsDone=23
+[F2bV2 +47672ms] 429 /api/state total429=263 totalApi=383 testsDone=23
+[F2bV2 +47673ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47724ms] LIMITER-DENY count=384 limit=120 resetIn=12406ms totalApi=384 testsDone=23
+[F2bV2 +47724ms] 429 /api/state total429=264 totalApi=384 testsDone=23
+[F2bV2 +47724ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47774ms] LIMITER-DENY count=385 limit=120 resetIn=12356ms totalApi=385 testsDone=23
+[F2bV2 +47775ms] 429 /api/state total429=265 totalApi=385 testsDone=23
+[F2bV2 +47775ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47825ms] LIMITER-DENY count=386 limit=120 resetIn=12305ms totalApi=386 testsDone=23
+[F2bV2 +47826ms] 429 /api/state total429=266 totalApi=386 testsDone=23
+[F2bV2 +47826ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47877ms] LIMITER-DENY count=387 limit=120 resetIn=12253ms totalApi=387 testsDone=23
+[F2bV2 +47878ms] 429 /api/state total429=267 totalApi=387 testsDone=23
+[F2bV2 +47878ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47929ms] LIMITER-DENY count=388 limit=120 resetIn=12201ms totalApi=388 testsDone=23
+[F2bV2 +47930ms] 429 /api/state total429=268 totalApi=388 testsDone=23
+[F2bV2 +47930ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +47981ms] LIMITER-DENY count=389 limit=120 resetIn=12149ms totalApi=389 testsDone=23
+[F2bV2 +47982ms] 429 /api/state total429=269 totalApi=389 testsDone=23
+[F2bV2 +47982ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48033ms] LIMITER-DENY count=390 limit=120 resetIn=12097ms totalApi=390 testsDone=23
+[F2bV2 +48033ms] 429 /api/state total429=270 totalApi=390 testsDone=23
+[F2bV2 +48034ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48085ms] LIMITER-DENY count=391 limit=120 resetIn=12045ms totalApi=391 testsDone=23
+[F2bV2 +48085ms] 429 /api/state total429=271 totalApi=391 testsDone=23
+[F2bV2 +48086ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48137ms] LIMITER-DENY count=392 limit=120 resetIn=11993ms totalApi=392 testsDone=23
+[F2bV2 +48137ms] 429 /api/state total429=272 totalApi=392 testsDone=23
+[F2bV2 +48137ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48188ms] LIMITER-DENY count=393 limit=120 resetIn=11942ms totalApi=393 testsDone=23
+[F2bV2 +48189ms] 429 /api/state total429=273 totalApi=393 testsDone=23
+[F2bV2 +48189ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48239ms] LIMITER-DENY count=394 limit=120 resetIn=11891ms totalApi=394 testsDone=23
+[F2bV2 +48240ms] 429 /api/state total429=274 totalApi=394 testsDone=23
+[F2bV2 +48240ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48290ms] LIMITER-DENY count=395 limit=120 resetIn=11840ms totalApi=395 testsDone=23
+[F2bV2 +48291ms] 429 /api/state total429=275 totalApi=395 testsDone=23
+[F2bV2 +48291ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48342ms] LIMITER-DENY count=396 limit=120 resetIn=11788ms totalApi=396 testsDone=23
+[F2bV2 +48343ms] 429 /api/state total429=276 totalApi=396 testsDone=23
+[F2bV2 +48343ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48394ms] LIMITER-DENY count=397 limit=120 resetIn=11736ms totalApi=397 testsDone=23
+[F2bV2 +48395ms] 429 /api/state total429=277 totalApi=397 testsDone=23
+[F2bV2 +48395ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48446ms] LIMITER-DENY count=398 limit=120 resetIn=11684ms totalApi=398 testsDone=23
+[F2bV2 +48446ms] 429 /api/state total429=278 totalApi=398 testsDone=23
+[F2bV2 +48447ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48498ms] LIMITER-DENY count=399 limit=120 resetIn=11632ms totalApi=399 testsDone=23
+[F2bV2 +48498ms] 429 /api/state total429=279 totalApi=399 testsDone=23
+[F2bV2 +48498ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48549ms] LIMITER-DENY count=400 limit=120 resetIn=11581ms totalApi=400 testsDone=23
+[F2bV2 +48550ms] 429 /api/state total429=280 totalApi=400 testsDone=23
+[F2bV2 +48550ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48600ms] LIMITER-DENY count=401 limit=120 resetIn=11530ms totalApi=401 testsDone=23
+[F2bV2 +48601ms] 429 /api/state total429=281 totalApi=401 testsDone=23
+[F2bV2 +48601ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48652ms] LIMITER-DENY count=402 limit=120 resetIn=11478ms totalApi=402 testsDone=23
+[F2bV2 +48653ms] 429 /api/state total429=282 totalApi=402 testsDone=23
+[F2bV2 +48653ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48704ms] LIMITER-DENY count=403 limit=120 resetIn=11426ms totalApi=403 testsDone=23
+[F2bV2 +48704ms] 429 /api/state total429=283 totalApi=403 testsDone=23
+[F2bV2 +48705ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48756ms] LIMITER-DENY count=404 limit=120 resetIn=11374ms totalApi=404 testsDone=23
+[F2bV2 +48756ms] 429 /api/state total429=284 totalApi=404 testsDone=23
+[F2bV2 +48757ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48808ms] LIMITER-DENY count=405 limit=120 resetIn=11322ms totalApi=405 testsDone=23
+[F2bV2 +48808ms] 429 /api/state total429=285 totalApi=405 testsDone=23
+[F2bV2 +48808ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48859ms] LIMITER-DENY count=406 limit=120 resetIn=11271ms totalApi=406 testsDone=23
+[F2bV2 +48860ms] 429 /api/state total429=286 totalApi=406 testsDone=23
+[F2bV2 +48860ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48911ms] LIMITER-DENY count=407 limit=120 resetIn=11219ms totalApi=407 testsDone=23
+[F2bV2 +48912ms] 429 /api/state total429=287 totalApi=407 testsDone=23
+[F2bV2 +48912ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +48963ms] LIMITER-DENY count=408 limit=120 resetIn=11167ms totalApi=408 testsDone=23
+[F2bV2 +48964ms] 429 /api/state total429=288 totalApi=408 testsDone=23
+[F2bV2 +48964ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49015ms] LIMITER-DENY count=409 limit=120 resetIn=11115ms totalApi=409 testsDone=23
+[F2bV2 +49015ms] 429 /api/state total429=289 totalApi=409 testsDone=23
+[F2bV2 +49016ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49067ms] LIMITER-DENY count=410 limit=120 resetIn=11063ms totalApi=410 testsDone=23
+[F2bV2 +49067ms] 429 /api/state total429=290 totalApi=410 testsDone=23
+[F2bV2 +49067ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49117ms] LIMITER-DENY count=411 limit=120 resetIn=11013ms totalApi=411 testsDone=23
+[F2bV2 +49118ms] 429 /api/state total429=291 totalApi=411 testsDone=23
+[F2bV2 +49118ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49169ms] LIMITER-DENY count=412 limit=120 resetIn=10961ms totalApi=412 testsDone=23
+[F2bV2 +49170ms] 429 /api/state total429=292 totalApi=412 testsDone=23
+[F2bV2 +49170ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49221ms] LIMITER-DENY count=413 limit=120 resetIn=10909ms totalApi=413 testsDone=23
+[F2bV2 +49222ms] 429 /api/state total429=293 totalApi=413 testsDone=23
+[F2bV2 +49222ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49273ms] LIMITER-DENY count=414 limit=120 resetIn=10857ms totalApi=414 testsDone=23
+[F2bV2 +49274ms] 429 /api/state total429=294 totalApi=414 testsDone=23
+[F2bV2 +49274ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49325ms] LIMITER-DENY count=415 limit=120 resetIn=10805ms totalApi=415 testsDone=23
+[F2bV2 +49325ms] 429 /api/state total429=295 totalApi=415 testsDone=23
+[F2bV2 +49326ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49377ms] LIMITER-DENY count=416 limit=120 resetIn=10753ms totalApi=416 testsDone=23
+[F2bV2 +49377ms] 429 /api/state total429=296 totalApi=416 testsDone=23
+[F2bV2 +49378ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49429ms] LIMITER-DENY count=417 limit=120 resetIn=10701ms totalApi=417 testsDone=23
+[F2bV2 +49429ms] 429 /api/state total429=297 totalApi=417 testsDone=23
+[F2bV2 +49430ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49481ms] LIMITER-DENY count=418 limit=120 resetIn=10649ms totalApi=418 testsDone=23
+[F2bV2 +49481ms] 429 /api/state total429=298 totalApi=418 testsDone=23
+[F2bV2 +49482ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49533ms] LIMITER-DENY count=419 limit=120 resetIn=10597ms totalApi=419 testsDone=23
+[F2bV2 +49533ms] 429 /api/state total429=299 totalApi=419 testsDone=23
+[F2bV2 +49533ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49585ms] LIMITER-DENY count=420 limit=120 resetIn=10545ms totalApi=420 testsDone=23
+[F2bV2 +49586ms] 429 /api/state total429=300 totalApi=420 testsDone=23
+[F2bV2 +49586ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49637ms] LIMITER-DENY count=421 limit=120 resetIn=10493ms totalApi=421 testsDone=23
+[F2bV2 +49638ms] 429 /api/state total429=301 totalApi=421 testsDone=23
+[F2bV2 +49638ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49690ms] LIMITER-DENY count=422 limit=120 resetIn=10440ms totalApi=422 testsDone=23
+[F2bV2 +49690ms] 429 /api/state total429=302 totalApi=422 testsDone=23
+[F2bV2 +49691ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49742ms] LIMITER-DENY count=423 limit=120 resetIn=10388ms totalApi=423 testsDone=23
+[F2bV2 +49743ms] 429 /api/state total429=303 totalApi=423 testsDone=23
+[F2bV2 +49743ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49794ms] LIMITER-DENY count=424 limit=120 resetIn=10336ms totalApi=424 testsDone=23
+[F2bV2 +49795ms] 429 /api/state total429=304 totalApi=424 testsDone=23
+[F2bV2 +49795ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49846ms] LIMITER-DENY count=425 limit=120 resetIn=10284ms totalApi=425 testsDone=23
+[F2bV2 +49847ms] 429 /api/state total429=305 totalApi=425 testsDone=23
+[F2bV2 +49847ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49898ms] LIMITER-DENY count=426 limit=120 resetIn=10232ms totalApi=426 testsDone=23
+[F2bV2 +49899ms] 429 /api/state total429=306 totalApi=426 testsDone=23
+[F2bV2 +49899ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +49949ms] LIMITER-DENY count=427 limit=120 resetIn=10181ms totalApi=427 testsDone=23
+[F2bV2 +49950ms] 429 /api/state total429=307 totalApi=427 testsDone=23
+[F2bV2 +49950ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50001ms] LIMITER-DENY count=428 limit=120 resetIn=10129ms totalApi=428 testsDone=23
+[F2bV2 +50002ms] 429 /api/state total429=308 totalApi=428 testsDone=23
+[F2bV2 +50002ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50053ms] LIMITER-DENY count=429 limit=120 resetIn=10077ms totalApi=429 testsDone=23
+[F2bV2 +50054ms] 429 /api/state total429=309 totalApi=429 testsDone=23
+[F2bV2 +50054ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50105ms] LIMITER-DENY count=430 limit=120 resetIn=10025ms totalApi=430 testsDone=23
+[F2bV2 +50106ms] 429 /api/state total429=310 totalApi=430 testsDone=23
+[F2bV2 +50106ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50157ms] LIMITER-DENY count=431 limit=120 resetIn=9973ms totalApi=431 testsDone=23
+[F2bV2 +50158ms] 429 /api/state total429=311 totalApi=431 testsDone=23
+[F2bV2 +50158ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50209ms] LIMITER-DENY count=432 limit=120 resetIn=9921ms totalApi=432 testsDone=23
+[F2bV2 +50210ms] 429 /api/state total429=312 totalApi=432 testsDone=23
+[F2bV2 +50210ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50261ms] LIMITER-DENY count=433 limit=120 resetIn=9869ms totalApi=433 testsDone=23
+[F2bV2 +50261ms] 429 /api/state total429=313 totalApi=433 testsDone=23
+[F2bV2 +50262ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50313ms] LIMITER-DENY count=434 limit=120 resetIn=9817ms totalApi=434 testsDone=23
+[F2bV2 +50313ms] 429 /api/state total429=314 totalApi=434 testsDone=23
+[F2bV2 +50313ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50363ms] LIMITER-DENY count=435 limit=120 resetIn=9767ms totalApi=435 testsDone=23
+[F2bV2 +50364ms] 429 /api/state total429=315 totalApi=435 testsDone=23
+[F2bV2 +50364ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50415ms] LIMITER-DENY count=436 limit=120 resetIn=9715ms totalApi=436 testsDone=23
+[F2bV2 +50416ms] 429 /api/state total429=316 totalApi=436 testsDone=23
+[F2bV2 +50416ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50467ms] LIMITER-DENY count=437 limit=120 resetIn=9663ms totalApi=437 testsDone=23
+[F2bV2 +50468ms] 429 /api/state total429=317 totalApi=437 testsDone=23
+[F2bV2 +50468ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50519ms] LIMITER-DENY count=438 limit=120 resetIn=9611ms totalApi=438 testsDone=23
+[F2bV2 +50520ms] 429 /api/state total429=318 totalApi=438 testsDone=23
+[F2bV2 +50520ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50571ms] LIMITER-DENY count=439 limit=120 resetIn=9559ms totalApi=439 testsDone=23
+[F2bV2 +50572ms] 429 /api/state total429=319 totalApi=439 testsDone=23
+[F2bV2 +50572ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50623ms] LIMITER-DENY count=440 limit=120 resetIn=9507ms totalApi=440 testsDone=23
+[F2bV2 +50623ms] 429 /api/state total429=320 totalApi=440 testsDone=23
+[F2bV2 +50624ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50675ms] LIMITER-DENY count=441 limit=120 resetIn=9455ms totalApi=441 testsDone=23
+[F2bV2 +50675ms] 429 /api/state total429=321 totalApi=441 testsDone=23
+[F2bV2 +50676ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50727ms] LIMITER-DENY count=442 limit=120 resetIn=9403ms totalApi=442 testsDone=23
+[F2bV2 +50728ms] 429 /api/state total429=322 totalApi=442 testsDone=23
+[F2bV2 +50728ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50779ms] LIMITER-DENY count=443 limit=120 resetIn=9351ms totalApi=443 testsDone=23
+[F2bV2 +50780ms] 429 /api/state total429=323 totalApi=443 testsDone=23
+[F2bV2 +50780ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50831ms] LIMITER-DENY count=444 limit=120 resetIn=9299ms totalApi=444 testsDone=23
+[F2bV2 +50832ms] 429 /api/state total429=324 totalApi=444 testsDone=23
+[F2bV2 +50832ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50883ms] LIMITER-DENY count=445 limit=120 resetIn=9247ms totalApi=445 testsDone=23
+[F2bV2 +50884ms] 429 /api/state total429=325 totalApi=445 testsDone=23
+[F2bV2 +50884ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50936ms] LIMITER-DENY count=446 limit=120 resetIn=9194ms totalApi=446 testsDone=23
+[F2bV2 +50936ms] 429 /api/state total429=326 totalApi=446 testsDone=23
+[F2bV2 +50937ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +50988ms] LIMITER-DENY count=447 limit=120 resetIn=9142ms totalApi=447 testsDone=23
+[F2bV2 +50989ms] 429 /api/state total429=327 totalApi=447 testsDone=23
+[F2bV2 +50989ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51040ms] LIMITER-DENY count=448 limit=120 resetIn=9090ms totalApi=448 testsDone=23
+[F2bV2 +51041ms] 429 /api/state total429=328 totalApi=448 testsDone=23
+[F2bV2 +51041ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51092ms] LIMITER-DENY count=449 limit=120 resetIn=9038ms totalApi=449 testsDone=23
+[F2bV2 +51092ms] 429 /api/state total429=329 totalApi=449 testsDone=23
+[F2bV2 +51093ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51144ms] LIMITER-DENY count=450 limit=120 resetIn=8986ms totalApi=450 testsDone=23
+[F2bV2 +51144ms] 429 /api/state total429=330 totalApi=450 testsDone=23
+[F2bV2 +51145ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51196ms] LIMITER-DENY count=451 limit=120 resetIn=8934ms totalApi=451 testsDone=23
+[F2bV2 +51197ms] 429 /api/state total429=331 totalApi=451 testsDone=23
+[F2bV2 +51197ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51248ms] LIMITER-DENY count=452 limit=120 resetIn=8882ms totalApi=452 testsDone=23
+[F2bV2 +51249ms] 429 /api/state total429=332 totalApi=452 testsDone=23
+[F2bV2 +51249ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51300ms] LIMITER-DENY count=453 limit=120 resetIn=8830ms totalApi=453 testsDone=23
+[F2bV2 +51301ms] 429 /api/state total429=333 totalApi=453 testsDone=23
+[F2bV2 +51302ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51353ms] LIMITER-DENY count=454 limit=120 resetIn=8777ms totalApi=454 testsDone=23
+[F2bV2 +51353ms] 429 /api/state total429=334 totalApi=454 testsDone=23
+[F2bV2 +51354ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51405ms] LIMITER-DENY count=455 limit=120 resetIn=8725ms totalApi=455 testsDone=23
+[F2bV2 +51406ms] 429 /api/state total429=335 totalApi=455 testsDone=23
+[F2bV2 +51406ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51457ms] LIMITER-DENY count=456 limit=120 resetIn=8673ms totalApi=456 testsDone=23
+[F2bV2 +51458ms] 429 /api/state total429=336 totalApi=456 testsDone=23
+[F2bV2 +51458ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51509ms] LIMITER-DENY count=457 limit=120 resetIn=8621ms totalApi=457 testsDone=23
+[F2bV2 +51510ms] 429 /api/state total429=337 totalApi=457 testsDone=23
+[F2bV2 +51510ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51561ms] LIMITER-DENY count=458 limit=120 resetIn=8569ms totalApi=458 testsDone=23
+[F2bV2 +51565ms] 429 /api/state total429=338 totalApi=458 testsDone=23
+[F2bV2 +51565ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51616ms] LIMITER-DENY count=459 limit=120 resetIn=8514ms totalApi=459 testsDone=23
+[F2bV2 +51617ms] 429 /api/state total429=339 totalApi=459 testsDone=23
+[F2bV2 +51618ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51669ms] LIMITER-DENY count=460 limit=120 resetIn=8461ms totalApi=460 testsDone=23
+[F2bV2 +51669ms] 429 /api/state total429=340 totalApi=460 testsDone=23
+[F2bV2 +51669ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51719ms] LIMITER-DENY count=461 limit=120 resetIn=8411ms totalApi=461 testsDone=23
+[F2bV2 +51720ms] 429 /api/state total429=341 totalApi=461 testsDone=23
+[F2bV2 +51720ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51771ms] LIMITER-DENY count=462 limit=120 resetIn=8359ms totalApi=462 testsDone=23
+[F2bV2 +51772ms] 429 /api/state total429=342 totalApi=462 testsDone=23
+[F2bV2 +51772ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51823ms] LIMITER-DENY count=463 limit=120 resetIn=8307ms totalApi=463 testsDone=23
+[F2bV2 +51824ms] 429 /api/state total429=343 totalApi=463 testsDone=23
+[F2bV2 +51824ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51875ms] LIMITER-DENY count=464 limit=120 resetIn=8255ms totalApi=464 testsDone=23
+[F2bV2 +51875ms] 429 /api/state total429=344 totalApi=464 testsDone=23
+[F2bV2 +51876ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51927ms] LIMITER-DENY count=465 limit=120 resetIn=8203ms totalApi=465 testsDone=23
+[F2bV2 +51927ms] 429 /api/state total429=345 totalApi=465 testsDone=23
+[F2bV2 +51927ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +51977ms] LIMITER-DENY count=466 limit=120 resetIn=8153ms totalApi=466 testsDone=23
+[F2bV2 +51978ms] 429 /api/state total429=346 totalApi=466 testsDone=23
+[F2bV2 +51978ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52029ms] LIMITER-DENY count=467 limit=120 resetIn=8101ms totalApi=467 testsDone=23
+[F2bV2 +52030ms] 429 /api/state total429=347 totalApi=467 testsDone=23
+[F2bV2 +52030ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52080ms] LIMITER-DENY count=468 limit=120 resetIn=8050ms totalApi=468 testsDone=23
+[F2bV2 +52081ms] 429 /api/state total429=348 totalApi=468 testsDone=23
+[F2bV2 +52081ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52132ms] LIMITER-DENY count=469 limit=120 resetIn=7998ms totalApi=469 testsDone=23
+[F2bV2 +52133ms] 429 /api/state total429=349 totalApi=469 testsDone=23
+[F2bV2 +52133ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52184ms] LIMITER-DENY count=470 limit=120 resetIn=7946ms totalApi=470 testsDone=23
+[F2bV2 +52185ms] 429 /api/state total429=350 totalApi=470 testsDone=23
+[F2bV2 +52185ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52236ms] LIMITER-DENY count=471 limit=120 resetIn=7894ms totalApi=471 testsDone=23
+[F2bV2 +52238ms] 429 /api/state total429=351 totalApi=471 testsDone=23
+[F2bV2 +52238ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52289ms] LIMITER-DENY count=472 limit=120 resetIn=7841ms totalApi=472 testsDone=23
+[F2bV2 +52290ms] 429 /api/state total429=352 totalApi=472 testsDone=23
+[F2bV2 +52290ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52341ms] LIMITER-DENY count=473 limit=120 resetIn=7789ms totalApi=473 testsDone=23
+[F2bV2 +52342ms] 429 /api/state total429=353 totalApi=473 testsDone=23
+[F2bV2 +52342ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52393ms] LIMITER-DENY count=474 limit=120 resetIn=7737ms totalApi=474 testsDone=23
+[F2bV2 +52393ms] 429 /api/state total429=354 totalApi=474 testsDone=23
+[F2bV2 +52394ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52445ms] LIMITER-DENY count=475 limit=120 resetIn=7685ms totalApi=475 testsDone=23
+[F2bV2 +52445ms] 429 /api/state total429=355 totalApi=475 testsDone=23
+[F2bV2 +52445ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52496ms] LIMITER-DENY count=476 limit=120 resetIn=7634ms totalApi=476 testsDone=23
+[F2bV2 +52497ms] 429 /api/state total429=356 totalApi=476 testsDone=23
+[F2bV2 +52497ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52548ms] LIMITER-DENY count=477 limit=120 resetIn=7582ms totalApi=477 testsDone=23
+[F2bV2 +52549ms] 429 /api/state total429=357 totalApi=477 testsDone=23
+[F2bV2 +52549ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52600ms] LIMITER-DENY count=478 limit=120 resetIn=7530ms totalApi=478 testsDone=23
+[F2bV2 +52601ms] 429 /api/state total429=358 totalApi=478 testsDone=23
+[F2bV2 +52601ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52652ms] LIMITER-DENY count=479 limit=120 resetIn=7478ms totalApi=479 testsDone=23
+[F2bV2 +52653ms] 429 /api/state total429=359 totalApi=479 testsDone=23
+[F2bV2 +52653ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52705ms] LIMITER-DENY count=480 limit=120 resetIn=7425ms totalApi=480 testsDone=23
+[F2bV2 +52705ms] 429 /api/state total429=360 totalApi=480 testsDone=23
+[F2bV2 +52706ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52757ms] LIMITER-DENY count=481 limit=120 resetIn=7373ms totalApi=481 testsDone=23
+[F2bV2 +52758ms] 429 /api/state total429=361 totalApi=481 testsDone=23
+[F2bV2 +52758ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52809ms] LIMITER-DENY count=482 limit=120 resetIn=7321ms totalApi=482 testsDone=23
+[F2bV2 +52809ms] 429 /api/state total429=362 totalApi=482 testsDone=23
+[F2bV2 +52810ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52861ms] LIMITER-DENY count=483 limit=120 resetIn=7269ms totalApi=483 testsDone=23
+[F2bV2 +52861ms] 429 /api/state total429=363 totalApi=483 testsDone=23
+[F2bV2 +52862ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52913ms] LIMITER-DENY count=484 limit=120 resetIn=7217ms totalApi=484 testsDone=23
+[F2bV2 +52913ms] 429 /api/state total429=364 totalApi=484 testsDone=23
+[F2bV2 +52914ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +52965ms] LIMITER-DENY count=485 limit=120 resetIn=7165ms totalApi=485 testsDone=23
+[F2bV2 +52965ms] 429 /api/state total429=365 totalApi=485 testsDone=23
+[F2bV2 +52966ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53017ms] LIMITER-DENY count=486 limit=120 resetIn=7113ms totalApi=486 testsDone=23
+[F2bV2 +53017ms] 429 /api/state total429=366 totalApi=486 testsDone=23
+[F2bV2 +53018ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53069ms] LIMITER-DENY count=487 limit=120 resetIn=7061ms totalApi=487 testsDone=23
+[F2bV2 +53069ms] 429 /api/state total429=367 totalApi=487 testsDone=23
+[F2bV2 +53070ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53121ms] LIMITER-DENY count=488 limit=120 resetIn=7009ms totalApi=488 testsDone=23
+[F2bV2 +53121ms] 429 /api/state total429=368 totalApi=488 testsDone=23
+[F2bV2 +53122ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53173ms] LIMITER-DENY count=489 limit=120 resetIn=6957ms totalApi=489 testsDone=23
+[F2bV2 +53173ms] 429 /api/state total429=369 totalApi=489 testsDone=23
+[F2bV2 +53174ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53225ms] LIMITER-DENY count=490 limit=120 resetIn=6905ms totalApi=490 testsDone=23
+[F2bV2 +53225ms] 429 /api/state total429=370 totalApi=490 testsDone=23
+[F2bV2 +53226ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53277ms] LIMITER-DENY count=491 limit=120 resetIn=6853ms totalApi=491 testsDone=23
+[F2bV2 +53277ms] 429 /api/state total429=371 totalApi=491 testsDone=23
+[F2bV2 +53277ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53329ms] LIMITER-DENY count=492 limit=120 resetIn=6801ms totalApi=492 testsDone=23
+[F2bV2 +53329ms] 429 /api/state total429=372 totalApi=492 testsDone=23
+[F2bV2 +53330ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53381ms] LIMITER-DENY count=493 limit=120 resetIn=6749ms totalApi=493 testsDone=23
+[F2bV2 +53381ms] 429 /api/state total429=373 totalApi=493 testsDone=23
+[F2bV2 +53382ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53433ms] LIMITER-DENY count=494 limit=120 resetIn=6697ms totalApi=494 testsDone=23
+[F2bV2 +53433ms] 429 /api/state total429=374 totalApi=494 testsDone=23
+[F2bV2 +53433ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53483ms] LIMITER-DENY count=495 limit=120 resetIn=6647ms totalApi=495 testsDone=23
+[F2bV2 +53484ms] 429 /api/state total429=375 totalApi=495 testsDone=23
+[F2bV2 +53484ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53535ms] LIMITER-DENY count=496 limit=120 resetIn=6595ms totalApi=496 testsDone=23
+[F2bV2 +53536ms] 429 /api/state total429=376 totalApi=496 testsDone=23
+[F2bV2 +53536ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53587ms] LIMITER-DENY count=497 limit=120 resetIn=6543ms totalApi=497 testsDone=23
+[F2bV2 +53588ms] 429 /api/state total429=377 totalApi=497 testsDone=23
+[F2bV2 +53588ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53639ms] LIMITER-DENY count=498 limit=120 resetIn=6491ms totalApi=498 testsDone=23
+[F2bV2 +53639ms] 429 /api/state total429=378 totalApi=498 testsDone=23
+[F2bV2 +53640ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53691ms] LIMITER-DENY count=499 limit=120 resetIn=6439ms totalApi=499 testsDone=23
+[F2bV2 +53692ms] 429 /api/state total429=379 totalApi=499 testsDone=23
+[F2bV2 +53692ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53743ms] LIMITER-DENY count=500 limit=120 resetIn=6387ms totalApi=500 testsDone=23
+[F2bV2 +53743ms] 429 /api/state total429=380 totalApi=500 testsDone=23
+[F2bV2 +53743ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53793ms] LIMITER-DENY count=501 limit=120 resetIn=6337ms totalApi=501 testsDone=23
+[F2bV2 +53794ms] 429 /api/state total429=381 totalApi=501 testsDone=23
+[F2bV2 +53794ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53845ms] LIMITER-DENY count=502 limit=120 resetIn=6285ms totalApi=502 testsDone=23
+[F2bV2 +53846ms] 429 /api/state total429=382 totalApi=502 testsDone=23
+[F2bV2 +53846ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53897ms] LIMITER-DENY count=503 limit=120 resetIn=6233ms totalApi=503 testsDone=23
+[F2bV2 +53898ms] 429 /api/state total429=383 totalApi=503 testsDone=23
+[F2bV2 +53898ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +53949ms] LIMITER-DENY count=504 limit=120 resetIn=6181ms totalApi=504 testsDone=23
+[F2bV2 +53950ms] 429 /api/state total429=384 totalApi=504 testsDone=23
+[F2bV2 +53950ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54001ms] LIMITER-DENY count=505 limit=120 resetIn=6129ms totalApi=505 testsDone=23
+[F2bV2 +54001ms] 429 /api/state total429=385 totalApi=505 testsDone=23
+[F2bV2 +54001ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54052ms] LIMITER-DENY count=506 limit=120 resetIn=6078ms totalApi=506 testsDone=23
+[F2bV2 +54052ms] 429 /api/state total429=386 totalApi=506 testsDone=23
+[F2bV2 +54053ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54104ms] LIMITER-DENY count=507 limit=120 resetIn=6026ms totalApi=507 testsDone=23
+[F2bV2 +54104ms] 429 /api/state total429=387 totalApi=507 testsDone=23
+[F2bV2 +54105ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54156ms] LIMITER-DENY count=508 limit=120 resetIn=5974ms totalApi=508 testsDone=23
+[F2bV2 +54156ms] 429 /api/state total429=388 totalApi=508 testsDone=23
+[F2bV2 +54156ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54207ms] LIMITER-DENY count=509 limit=120 resetIn=5923ms totalApi=509 testsDone=23
+[F2bV2 +54207ms] 429 /api/state total429=389 totalApi=509 testsDone=23
+[F2bV2 +54207ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54258ms] LIMITER-DENY count=510 limit=120 resetIn=5872ms totalApi=510 testsDone=23
+[F2bV2 +54259ms] 429 /api/state total429=390 totalApi=510 testsDone=23
+[F2bV2 +54259ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54310ms] LIMITER-DENY count=511 limit=120 resetIn=5820ms totalApi=511 testsDone=23
+[F2bV2 +54311ms] 429 /api/state total429=391 totalApi=511 testsDone=23
+[F2bV2 +54311ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54362ms] LIMITER-DENY count=512 limit=120 resetIn=5768ms totalApi=512 testsDone=23
+[F2bV2 +54363ms] 429 /api/state total429=392 totalApi=512 testsDone=23
+[F2bV2 +54363ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54414ms] LIMITER-DENY count=513 limit=120 resetIn=5716ms totalApi=513 testsDone=23
+[F2bV2 +54414ms] 429 /api/state total429=393 totalApi=513 testsDone=23
+[F2bV2 +54415ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54466ms] LIMITER-DENY count=514 limit=120 resetIn=5664ms totalApi=514 testsDone=23
+[F2bV2 +54466ms] 429 /api/state total429=394 totalApi=514 testsDone=23
+[F2bV2 +54466ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54517ms] LIMITER-DENY count=515 limit=120 resetIn=5613ms totalApi=515 testsDone=23
+[F2bV2 +54518ms] 429 /api/state total429=395 totalApi=515 testsDone=23
+[F2bV2 +54518ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54569ms] LIMITER-DENY count=516 limit=120 resetIn=5561ms totalApi=516 testsDone=23
+[F2bV2 +54569ms] 429 /api/state total429=396 totalApi=516 testsDone=23
+[F2bV2 +54570ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54621ms] LIMITER-DENY count=517 limit=120 resetIn=5509ms totalApi=517 testsDone=23
+[F2bV2 +54621ms] 429 /api/state total429=397 totalApi=517 testsDone=23
+[F2bV2 +54621ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54672ms] LIMITER-DENY count=518 limit=120 resetIn=5458ms totalApi=518 testsDone=23
+[F2bV2 +54673ms] 429 /api/state total429=398 totalApi=518 testsDone=23
+[F2bV2 +54673ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54724ms] LIMITER-DENY count=519 limit=120 resetIn=5406ms totalApi=519 testsDone=23
+[F2bV2 +54724ms] 429 /api/state total429=399 totalApi=519 testsDone=23
+[F2bV2 +54725ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54776ms] LIMITER-DENY count=520 limit=120 resetIn=5354ms totalApi=520 testsDone=23
+[F2bV2 +54776ms] 429 /api/state total429=400 totalApi=520 testsDone=23
+[F2bV2 +54777ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54827ms] LIMITER-DENY count=521 limit=120 resetIn=5303ms totalApi=521 testsDone=23
+[F2bV2 +54828ms] 429 /api/state total429=401 totalApi=521 testsDone=23
+[F2bV2 +54828ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54879ms] LIMITER-DENY count=522 limit=120 resetIn=5251ms totalApi=522 testsDone=23
+[F2bV2 +54880ms] 429 /api/state total429=402 totalApi=522 testsDone=23
+[F2bV2 +54880ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54931ms] LIMITER-DENY count=523 limit=120 resetIn=5199ms totalApi=523 testsDone=23
+[F2bV2 +54931ms] 429 /api/state total429=403 totalApi=523 testsDone=23
+[F2bV2 +54931ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +54981ms] LIMITER-DENY count=524 limit=120 resetIn=5149ms totalApi=524 testsDone=23
+[F2bV2 +54982ms] 429 /api/state total429=404 totalApi=524 testsDone=23
+[F2bV2 +54982ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55033ms] LIMITER-DENY count=525 limit=120 resetIn=5097ms totalApi=525 testsDone=23
+[F2bV2 +55034ms] 429 /api/state total429=405 totalApi=525 testsDone=23
+[F2bV2 +55034ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55085ms] LIMITER-DENY count=526 limit=120 resetIn=5045ms totalApi=526 testsDone=23
+[F2bV2 +55087ms] 429 /api/state total429=406 totalApi=526 testsDone=23
+[F2bV2 +55087ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55138ms] LIMITER-DENY count=527 limit=120 resetIn=4992ms totalApi=527 testsDone=23
+[F2bV2 +55139ms] 429 /api/state total429=407 totalApi=527 testsDone=23
+[F2bV2 +55139ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55190ms] LIMITER-DENY count=528 limit=120 resetIn=4940ms totalApi=528 testsDone=23
+[F2bV2 +55190ms] 429 /api/state total429=408 totalApi=528 testsDone=23
+[F2bV2 +55191ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55242ms] LIMITER-DENY count=529 limit=120 resetIn=4888ms totalApi=529 testsDone=23
+[F2bV2 +55242ms] 429 /api/state total429=409 totalApi=529 testsDone=23
+[F2bV2 +55242ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55293ms] LIMITER-DENY count=530 limit=120 resetIn=4837ms totalApi=530 testsDone=23
+[F2bV2 +55294ms] 429 /api/state total429=410 totalApi=530 testsDone=23
+[F2bV2 +55294ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55345ms] LIMITER-DENY count=531 limit=120 resetIn=4785ms totalApi=531 testsDone=23
+[F2bV2 +55346ms] 429 /api/state total429=411 totalApi=531 testsDone=23
+[F2bV2 +55346ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55397ms] LIMITER-DENY count=532 limit=120 resetIn=4733ms totalApi=532 testsDone=23
+[F2bV2 +55397ms] 429 /api/state total429=412 totalApi=532 testsDone=23
+[F2bV2 +55398ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55449ms] LIMITER-DENY count=533 limit=120 resetIn=4681ms totalApi=533 testsDone=23
+[F2bV2 +55449ms] 429 /api/state total429=413 totalApi=533 testsDone=23
+[F2bV2 +55449ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55500ms] LIMITER-DENY count=534 limit=120 resetIn=4630ms totalApi=534 testsDone=23
+[F2bV2 +55501ms] 429 /api/state total429=414 totalApi=534 testsDone=23
+[F2bV2 +55501ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55552ms] LIMITER-DENY count=535 limit=120 resetIn=4578ms totalApi=535 testsDone=23
+[F2bV2 +55553ms] 429 /api/state total429=415 totalApi=535 testsDone=23
+[F2bV2 +55553ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55604ms] LIMITER-DENY count=536 limit=120 resetIn=4526ms totalApi=536 testsDone=23
+[F2bV2 +55604ms] 429 /api/state total429=416 totalApi=536 testsDone=23
+[F2bV2 +55605ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55656ms] LIMITER-DENY count=537 limit=120 resetIn=4474ms totalApi=537 testsDone=23
+[F2bV2 +55656ms] 429 /api/state total429=417 totalApi=537 testsDone=23
+[F2bV2 +55657ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55708ms] LIMITER-DENY count=538 limit=120 resetIn=4422ms totalApi=538 testsDone=23
+[F2bV2 +55708ms] 429 /api/state total429=418 totalApi=538 testsDone=23
+[F2bV2 +55708ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55759ms] LIMITER-DENY count=539 limit=120 resetIn=4371ms totalApi=539 testsDone=23
+[F2bV2 +55760ms] 429 /api/state total429=419 totalApi=539 testsDone=23
+[F2bV2 +55760ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55811ms] LIMITER-DENY count=540 limit=120 resetIn=4319ms totalApi=540 testsDone=23
+[F2bV2 +55811ms] 429 /api/state total429=420 totalApi=540 testsDone=23
+[F2bV2 +55812ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55863ms] LIMITER-DENY count=541 limit=120 resetIn=4267ms totalApi=541 testsDone=23
+[F2bV2 +55863ms] 429 /api/state total429=421 totalApi=541 testsDone=23
+[F2bV2 +55863ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55914ms] LIMITER-DENY count=542 limit=120 resetIn=4216ms totalApi=542 testsDone=23
+[F2bV2 +55915ms] 429 /api/state total429=422 totalApi=542 testsDone=23
+[F2bV2 +55915ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +55966ms] LIMITER-DENY count=543 limit=120 resetIn=4164ms totalApi=543 testsDone=23
+[F2bV2 +55967ms] 429 /api/state total429=423 totalApi=543 testsDone=23
+[F2bV2 +55967ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56018ms] LIMITER-DENY count=544 limit=120 resetIn=4112ms totalApi=544 testsDone=23
+[F2bV2 +56018ms] 429 /api/state total429=424 totalApi=544 testsDone=23
+[F2bV2 +56018ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56069ms] LIMITER-DENY count=545 limit=120 resetIn=4061ms totalApi=545 testsDone=23
+[F2bV2 +56069ms] 429 /api/state total429=425 totalApi=545 testsDone=23
+[F2bV2 +56069ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56119ms] LIMITER-DENY count=546 limit=120 resetIn=4011ms totalApi=546 testsDone=23
+[F2bV2 +56120ms] 429 /api/state total429=426 totalApi=546 testsDone=23
+[F2bV2 +56120ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56171ms] LIMITER-DENY count=547 limit=120 resetIn=3959ms totalApi=547 testsDone=23
+[F2bV2 +56172ms] 429 /api/state total429=427 totalApi=547 testsDone=23
+[F2bV2 +56172ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56223ms] LIMITER-DENY count=548 limit=120 resetIn=3907ms totalApi=548 testsDone=23
+[F2bV2 +56223ms] 429 /api/state total429=428 totalApi=548 testsDone=23
+[F2bV2 +56224ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56275ms] LIMITER-DENY count=549 limit=120 resetIn=3855ms totalApi=549 testsDone=23
+[F2bV2 +56275ms] 429 /api/state total429=429 totalApi=549 testsDone=23
+[F2bV2 +56276ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56327ms] LIMITER-DENY count=550 limit=120 resetIn=3803ms totalApi=550 testsDone=23
+[F2bV2 +56327ms] 429 /api/state total429=430 totalApi=550 testsDone=23
+[F2bV2 +56327ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56378ms] LIMITER-DENY count=551 limit=120 resetIn=3752ms totalApi=551 testsDone=23
+[F2bV2 +56379ms] 429 /api/state total429=431 totalApi=551 testsDone=23
+[F2bV2 +56379ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56430ms] LIMITER-DENY count=552 limit=120 resetIn=3700ms totalApi=552 testsDone=23
+[F2bV2 +56430ms] 429 /api/state total429=432 totalApi=552 testsDone=23
+[F2bV2 +56431ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56481ms] LIMITER-DENY count=553 limit=120 resetIn=3649ms totalApi=553 testsDone=23
+[F2bV2 +56482ms] 429 /api/state total429=433 totalApi=553 testsDone=23
+[F2bV2 +56482ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56534ms] LIMITER-DENY count=554 limit=120 resetIn=3596ms totalApi=554 testsDone=23
+[F2bV2 +56534ms] 429 /api/state total429=434 totalApi=554 testsDone=23
+[F2bV2 +56535ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56586ms] LIMITER-DENY count=555 limit=120 resetIn=3544ms totalApi=555 testsDone=23
+[F2bV2 +56587ms] 429 /api/state total429=435 totalApi=555 testsDone=23
+[F2bV2 +56587ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56638ms] LIMITER-DENY count=556 limit=120 resetIn=3492ms totalApi=556 testsDone=23
+[F2bV2 +56639ms] 429 /api/state total429=436 totalApi=556 testsDone=23
+[F2bV2 +56639ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56690ms] LIMITER-DENY count=557 limit=120 resetIn=3440ms totalApi=557 testsDone=23
+[F2bV2 +56691ms] 429 /api/state total429=437 totalApi=557 testsDone=23
+[F2bV2 +56691ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56742ms] LIMITER-DENY count=558 limit=120 resetIn=3388ms totalApi=558 testsDone=23
+[F2bV2 +56743ms] 429 /api/state total429=438 totalApi=558 testsDone=23
+[F2bV2 +56743ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56794ms] LIMITER-DENY count=559 limit=120 resetIn=3336ms totalApi=559 testsDone=23
+[F2bV2 +56794ms] 429 /api/state total429=439 totalApi=559 testsDone=23
+[F2bV2 +56795ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56846ms] LIMITER-DENY count=560 limit=120 resetIn=3284ms totalApi=560 testsDone=23
+[F2bV2 +56846ms] 429 /api/state total429=440 totalApi=560 testsDone=23
+[F2bV2 +56847ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56898ms] LIMITER-DENY count=561 limit=120 resetIn=3232ms totalApi=561 testsDone=23
+[F2bV2 +56898ms] 429 /api/state total429=441 totalApi=561 testsDone=23
+[F2bV2 +56899ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +56950ms] LIMITER-DENY count=562 limit=120 resetIn=3180ms totalApi=562 testsDone=23
+[F2bV2 +56950ms] 429 /api/state total429=442 totalApi=562 testsDone=23
+[F2bV2 +56950ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57001ms] LIMITER-DENY count=563 limit=120 resetIn=3129ms totalApi=563 testsDone=23
+[F2bV2 +57002ms] 429 /api/state total429=443 totalApi=563 testsDone=23
+[F2bV2 +57002ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57053ms] LIMITER-DENY count=564 limit=120 resetIn=3077ms totalApi=564 testsDone=23
+[F2bV2 +57054ms] 429 /api/state total429=444 totalApi=564 testsDone=23
+[F2bV2 +57054ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57105ms] LIMITER-DENY count=565 limit=120 resetIn=3025ms totalApi=565 testsDone=23
+[F2bV2 +57105ms] 429 /api/state total429=445 totalApi=565 testsDone=23
+[F2bV2 +57106ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57157ms] LIMITER-DENY count=566 limit=120 resetIn=2973ms totalApi=566 testsDone=23
+[F2bV2 +57157ms] 429 /api/state total429=446 totalApi=566 testsDone=23
+[F2bV2 +57158ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57209ms] LIMITER-DENY count=567 limit=120 resetIn=2921ms totalApi=567 testsDone=23
+[F2bV2 +57209ms] 429 /api/state total429=447 totalApi=567 testsDone=23
+[F2bV2 +57210ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57261ms] LIMITER-DENY count=568 limit=120 resetIn=2869ms totalApi=568 testsDone=23
+[F2bV2 +57261ms] 429 /api/state total429=448 totalApi=568 testsDone=23
+[F2bV2 +57261ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57311ms] LIMITER-DENY count=569 limit=120 resetIn=2819ms totalApi=569 testsDone=23
+[F2bV2 +57312ms] 429 /api/state total429=449 totalApi=569 testsDone=23
+[F2bV2 +57312ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57363ms] LIMITER-DENY count=570 limit=120 resetIn=2767ms totalApi=570 testsDone=23
+[F2bV2 +57363ms] 429 /api/state total429=450 totalApi=570 testsDone=23
+[F2bV2 +57364ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57415ms] LIMITER-DENY count=571 limit=120 resetIn=2715ms totalApi=571 testsDone=23
+[F2bV2 +57415ms] 429 /api/state total429=451 totalApi=571 testsDone=23
+[F2bV2 +57415ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57466ms] LIMITER-DENY count=572 limit=120 resetIn=2664ms totalApi=572 testsDone=23
+[F2bV2 +57467ms] 429 /api/state total429=452 totalApi=572 testsDone=23
+[F2bV2 +57467ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57518ms] LIMITER-DENY count=573 limit=120 resetIn=2612ms totalApi=573 testsDone=23
+[F2bV2 +57518ms] 429 /api/state total429=453 totalApi=573 testsDone=23
+[F2bV2 +57519ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57570ms] LIMITER-DENY count=574 limit=120 resetIn=2560ms totalApi=574 testsDone=23
+[F2bV2 +57570ms] 429 /api/state total429=454 totalApi=574 testsDone=23
+[F2bV2 +57571ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57622ms] LIMITER-DENY count=575 limit=120 resetIn=2508ms totalApi=575 testsDone=23
+[F2bV2 +57622ms] 429 /api/state total429=455 totalApi=575 testsDone=23
+[F2bV2 +57622ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57673ms] LIMITER-DENY count=576 limit=120 resetIn=2457ms totalApi=576 testsDone=23
+[F2bV2 +57674ms] 429 /api/state total429=456 totalApi=576 testsDone=23
+[F2bV2 +57674ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57725ms] LIMITER-DENY count=577 limit=120 resetIn=2405ms totalApi=577 testsDone=23
+[F2bV2 +57726ms] 429 /api/state total429=457 totalApi=577 testsDone=23
+[F2bV2 +57726ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57777ms] LIMITER-DENY count=578 limit=120 resetIn=2353ms totalApi=578 testsDone=23
+[F2bV2 +57777ms] 429 /api/state total429=458 totalApi=578 testsDone=23
+[F2bV2 +57778ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57829ms] LIMITER-DENY count=579 limit=120 resetIn=2301ms totalApi=579 testsDone=23
+[F2bV2 +57829ms] 429 /api/state total429=459 totalApi=579 testsDone=23
+[F2bV2 +57829ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57880ms] LIMITER-DENY count=580 limit=120 resetIn=2250ms totalApi=580 testsDone=23
+[F2bV2 +57881ms] 429 /api/state total429=460 totalApi=580 testsDone=23
+[F2bV2 +57881ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57932ms] LIMITER-DENY count=581 limit=120 resetIn=2198ms totalApi=581 testsDone=23
+[F2bV2 +57932ms] 429 /api/state total429=461 totalApi=581 testsDone=23
+[F2bV2 +57933ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +57984ms] LIMITER-DENY count=582 limit=120 resetIn=2146ms totalApi=582 testsDone=23
+[F2bV2 +57984ms] 429 /api/state total429=462 totalApi=582 testsDone=23
+[F2bV2 +57985ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58036ms] LIMITER-DENY count=583 limit=120 resetIn=2094ms totalApi=583 testsDone=23
+[F2bV2 +58036ms] 429 /api/state total429=463 totalApi=583 testsDone=23
+[F2bV2 +58036ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58087ms] LIMITER-DENY count=584 limit=120 resetIn=2043ms totalApi=584 testsDone=23
+[F2bV2 +58087ms] 429 /api/state total429=464 totalApi=584 testsDone=23
+[F2bV2 +58087ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58138ms] LIMITER-DENY count=585 limit=120 resetIn=1992ms totalApi=585 testsDone=23
+[F2bV2 +58139ms] 429 /api/state total429=465 totalApi=585 testsDone=23
+[F2bV2 +58139ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58190ms] LIMITER-DENY count=586 limit=120 resetIn=1940ms totalApi=586 testsDone=23
+[F2bV2 +58190ms] 429 /api/state total429=466 totalApi=586 testsDone=23
+[F2bV2 +58191ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58242ms] LIMITER-DENY count=587 limit=120 resetIn=1888ms totalApi=587 testsDone=23
+[F2bV2 +58242ms] 429 /api/state total429=467 totalApi=587 testsDone=23
+[F2bV2 +58242ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58292ms] LIMITER-DENY count=588 limit=120 resetIn=1838ms totalApi=588 testsDone=23
+[F2bV2 +58293ms] 429 /api/state total429=468 totalApi=588 testsDone=23
+[F2bV2 +58293ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58344ms] LIMITER-DENY count=589 limit=120 resetIn=1786ms totalApi=589 testsDone=23
+[F2bV2 +58345ms] 429 /api/state total429=469 totalApi=589 testsDone=23
+[F2bV2 +58345ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58396ms] LIMITER-DENY count=590 limit=120 resetIn=1734ms totalApi=590 testsDone=23
+[F2bV2 +58396ms] 429 /api/state total429=470 totalApi=590 testsDone=23
+[F2bV2 +58397ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58448ms] LIMITER-DENY count=591 limit=120 resetIn=1682ms totalApi=591 testsDone=23
+[F2bV2 +58448ms] 429 /api/state total429=471 totalApi=591 testsDone=23
+[F2bV2 +58448ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58498ms] LIMITER-DENY count=592 limit=120 resetIn=1632ms totalApi=592 testsDone=23
+[F2bV2 +58499ms] 429 /api/state total429=472 totalApi=592 testsDone=23
+[F2bV2 +58499ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58551ms] LIMITER-DENY count=593 limit=120 resetIn=1579ms totalApi=593 testsDone=23
+[F2bV2 +58551ms] 429 /api/state total429=473 totalApi=593 testsDone=23
+[F2bV2 +58552ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58603ms] LIMITER-DENY count=594 limit=120 resetIn=1527ms totalApi=594 testsDone=23
+[F2bV2 +58603ms] 429 /api/state total429=474 totalApi=594 testsDone=23
+[F2bV2 +58604ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58655ms] LIMITER-DENY count=595 limit=120 resetIn=1475ms totalApi=595 testsDone=23
+[F2bV2 +58655ms] 429 /api/state total429=475 totalApi=595 testsDone=23
+[F2bV2 +58655ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58706ms] LIMITER-DENY count=596 limit=120 resetIn=1424ms totalApi=596 testsDone=23
+[F2bV2 +58707ms] 429 /api/state total429=476 totalApi=596 testsDone=23
+[F2bV2 +58707ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58758ms] LIMITER-DENY count=597 limit=120 resetIn=1372ms totalApi=597 testsDone=23
+[F2bV2 +58758ms] 429 /api/state total429=477 totalApi=597 testsDone=23
+[F2bV2 +58758ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58810ms] LIMITER-DENY count=598 limit=120 resetIn=1321ms totalApi=598 testsDone=23
+[F2bV2 +58810ms] 429 /api/state total429=478 totalApi=598 testsDone=23
+[F2bV2 +58810ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58861ms] LIMITER-DENY count=599 limit=120 resetIn=1269ms totalApi=599 testsDone=23
+[F2bV2 +58862ms] 429 /api/state total429=479 totalApi=599 testsDone=23
+[F2bV2 +58862ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58913ms] LIMITER-DENY count=600 limit=120 resetIn=1217ms totalApi=600 testsDone=23
+[F2bV2 +58913ms] 429 /api/state total429=480 totalApi=600 testsDone=23
+[F2bV2 +58913ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +58964ms] LIMITER-DENY count=601 limit=120 resetIn=1166ms totalApi=601 testsDone=23
+[F2bV2 +58965ms] 429 /api/state total429=481 totalApi=601 testsDone=23
+[F2bV2 +58965ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59016ms] LIMITER-DENY count=602 limit=120 resetIn=1114ms totalApi=602 testsDone=23
+[F2bV2 +59016ms] 429 /api/state total429=482 totalApi=602 testsDone=23
+[F2bV2 +59017ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59068ms] LIMITER-DENY count=603 limit=120 resetIn=1062ms totalApi=603 testsDone=23
+[F2bV2 +59068ms] 429 /api/state total429=483 totalApi=603 testsDone=23
+[F2bV2 +59069ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59120ms] LIMITER-DENY count=604 limit=120 resetIn=1010ms totalApi=604 testsDone=23
+[F2bV2 +59120ms] 429 /api/state total429=484 totalApi=604 testsDone=23
+[F2bV2 +59120ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59170ms] LIMITER-DENY count=605 limit=120 resetIn=960ms totalApi=605 testsDone=23
+[F2bV2 +59171ms] 429 /api/state total429=485 totalApi=605 testsDone=23
+[F2bV2 +59171ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59221ms] LIMITER-DENY count=606 limit=120 resetIn=909ms totalApi=606 testsDone=23
+[F2bV2 +59222ms] 429 /api/state total429=486 totalApi=606 testsDone=23
+[F2bV2 +59222ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59273ms] LIMITER-DENY count=607 limit=120 resetIn=857ms totalApi=607 testsDone=23
+[F2bV2 +59274ms] 429 /api/state total429=487 totalApi=607 testsDone=23
+[F2bV2 +59274ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59325ms] LIMITER-DENY count=608 limit=120 resetIn=805ms totalApi=608 testsDone=23
+[F2bV2 +59326ms] 429 /api/state total429=488 totalApi=608 testsDone=23
+[F2bV2 +59326ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59377ms] LIMITER-DENY count=609 limit=120 resetIn=753ms totalApi=609 testsDone=23
+[F2bV2 +59377ms] 429 /api/state total429=489 totalApi=609 testsDone=23
+[F2bV2 +59378ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59429ms] LIMITER-DENY count=610 limit=120 resetIn=701ms totalApi=610 testsDone=23
+[F2bV2 +59429ms] 429 /api/state total429=490 totalApi=610 testsDone=23
+[F2bV2 +59430ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59481ms] LIMITER-DENY count=611 limit=120 resetIn=649ms totalApi=611 testsDone=23
+[F2bV2 +59481ms] 429 /api/state total429=491 totalApi=611 testsDone=23
+[F2bV2 +59481ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59532ms] LIMITER-DENY count=612 limit=120 resetIn=598ms totalApi=612 testsDone=23
+[F2bV2 +59533ms] 429 /api/state total429=492 totalApi=612 testsDone=23
+[F2bV2 +59533ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59584ms] LIMITER-DENY count=613 limit=120 resetIn=546ms totalApi=613 testsDone=23
+[F2bV2 +59585ms] 429 /api/state total429=493 totalApi=613 testsDone=23
+[F2bV2 +59585ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59636ms] LIMITER-DENY count=614 limit=120 resetIn=494ms totalApi=614 testsDone=23
+[F2bV2 +59637ms] 429 /api/state total429=494 totalApi=614 testsDone=23
+[F2bV2 +59637ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59688ms] LIMITER-DENY count=615 limit=120 resetIn=442ms totalApi=615 testsDone=23
+[F2bV2 +59688ms] 429 /api/state total429=495 totalApi=615 testsDone=23
+[F2bV2 +59689ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59740ms] LIMITER-DENY count=616 limit=120 resetIn=390ms totalApi=616 testsDone=23
+[F2bV2 +59740ms] 429 /api/state total429=496 totalApi=616 testsDone=23
+[F2bV2 +59741ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59792ms] LIMITER-DENY count=617 limit=120 resetIn=338ms totalApi=617 testsDone=23
+[F2bV2 +59792ms] 429 /api/state total429=497 totalApi=617 testsDone=23
+[F2bV2 +59792ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59843ms] LIMITER-DENY count=618 limit=120 resetIn=287ms totalApi=618 testsDone=23
+[F2bV2 +59843ms] 429 /api/state total429=498 totalApi=618 testsDone=23
+[F2bV2 +59844ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59895ms] LIMITER-DENY count=619 limit=120 resetIn=235ms totalApi=619 testsDone=23
+[F2bV2 +59895ms] 429 /api/state total429=499 totalApi=619 testsDone=23
+[F2bV2 +59895ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59946ms] LIMITER-DENY count=620 limit=120 resetIn=184ms totalApi=620 testsDone=23
+[F2bV2 +59947ms] 429 /api/state total429=500 totalApi=620 testsDone=23
+[F2bV2 +59947ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +59999ms] LIMITER-DENY count=621 limit=120 resetIn=131ms totalApi=621 testsDone=23
+[F2bV2 +59999ms] 429 /api/state total429=501 totalApi=621 testsDone=23
+[F2bV2 +60000ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +60051ms] LIMITER-DENY count=622 limit=120 resetIn=79ms totalApi=622 testsDone=23
+[F2bV2 +60051ms] 429 /api/state total429=502 totalApi=622 testsDone=23
+[F2bV2 +60051ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +60101ms] LIMITER-DENY count=623 limit=120 resetIn=29ms totalApi=623 testsDone=23
+[F2bV2 +60102ms] 429 /api/state total429=503 totalApi=623 testsDone=23
+[F2bV2 +60102ms] state-poll -> ERROR 429 console API rate limit exceeded
+[F2bV2 +60161ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60222ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60288ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60348ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60405ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60463ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60521ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60580ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60638ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60703ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60763ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60820ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60878ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60936ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +60994ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61051ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61108ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61167ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61224ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61281ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61339ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61398ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61456ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61514ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61571ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61629ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61686ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61744ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61801ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61858ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61915ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61973ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +61974ms] FAIL #24 the console can keep cycling until the plan is done 20056ms api=+388 state=+384 429=+356 totalApi=655 total429=503
+[F2bV2 +61979ms] ok #25 statistics report what the runtime executed 5ms api=+1 state=+0 429=+0 totalApi=656 total429=503
+[F2bV2 +61981ms] ok #26 the discussion endpoint lists the selectable personas 2ms api=+1 state=+0 429=+0 totalApi=657 total429=503
+[F2bV2 +61982ms] 400 /api/discussion totalApi=658
+[F2bV2 +61982ms] admission /api/discussion -> 400
+[F2bV2 +61983ms] 400 /api/discussion totalApi=659
+[F2bV2 +61983ms] admission /api/discussion -> 400
+[F2bV2 +61984ms] 400 /api/discussion totalApi=660
+[F2bV2 +61984ms] admission /api/discussion -> 400
+[F2bV2 +61984ms] ok #27 the discussion endpoint validates its request 3ms api=+3 state=+0 429=+0 totalApi=660 total429=503
+[F2bV2 +62057ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62114ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62173ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62231ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62289ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62347ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62405ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62464ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62522ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62581ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62640ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62698ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62757ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62816ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62875ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62933ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +62991ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63050ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63111ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63170ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63229ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63287ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63345ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63404ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63465ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63528ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63587ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63651ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63711ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63769ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63828ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63887ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +63946ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +64003ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +64062ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +64121ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +64129ms] state-poll -> status=done pending=0 gitReport=true
+[F2bV2 +64130ms] ok #28 a discussion runs, streams its rounds, and reports 2146ms api=+39 state=+37 429=+0 totalApi=699 total429=503
+[F2bV2 +64133ms] SUMMARY wall=64133ms api=699 state=640 events=10 tasks=13 clear=7 sessions=3 429=503 409=2 other4xx=9 modelCalls=29 tests=28 limiterPatched=true limiterCalls=699 limiterDenied=503 limiterMaxCount=623 git launches=10 completions=10 avgMs=15 maxMs=21 first429=+18561ms testIdx=19 api=121 other={"/api/calls/main_agent%7Cgraph_3%7Cread_big":1,"/api/calls":1,"/api/calls/nope":1,"/api/approvals/approval_1_1790117325020":1,"/api/approvals/approval_1_1790117326149":1,"/api/approval-mode":4,"/api/settings":11,"/api/stats":1,"/api/discussion/personas":1,"/api/discussion":4}

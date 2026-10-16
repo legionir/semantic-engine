@@ -1,0 +1,5039 @@
+{
+  "generatedAt": "2026-09-22T13:13:40.422Z",
+  "fixture": "fixture/",
+  "goldFile": "gold.json",
+  "gateBars": "macro precision >= 0.95 AND exact-class precision = 1.0; macro recall >= B1 AND > B0 (docs/GATES.md; measured, never changed)",
+  "softBars": null,
+  "freezeVerified": true,
+  "lexicon": {
+    "version": "1.0.0",
+    "patterns": 18
+  },
+  "summary": {
+    "macro": {
+      "AWARE": {
+        "precision": 1,
+        "recall": 1
+      },
+      "BLIND": {
+        "precision": 0.975,
+        "recall": 0.875
+      },
+      "NO_CHAIN": {
+        "precision": 1,
+        "recall": 0.9833333333333334
+      },
+      "NO_DEPENDEES": {
+        "precision": 1,
+        "recall": 0.9666666666666668
+      },
+      "NO_HARD_SURFACE": {
+        "precision": 0.975,
+        "recall": 0.9625
+      },
+      "NO_REFERRERS_EXPLICIT": {
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_SINGLETON": {
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_DEPTH": {
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_AMBIGUITY_EXPANSION": {
+        "precision": 1,
+        "recall": 0.95
+      },
+      "B0": {
+        "precision": 0.5819696969696969,
+        "recall": 0.7875
+      },
+      "B1": {
+        "precision": 0.6033333333333333,
+        "recall": 0.8958333333333333
+      }
+    },
+    "micro": {
+      "AWARE": {
+        "tp": 67,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "BLIND": {
+        "tp": 58,
+        "fp": 1,
+        "fn": 9,
+        "precision": 0.9830508474576272,
+        "recall": 0.8656716417910447
+      },
+      "NO_CHAIN": {
+        "tp": 66,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.9850746268656716
+      },
+      "NO_DEPENDEES": {
+        "tp": 65,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0.9701492537313433
+      },
+      "NO_HARD_SURFACE": {
+        "tp": 64,
+        "fp": 1,
+        "fn": 3,
+        "precision": 0.9846153846153847,
+        "recall": 0.9552238805970149
+      },
+      "NO_REFERRERS_EXPLICIT": {
+        "tp": 67,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_SINGLETON": {
+        "tp": 67,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_DEPTH": {
+        "tp": 67,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_AMBIGUITY_EXPANSION": {
+        "tp": 64,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1,
+        "recall": 0.9552238805970149
+      }
+    }
+  },
+  "gates": {
+    "precision_ge_095": true,
+    "exact_class_precision_1": true,
+    "recall_ge_b1": true,
+    "recall_gt_b0": true
+  },
+  "softGateResult": null,
+  "calibration": {
+    "unresolvedCount": 2,
+    "unresolvedChecks": [
+      {
+        "name": "fs",
+        "sourcePath": "src/app.ts",
+        "reasonContains": "unresolved namespace import",
+        "found": true
+      },
+      {
+        "name": "ghost",
+        "sourcePath": "src/unused.ts",
+        "reasonContains": "unresolved import 'ghost'",
+        "found": true
+      }
+    ],
+    "hardBindingChecks": [
+      {
+        "sourcePath": "src/shadow.ts",
+        "line": 3,
+        "kind": "local-shadow",
+        "enclosing": "s-f",
+        "found": true
+      }
+    ],
+    "bindingHardEnclosings": [
+      "s-f",
+      "s-s",
+      "s-v"
+    ],
+    "bindingHardCheck": true,
+    "ambiguousRefCount": 1,
+    "ambiguousRefs": [
+      {
+        "at": "src/usesfmt.ts:2",
+        "candidates": [
+          "s-fmt1",
+          "s-fmt2"
+        ]
+      }
+    ],
+    "wrongExactRefs": [],
+    "fileDepCount": 13,
+    "fileDepCountExpected": 13,
+    "midEdgeCheck": true,
+    "viaMidYieldsCheck": true,
+    "unclassifiedOccurrences": 0,
+    "touchedUnresolved": {
+      "T1": 0,
+      "T2": 0,
+      "T3": 0,
+      "T4": 1,
+      "T5": 1,
+      "T6": 1,
+      "T7": 0,
+      "T8": 0,
+      "T9": 0,
+      "T10": 0,
+      "T11": 0,
+      "T12": 0,
+      "T13": 1,
+      "T14": 0,
+      "T15": 0,
+      "T16": 0,
+      "T17": 0,
+      "T18": 0,
+      "T19": 0,
+      "T20": 0
+    },
+    "touchedUnresolvedPass": true,
+    "touchedBindingHard": {
+      "T1": 1,
+      "T2": 0,
+      "T3": 0,
+      "T4": 0,
+      "T5": 1,
+      "T6": 1,
+      "T7": 1,
+      "T8": 0,
+      "T9": 1,
+      "T10": 3,
+      "T11": 0,
+      "T12": 0,
+      "T13": 0,
+      "T14": 1,
+      "T15": 0,
+      "T16": 1,
+      "T17": 1,
+      "T18": 1,
+      "T19": 1,
+      "T20": 1
+    },
+    "touchedBindingHardPass": true,
+    "deterministic": true,
+    "persistedLeg": {
+      "storeSchemaVersion": 1,
+      "graphEqualAfterReopen": true,
+      "handleResolvesAfterReopen": true,
+      "allTasksEqual": true,
+      "taskParity": true,
+      "tasks": [
+        {
+          "id": "T1",
+          "equal": true
+        },
+        {
+          "id": "T2",
+          "equal": true
+        },
+        {
+          "id": "T3",
+          "equal": true
+        },
+        {
+          "id": "T4",
+          "equal": true
+        },
+        {
+          "id": "T5",
+          "equal": true
+        },
+        {
+          "id": "T6",
+          "equal": true
+        },
+        {
+          "id": "T7",
+          "equal": true
+        },
+        {
+          "id": "T8",
+          "equal": true
+        },
+        {
+          "id": "T9",
+          "equal": true
+        },
+        {
+          "id": "T10",
+          "equal": true
+        },
+        {
+          "id": "T11",
+          "equal": true
+        },
+        {
+          "id": "T12",
+          "equal": true
+        },
+        {
+          "id": "T13",
+          "equal": true
+        },
+        {
+          "id": "T14",
+          "equal": true
+        },
+        {
+          "id": "T15",
+          "equal": true
+        },
+        {
+          "id": "T16",
+          "equal": true
+        },
+        {
+          "id": "T17",
+          "equal": true
+        },
+        {
+          "id": "T18",
+          "equal": true
+        },
+        {
+          "id": "T19",
+          "equal": true
+        },
+        {
+          "id": "T20",
+          "equal": true
+        }
+      ]
+    },
+    "incremental": {
+      "equal": true,
+      "invalidPathRejected": true,
+      "changedPaths": [
+        "src/use.ts"
+      ]
+    },
+    "b0b1Reproduction": {
+      "expected": {
+        "b0": {
+          "precision": 0.582,
+          "recall": 0.787
+        },
+        "b1": {
+          "precision": 0.603,
+          "recall": 0.896
+        }
+      },
+      "actual": {
+        "b0": {
+          "precision": 0.5819696969696969,
+          "recall": 0.7875
+        },
+        "b1": {
+          "precision": 0.6033333333333333,
+          "recall": 0.8958333333333333
+        }
+      },
+      "pass": true
+    }
+  },
+  "graphCounts": {
+    "references": 15,
+    "unresolved": 2,
+    "hardBindings": 1,
+    "fileDeps": 13,
+    "resolutionModes": {
+      "exact": 14,
+      "ambiguous": 1,
+      "heuristic": 0,
+      "unresolved": 0
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "seed": "s-add",
+      "goal": "Show all usages of add",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 5,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "keywords": [
+          "usages",
+          "add"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T2",
+      "seed": "s-sub",
+      "goal": "Show the subtraction helper and every place it is applied",
+      "relevant": [
+        "s-sub",
+        "s-r"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-r",
+            "s-sub"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "subtraction",
+          "helper",
+          "place",
+          "applied"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 2,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.25,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T3",
+      "seed": "s-pi",
+      "goal": "Show the PI constant and where it is used",
+      "relevant": [
+        "s-pi",
+        "s-r2"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-pi",
+            "s-r2"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub"
+        ],
+        "tp": 2,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.4,
+        "recall": 1,
+        "keywords": [
+          "pi",
+          "constant"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 2,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.25,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T4",
+      "seed": "s-total",
+      "goal": "Show total and everything that consumes it",
+      "relevant": [
+        "s-total",
+        "s-double",
+        "s-grand"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 4,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-double",
+          "s-grand",
+          "s-total"
+        ],
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "total",
+          "everything",
+          "consumes"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-grand",
+          "s-pi",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 3,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "files": [
+          "src/app.ts",
+          "src/math.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T5",
+      "seed": "s-grand",
+      "goal": "Trace grand back to its sources through the import chain",
+      "relevant": [
+        "s-grand",
+        "s-total",
+        "s-double",
+        "s-v"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-grand"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 3,
+          "precision": 1,
+          "recall": 0.25,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-double",
+            "s-grand",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 4,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-double",
+          "s-f",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 4,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.4,
+        "recall": 1,
+        "keywords": [
+          "trace",
+          "grand",
+          "sources",
+          "import",
+          "chain"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-double",
+          "s-grand",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/app.ts",
+          "src/use.ts",
+          "src/via.ts"
+        ]
+      }
+    },
+    {
+      "id": "T6",
+      "seed": "s-v",
+      "goal": "Show the re-export chain behind v (mid/footbridge modules)",
+      "relevant": [
+        "s-v",
+        "s-grand",
+        "s-add"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-add",
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1,
+          "recall": 0.6666666666666666,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1,
+          "recall": 0.6666666666666666,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-add",
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-add",
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-add",
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-add",
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-add",
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-add",
+            "s-grand",
+            "s-v"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 3,
+        "fp": 13,
+        "fn": 0,
+        "precision": 0.1875,
+        "recall": 1,
+        "keywords": [
+          "re",
+          "export",
+          "chain",
+          "v",
+          "mid",
+          "footbridge",
+          "modules"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-grand",
+          "s-v"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.6666666666666666,
+        "files": [
+          "src/app.ts",
+          "src/mid.ts",
+          "src/via.ts"
+        ]
+      }
+    },
+    {
+      "id": "T7",
+      "seed": "s-f",
+      "goal": "Show function f and its shadowed parameter",
+      "relevant": [
+        "s-f"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-f"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 1,
+        "fp": 15,
+        "fn": 0,
+        "precision": 0.0625,
+        "recall": 1,
+        "keywords": [
+          "function",
+          "f",
+          "shadowed",
+          "parameter"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-f",
+          "s-pi",
+          "s-sub"
+        ],
+        "tp": 1,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.25,
+        "recall": 1,
+        "files": [
+          "src/math.ts",
+          "src/shadow.ts"
+        ]
+      }
+    },
+    {
+      "id": "T8",
+      "seed": "s-fmt1",
+      "goal": "Find the helper that formats output",
+      "relevant": [
+        "s-fmt1",
+        "s-fmt2",
+        "s-o"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-fmt1",
+            "s-o"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1,
+          "recall": 0.6666666666666666,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 1,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "helper",
+          "formats",
+          "output"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-fmt1",
+          "s-fmt2",
+          "s-o"
+        ],
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/dup.ts",
+          "src/usesfmt.ts"
+        ]
+      }
+    },
+    {
+      "id": "T9",
+      "seed": "s-store",
+      "goal": "Show the Store class and its consumers",
+      "relevant": [
+        "s-store",
+        "s-s"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-s",
+            "s-store"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-s",
+          "s-store"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "store",
+          "class",
+          "consumers"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-s",
+          "s-store"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/admin.ts",
+          "src/store.ts"
+        ]
+      }
+    },
+    {
+      "id": "T10",
+      "seed": "s-double",
+      "goal": "Show references the resolver cannot bind (shadowed, re-exported, default-imported)",
+      "relevant": [
+        "s-double",
+        "s-f",
+        "s-v",
+        "s-s"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-double",
+            "s-f",
+            "s-s",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-double",
+            "s-grand"
+          ],
+          "tp": 1,
+          "fp": 1,
+          "fn": 3,
+          "precision": 0.5,
+          "recall": 0.25,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-double",
+            "s-f",
+            "s-s",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-double",
+            "s-f",
+            "s-s",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-double",
+            "s-grand"
+          ],
+          "tp": 1,
+          "fp": 1,
+          "fn": 3,
+          "precision": 0.5,
+          "recall": 0.25,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-double",
+            "s-f",
+            "s-s",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-double",
+            "s-f",
+            "s-s",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-double",
+            "s-f",
+            "s-s",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-double",
+            "s-f",
+            "s-s",
+            "s-v"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 4,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-lonely",
+          "s-pi",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 3,
+        "fp": 8,
+        "fn": 1,
+        "precision": 0.2727272727272727,
+        "recall": 0.75,
+        "keywords": [
+          "references",
+          "resolver",
+          "cannot",
+          "bind",
+          "shadowed",
+          "re",
+          "exported",
+          "default",
+          "imported"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-grand",
+          "s-pi",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 1,
+        "fp": 5,
+        "fn": 3,
+        "precision": 0.16666666666666666,
+        "recall": 0.25,
+        "files": [
+          "src/app.ts",
+          "src/math.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T11",
+      "seed": "s-o",
+      "goal": "Which fmt overload does o call?",
+      "relevant": [
+        "s-o",
+        "s-fmt1",
+        "s-fmt2"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-o"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-o"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-fmt1",
+            "s-fmt2",
+            "s-o"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-o"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 1,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 3,
+        "fp": 13,
+        "fn": 0,
+        "precision": 0.1875,
+        "recall": 1,
+        "keywords": [
+          "fmt",
+          "overload",
+          "o",
+          "call"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-fmt1",
+          "s-fmt2",
+          "s-o"
+        ],
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/dup.ts",
+          "src/usesfmt.ts"
+        ]
+      }
+    },
+    {
+      "id": "T12",
+      "seed": "s-r",
+      "goal": "Show r",
+      "relevant": [
+        "s-r"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-r"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 1,
+        "fp": 15,
+        "fn": 0,
+        "precision": 0.0625,
+        "recall": 1,
+        "keywords": [
+          "r"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub"
+        ],
+        "tp": 1,
+        "fp": 4,
+        "fn": 0,
+        "precision": 0.2,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts"
+        ]
+      }
+    },
+    {
+      "id": "T13",
+      "seed": "s-lonely",
+      "goal": "Show lonely",
+      "relevant": [
+        "s-lonely"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-lonely"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-lonely"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "lonely"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-lonely"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/unused.ts"
+        ]
+      }
+    },
+    {
+      "id": "T14",
+      "seed": "s-s",
+      "goal": "Show s",
+      "relevant": [
+        "s-s"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-s"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 1,
+        "fp": 14,
+        "fn": 0,
+        "precision": 0.06666666666666667,
+        "recall": 1,
+        "keywords": [
+          "s"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-s",
+          "s-store"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "files": [
+          "src/admin.ts",
+          "src/store.ts"
+        ]
+      }
+    },
+    {
+      "id": "T15",
+      "seed": "s-r2",
+      "goal": "Show r2",
+      "relevant": [
+        "s-r2"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-r2"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s-r",
+          "s-r2"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "keywords": [
+          "r2"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub"
+        ],
+        "tp": 1,
+        "fp": 4,
+        "fn": 0,
+        "precision": 0.2,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts"
+        ]
+      }
+    },
+    {
+      "id": "T16",
+      "seed": "s-add",
+      "goal": "Where is add called?",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 5,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "keywords": [
+          "add",
+          "called"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T17",
+      "seed": "s-add",
+      "goal": "List every call site of the add function",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 5,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-lonely",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "keywords": [
+          "call",
+          "site",
+          "add",
+          "function"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T18",
+      "seed": "s-add",
+      "goal": "add",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 5,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "keywords": [
+          "add"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T19",
+      "seed": "s-add",
+      "goal": "Which modules depend on the addition helper?",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 5,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "modules",
+          "depend",
+          "addition",
+          "helper"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T20",
+      "seed": "s-add",
+      "goal": "Show me everything that uses addition",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s-add",
+            "s-double",
+            "s-r",
+            "s-r2",
+            "s-total",
+            "s-v"
+          ],
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 5,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "everything",
+          "addition"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    }
+  ]
+}

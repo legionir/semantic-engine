@@ -1,0 +1,13 @@
+=== CMD: npx jest src/ai/tools/Phase3SemanticTools.test.ts --runInBand (post-fix) ===
+TIMESTAMP: 2026-09-21T22:04:26Z
+PASS src/ai/tools/Phase3SemanticTools.test.ts
+  Phase 3 symbol_references tool
+    ✓ is disabled without a workspace root (3 ms)
+    ✓ returns provenance, confidence and snapshot metadata (15 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        0.247 s, estimated 1 s
+Ran all test suites matching /src\/ai\/tools\/Phase3SemanticTools.test.ts/i.
+EXIT_CODE:0

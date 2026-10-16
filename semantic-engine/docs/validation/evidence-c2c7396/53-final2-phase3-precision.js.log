@@ -1,0 +1,15 @@
+=== CMD: node docs/validation/scripts/phase3-precision.js (final-2 tree) ===
+TIMESTAMP: 2026-09-21T22:37:17Z
+{
+  "references": 2,
+  "exact": 2,
+  "correctExact": 2,
+  "exactPrecision": 1,
+  "unresolved": 1,
+  "unresolvedRetained": 1,
+  "fileDeps": 2,
+  "incrementalEqualsFull": true,
+  "threshold": 0.95,
+  "pass": true
+}
+EXIT_CODE:0

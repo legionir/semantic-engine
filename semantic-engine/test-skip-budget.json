@@ -1,0 +1,4 @@
+{
+  "suites": 0,
+  "note": "SE-F-049 — the test gate (scripts/check-tests.js) refuses any jest run where a suite SKIPS at the suite level. test:gate runs after `npm run build`, so the dist-gated e2e/gateway/cli suites always run; a suite-level skip means either the build step vanished from the pipeline or a new describe.skip guard was added silently. Individual TEST skips (environment-probed, e.g. the sqlite3 glibc probe or the win32 case) are a different, honest category and are not counted here. Raising this number requires a recorded reason next to the change."
+}

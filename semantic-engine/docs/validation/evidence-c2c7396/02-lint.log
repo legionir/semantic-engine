@@ -1,0 +1,27 @@
+=== CMD: npm run lint ===
+TIMESTAMP: 2026-09-21T21:52:15Z
+
+> @aicoder/semantic-engine@0.1.0 lint
+> eslint src
+
+
+/home/user/semantic-engine-structured-ai/semantic-engine/src/ai/tools/Phase1ReadTools.ts
+  3:13  warning  'path' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+  7:10  warning  'LineIndex' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/user/semantic-engine-structured-ai/semantic-engine/src/ai/tools/QueryIndexTool.ts
+  165:10  warning  'loadSqlite' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/user/semantic-engine-structured-ai/semantic-engine/src/cli/commands/watch-command.ts
+  18:10  warning  'IEmbeddingGenerator' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+  20:3   warning  'createEmbeddingGeneratorFromArgs' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  21:3   warning  'embeddingRequested' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+
+/home/user/semantic-engine-structured-ai/semantic-engine/src/core/codeintel/Phase4Controlled.ts
+   5:10  warning  'FileEntry' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   6:39  warning  'makeSymbolKey' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+  21:7   warning  'phase4Contract' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+✖ 9 problems (0 errors, 9 warnings)
+
+EXIT_CODE:0

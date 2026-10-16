@@ -1,0 +1,1713 @@
+
+> structured-ai@0.1.0 test
+> node test/helpers/normalize.test.js && node test/contracts/actions.contract.test.js && node test/contracts/events.contract.test.js && node test/contracts/prompt.contract.test.js && node test/contracts/tool.contract.test.js && node test/contracts/api.contract.test.js && node test/contracts/persistence.contract.test.js && node test/contracts/discussion.contract.test.js && node test/contracts/rollout.contract.test.js && node test/policy/policy.test.js && node test/events/events.test.js && node test/projects/projects.test.js && node test/projects/project-api.test.js && node test/runs/run-context.test.js && node test/runs/concurrency.test.js && node test/runs/delegation-projects.test.js && node test/tools/project-tools.test.js && node test/tools/tool-runtime.test.js && node test/prompt/builder.test.js && node test/application/application.test.js && node test/actions/parser.test.js && node test/runtime/engine.test.js && node test/context/context.test.js && node test/tools/tools.test.js && node test/hooks/legacy.test.js && node test/hooks/hooks.test.js && node test/persistence/journal.test.js && node test/persistence/eventstore.test.js && node test/runtime/runtime.test.js && node test/mcp/semantic.test.js && node test/mcp/semantic-pool.test.js && node test/mcp/gateway.integration.test.js && node test/mcp/engine-paths.test.js && node test/projects/project-run.test.js && node test/persistence/project-stores.test.js && node test/persistence/repositories.test.js && node test/persistence/atomic-saves.test.js && node test/mcp/mcp.test.js && node test/mcp/layer.test.js && node test/context/archive.test.js && node test/e2e/e2e.test.js && node test/e2e/cli.test.js && node test/cli/modules.test.js && node test/e2e/interactive.test.js && node test/ui/ui.test.js && node test/ui/modules.test.js && node test/ui/visualizer.test.js && node test/discussion/discussion.test.js && node test/discussion/project-discussion.test.js && node test/web/web.test.js && node test/web/routes.test.js && node test/mvp/mvp.test.js
+
+  ok   ISO timestamps, run ids, temp paths and pids collapse to tokens
+  ok   workspace replacement wins over the temp-dir rule
+  ok   volatile numbers are key-driven; contractual numbers survive
+  ok   object keys are sorted recursively and array order is preserved
+  ok   normalizeJson accepts raw provider payloads
+  ok   epochs below the threshold are not mistaken for timestamps
+
+6/6 passed
+  ok   action envelope keeps its top-level keys and version
+  ok   valid tool_call, delegate and final actions parse and validate
+  ok   malformed text raises the documented model-response error
+  ok   a tool call without id is rejected with the documented message
+  ok   registered-agent delegation rejects empty persona/skills/tools arrays
+  ok   required-field matrix from the fixture still matches the validator
+
+6/6 passed
+  ok   every emitted event carries the full correlation envelope
+  ok   payload fields override context; unknown context patches are ignored
+  ok   source-extracted event names match the fixture inventory
+  ok   documented key payloads exist on live emissions
+  ok   normalizer collapses volatile event fields deterministically
+
+5/5 passed
+  ok   main agent messages match the captured structure
+  ok   sub-agent messages match the captured structure
+  ok   normalized main prompt is deterministic across rebuilds
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "contract capture"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   the request body keeps its contract shape
+  ok   system prompt edits reach the next rebuild (live reload)
+
+5/5 passed
+  ok   canonical tool schemas preserve the legacy snapshot and stable names
+  ok   every declaration has the model function contract
+  ok   registry validation and executable parity agree
+  ok   the public facade exposes callable names without leaking private helpers
+  ok   tool execution keeps identity in context and returns the legacy result shape
+
+5/5 passed
+  ok   the captured method/path inventory matches the live route boundary
+  ok   each documented response contract declares a stable status and required keys
+  ok   dynamic API paths preserve encoded project and discussion identity
+  ok   JSON responses retain status, content type and error-key contracts
+  ok   project and approval serializers keep additive identity fields
+
+5/5 passed
+  ok   the extracted persistence modules expose the documented boundaries
+  ok   JSON repository writes round-trip and corrupt input uses the caller fallback
+  ok   an interrupted atomic replacement leaves the previous JSON document intact
+  ok   safe identifiers and schema versions are stable and additive
+  ok   JSONL repositories preserve valid records while skipping a truncated tail
+
+5/5 passed
+  ok   the discussion facade exposes the stable specialist and lifecycle boundary
+  ok   discussion request validation keeps task, persona and round limits explicit
+  ok   the injected LLM adapter returns only the discussion content contract
+  ok   DiscussionService uses trusted project context and labels every lifecycle event
+  ok   list and load never cross a project's transcript boundary
+  ok   context resolution never treats a forged workspace argument as project identity
+
+6/6 passed
+  ok   removed facade files are absent and canonical replacements are present
+  ok   the six rollout flags are gone from the settings contract
+  ok   canonical public entrypoints no longer select a legacy implementation
+  ok   runtime source imports canonical paths and has no mode lookup
+
+4/4 passed
+  ok   the extracted modules and legacy facade expose the same engine
+  ok   PolicyMatcher applies conditions and last-match-wins precedence
+  ok   PolicyRegistry indexes groups and reloads declarative policy
+  ok   policy validation stays in the policy registry with legacy messages
+  ok   ApprovalStore owns pending records without changing the Map contract
+  ok   ApprovalManager preserves auto, prompt and deny modes with project attribution
+  ok   pending handler delegates UI storage while the manager keeps policy ownership
+  ok   PolicyEngine sends every decision through the audit callback
+
+8/8 passed
+  ok   the event module inventory and legacy facade are present
+  ok   EventTypes exactly covers the documented event inventory
+  ok   EventContext isolates concurrent scope and project attribution
+  ok   EventValidator enforces the envelope but permits additive unknown names
+  ok   EventBus preserves payload precedence, sequence and legacy shape
+  ok   EventProjector filters cross-project events and aggregates global metadata
+  ok   EventRedactor masks secrets and bounds source material without mutating events
+  ok   Observability remains a consumer boundary, not an event producer
+
+8/8 passed
+  ok   register + get + list round-trip with documented defaults
+  ok   two projects with the same basename get different ids
+  ok   re-registering a root returns the existing project (spelling variants included)
+  ok   a symlinked path spelling identifies the same root
+  ok   ids persist to disk and come back through a fresh registry
+  ok   rename keeps the id; update merges permissions
+  ok   identity fields are immutable via update
+  ok   remove targets only its own project
+  ok   registering a missing or non-directory root fails clearly
+  ok   registered project context points at the central dataRoot
+  ok   default project: registered workspace resolves the record, else a synthetic legacy context
+  ok   the synthetic default writes nothing to the registry file
+  ok   a corrupt registry file fails loudly, never silently resets
+  ok   resolveProjectForRun accepts a record AND an already-built context
+  ok   createProjectContext is idempotent on a context
+  ok   normalizeProjectInput maps both shapes and rejects anything else
+  ok   an explicit project is ownership-validated, not taken on faith
+  ok   a project option of the wrong shape names both accepted shapes
+  ok   the canonical runtime validates an explicit project id
+  ok   removed rollout environment variables cannot bypass project validation
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "projects phase probe"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   the canonical default project runs and scopes its Run context
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "projects phase probe"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a registered project rooted elsewhere runs through its own context
+
+22/22 passed
+  ok   redact masks bearer tokens and secret fields
+  ok   a scoped token cannot access another project
+  ok   MCP project-scoped servers are hidden from other projects
+  ok   catalogueEntries and call honour MCP scope
+  ok   global MCP approval is cached per gateway and audited per project
+  ok   GET /api/projects lists registered projects
+  ok   a scoped token only lists its allowed projects
+  ok   token limited to A cannot read B (403)
+  ok   unknown project is 404
+  ok   PATCH and GET /state stay on the named project
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "ok"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   POST /api/projects/:id/chat is accepted like tasks
+  ok   project B's events do not appear on A's stream
+  ok   GET /api/events?projectId= filters the same way
+  ok   cancel on A does not cancel B's runs
+  ok   legacy /api/state still works for the master token
+  ok   POST /api/projects validates rootPath
+  ok   scoped tokens cannot register a new project
+
+17/17 passed
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "legacy-done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   the canonical run context is always tracked by RunManager
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "parity-done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "parity-done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "parity-done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   normalized modular single-run output equals the legacy baseline
+
+=== Agent Iteration 1 ===
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-beta"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-alpha"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   two concurrent runs on two projects share nothing
+
+=== Agent Iteration 1 ===
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-beta"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   cancelling run A leaves run B unharmed
+  ok   scope-free lifecycle helpers remain available for direct callers
+
+5/5 passed
+  ok   two createRun calls in the same millisecond get distinct ids
+  ok   defaults for Phase 10 limits are documented in the schema
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-a"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-b"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-c"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   three projects: two run in parallel, the third queues then finishes
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "slow"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "slow"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   a full per-project queue rejects instead of hanging
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-a"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-b"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   cancelling project A does not drop project B's queue
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-a"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-b"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   metrics split project and gateway series
+  ok   a crashed project does not take the gateway or its neighbour down
+  ok   GET /api/metrics and /api/health are readable
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "slow"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   POST /api/projects/:id/tasks returns 429 when the queue is full
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-b"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   PROJECT_MEMORY_LIMIT refuses a new run for that project only
+  ok   INDEX_LIMIT is enforced by MAX_CONCURRENT_INDEX_RUNS
+
+11/11 passed
+  ok   optional projectId is accepted; unknown extras still rejected
+  ok   two Sub-Agents on two projects run concurrently without mixing
+  ok   failure of one project's Sub-Agent does not block the other
+  ok   cross-project and multi-project writes issue a separate approval
+  ok   the canonical runtime validates an explicit delegation project
+
+5/5 passed
+  ok   fs tools act in the caller's project and refuse foreign paths
+  ok   a symlink inside project A pointing into B is refused
+  ok   terminal uses the project cwd and process sessions are per-project
+  ok   git tools operate in the project's own repository
+  ok   project identity never travels through arguments (rule 9)
+  ok   tools pending awareness fail loudly on foreign roots
+  ok   tool execution telemetry carries run and project attribution
+  ok   no model-facing project tool exists anywhere
+
+=== Agent Iteration 1 ===
+
+=== Agent Iteration 1 ===
+[main_agent] Action: tool_call
+[main_agent] Executing tool graph (1 call(s), single, 1 wave(s)).
+[main_agent] Policy require_approval for fs_write (approved, auto): writes to the workspace
+[main_agent] Tool call_1 -> fs_write:
+{
+  "path": "artifact.txt",
+  "content": "written-by-B"
+}
+[main_agent] Tool result call_1 (success):
+{
+  "path": "artifact.txt",
+  "mode": "overwrite",
+  "created": true,
+  "bytes_written": 12,
+  "size_bytes": 12
+}
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-B"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": {
+    "tools": [
+      "fs_write"
+    ]
+  }
+}
+[main_agent] Action: tool_call
+[main_agent] Executing tool graph (1 call(s), single, 1 wave(s)).
+[main_agent] Policy require_approval for fs_write (approved, auto): writes to the workspace
+[main_agent] Tool call_1 -> fs_write:
+{
+  "path": "artifact.txt",
+  "content": "written-by-A"
+}
+[main_agent] Tool result call_1 (success):
+{
+  "path": "artifact.txt",
+  "mode": "overwrite",
+  "created": true,
+  "bytes_written": 12,
+  "size_bytes": 12
+}
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done-A"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": {
+    "tools": [
+      "fs_write"
+    ]
+  }
+}
+  ok   two concurrent runs on two roots keep tools isolated end-to-end
+
+9/9 passed
+  ok   named Phase 19 modules exist
+  ok   canonical tool groups expose one public runtime without compatibility wrappers
+  ok   the canonical Phase 19 modules have no require cycle back to agent.js
+  ok   executeTool keeps the Phase 4 signature and result cap
+  ok   registry schemas, runtime implementations and the adapter agree
+  ok   SemanticClient is shared with Phase 6 and index sessions stay on the engine
+  ok   PathBoundary and process group keep the previous security helpers
+  ok   Phase 30 removes rollout flags without inventing a tool mode
+
+8/8 passed
+  ok   modular main/sub prompts are message-for-message the legacy ones
+  ok   the modular builders still satisfy the phase-1 prompt fixture
+  ok   RequestBuilder body equals the legacy body in every variant
+  ok   live edits to prompt text and skills registry are visible without restart
+  ok   semantic-gated skills follow their activation gate in both modes
+  ok   project_context: additive message with the active project and its rules
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "p5 done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   end-to-end: a cross-root project's prompt shows its own root and context
+
+7/7 passed
+  ok   require('./agent/agent') keeps the documented export surface
+  ok   agent/config is the canonical settings surface
+  ok   settings defaults, types and snapshot masking are unchanged
+  ok   loader concatenates tool-schemas into the historical tools.json array
+  ok   a corrupt registry file fails with a clear error, not a bare SyntaxError
+  ok   validateRegistries still accepts the shipped catalogues
+  ok   runSession delegates to runAgent with a shared history
+  ok   lifecycle.shutdown is safe with missing deps and flushes when present
+
+8/8 passed
+  ok   agent.js keeps the historical wrappers and exposes the actions kit
+  ok   valid tool_call, delegate and final actions parse and validate through the kit
+  ok   native tool calls produce the historical internal action
+  ok   malformed text, missing id and empty-array delegation keep their error messages
+  ok   truncated answers keep TRUNCATED_RESPONSE and response_diagnostics
+  ok   strict and non-strict response_format stay distinct; AGENT_SCHEMA is process-fixed
+[main_agent] Repaired the arguments of "fs_write", ignoring created, bytes_written
+  ok   fenced JSON unwraps and native argument salvage still drops undeclared keys
+  ok   the actions kit has no require cycle back to agent.js
+
+8/8 passed
+  ok   the extracted runtime engine is the canonical implementation after rollout
+  ok   named Phase 16 modules exist and agent.js binds the canonical engine
+  ok   the runtime engine has no require cycle back to agent.js
+  ok   repeated canonical runs produce equal normalized events for a tool then final
+  ok   normalized delegation scenarios remain equal across repeated runs
+
+5/5 passed
+  ok   named Phase 17 modules exist and agent.js keeps historical wrappers
+  ok   the context kit and repositories have no require cycle back to agent.js
+  ok   lib/context, lib/memory and lib/archive stay facades over the extracted modules
+  ok   compaction keeps message order, memory-message location and tool pairs
+  ok   the context ceiling never produces a larger request than before
+  ok   archive is written before fold/compaction and search/get match the repository
+  ok   memory and archive recover after restart from the project data root
+
+7/7 passed
+workspace: /tmp/agent-test-9WzhP5
+
+filesystem
+  ok   fs_write creates a file and reports bytes
+  ok   fs_write append adds to the existing file
+  ok   fs_read supports line windows and tail
+  ok   fs_read reports binary files instead of returning bytes
+  ok   fs_read_many isolates per-file failures
+  ok   fs_list reports sizes when asked
+  ok   fs_tree respects max_depth
+  ok   fs_stat returns type and mode
+  ok   fs_edit refuses an ambiguous match
+  ok   fs_edit applies the expected number of replacements
+  ok   fs_move refuses to overwrite unless told to
+  ok   fs_delete requires recursive for directories
+  ok   fs_info returns full metadata for a text file
+  ok   fs_info detects CRLF, BOM and missing trailing newline
+  ok   fs_info reports binary files without text metrics
+  ok   fs_info summarises a directory
+  ok   fs_info can skip the hash and include a preview
+  ok   fs_info respects the workspace boundary
+
+workspace boundary
+  ok   paths outside the workspace are rejected
+  ok   symlinks cannot escape the workspace
+  ok   the workspace root cannot be deleted
+
+search
+  ok   search_start finds content and returns inline
+  ok   search_start honours file_pattern and files mode
+  ok   search_list and search_stop manage sessions
+  ok   search_get rejects an unknown id
+
+process
+  ok   terminal_exec returns a non-zero exit as data
+  ok   terminal_exec captures stdout
+  ok   terminal_exec times out instead of hanging
+  ok   process_start, read, write and terminate a session
+  ok   an oversized result is shortened as a whole, not only per string
+  ok   a batch read is bounded in total
+  ok   a small result is returned untouched
+  ok   a timed out command does not leave its children running
+  ok   terminating a background process kills its whole tree
+
+plan
+  ok   a plan is written, read back and summarised
+  ok   an agent assignment survives plan_set and can be rerouted
+  ok   a step cannot be marked done without evidence
+  ok   progress is recorded and the phase follows its steps
+  ok   steps can be added to a phase before it starts
+  ok   rewriting the plan keeps the progress already recorded
+  ok   the plan is complete only when nothing is open
+  ok   an unknown id is rejected rather than silently ignored
+
+git
+  ok   git tools operate on a repository
+  ok   git_branch is immune to shell injection
+  ok   git_checkout is immune to shell injection
+
+runtime
+  ok   unimplemented tools are rejected
+  ok   oversized output is truncated, not dropped
+  ok   runtime_stats reports executed calls
+  ok   registry, groups and implementations agree
+
+friction found in a real run
+  ok   one plan update may be written flat
+  ok   a skill is an index in the prompt and full text on demand
+  ok   the semantic-engine skill follows MCP availability
+  ok   a skill may carry data, and the data stays where it belongs
+  ok   loading a skill is an event, attributed to the agent
+  ok   a file search accepts a glob, not only a substring
+  ok   a command that cds out of the workspace is refused
+
+56/56 passed
+hooks
+  ok   hooks are globally off and empty by default
+  ok   the closed condition language and templates are deterministic
+  ok   hook references become graph dependencies
+  ok   unknown conditions, tools and cyclic graphs are rejected
+  ok   project overrides hot reload and populate the read-only routine
+
+5/5 passed
+  ok   named hook modules exist and do not depend on agent.js
+  ok   the legacy hooks facade is the extracted registry facade
+  ok   HookCondition keeps the closed boolean language
+  ok   HookRenderer preserves exact types and safe nested templates
+  ok   HookLoader merges project overrides and invalidates on file changes
+  ok   HookRegistry validates hook graph references and project-wide ids
+  ok   HookResult centralizes stable result and report shapes
+  ok   HookRunner executes through injected graph and emits lifecycle events
+
+8/8 passed
+journal
+  ok   thinking and tools are written as per-agent JSONL
+  ok   journaling can be disabled without creating files
+
+2/2 passed
+  ok   append writes one line per event to a day file
+  ok   query filters by run_id, scope and seq range
+  ok   query can read a historical day, not just today
+  ok   EVENTSTORE_ENABLED=false stops appending
+  ok   append never throws and skips non-events
+
+5/5 passed
+response parsing
+  ok   structured JSON content is parsed
+  ok   content wrapped in a markdown fence is unwrapped
+  ok   native OpenAI tool_calls are adapted to the action contract
+  ok   native tool calls with invalid argument JSON are rejected
+  ok   plain prose without tool calls still fails loudly
+  ok   a length-capped partial action is reported as truncation
+
+dependency references
+  ok   a reference is interpolated into a string
+  ok   a lone reference keeps the referenced type
+  ok   references resolve inside arrays and nested objects
+  ok   a reference to a call in the action but outside depends_on is refused
+  ok   a ${...} that names nothing in the action stays literal
+  ok   $${...} escapes a literal that would name a call
+  ok   repeated identical failures are counted, mixed results are not
+  ok   a reference to a failed call is refused
+  ok   an unreachable path is reported clearly
+  ok   arguments without references are untouched
+  ok   the dependency graph feeds results to dependents
+  ok   a generated id never collides with one the model chose
+
+run deadline and cancellation
+  ok   a fresh run is active and has remaining time
+  ok   cancelling a run stops further work
+  ok   an expired deadline stops further work
+  ok   the deadline is reported in the runtime context
+
+context budget
+  ok   a conversation inside the budget is untouched
+  ok   compression is graduated by age, newest untouched
+  ok   compaction preserves tool_call pairing
+  ok   compressing is preferred over dropping
+  ok   the tier of an exchange follows its distance from the newest
+  ok   dropping exchanges is recorded for the model
+
+policy engine
+  ok   read-only tools are allowed
+  ok   writes and shell commands need approval
+  ok   irrecoverable commands are denied outright
+  ok   touching .git through filesystem tools is denied
+  ok   a more specific later rule overrides a broad one
+  ok   enforce throws on a denied call
+  ok   the .git directory is protected on every path argument
+  ok   the agent cannot rewrite the policy that governs it
+  ok   changing the runtime's own configuration needs approval
+  ok   routine cleanup is not mistaken for a destructive command
+
+registries and schema
+  ok   every tool belongs to a group and to at least one skill
+  ok   every tool and parameter is documented
+  ok   every agent has a persona and every persona is used
+  ok   at least one profile can actually change the workspace
+  ok   the default schema is a valid json schema
+  ok   the strict schema satisfies strict mode
+  ok   string encoded arguments are accepted by the runtime
+  ok   the repository is detected instead of declared
+  ok   nothing in the prompt repeats what the request already carries
+  ok   the fixed cost of a request stays inside its budget
+  ok   every agent is told to use workspace relative paths
+  ok   the orchestrator can see which agents actually do work
+  ok   the agent budget is reported as a balance, not only a limit
+  ok   delegation guidance names concrete triggers and real work
+
+settings storage
+  ok   a value resolves override, then environment, then default
+  ok   values are validated on the way in
+  ok   the workspace cannot be changed while the process runs
+  ok   a change is visible to the very next read, with no restart
+  ok   limits reported to the model follow the store
+  ok   a secret is never echoed in full
+  ok   every environment variable in the code has a definition
+  ok   the run deadline follows the setting while a run is in flight
+  ok   temperature and model overrides outrank a profile
+[test] Context 53k of 60k, compacted to 41k (light 17, medium 2, heavy 0, dropped 0)
+  ok   context is maintained at a share of the budget, before the ceiling
+[test] Context 42k of 60k, compacted to 29k (light 13, medium 5, heavy 0, dropped 0)
+  ok   the compaction trigger itself is tunable at runtime
+
+live configuration
+  ok   editing a registry file takes effect without a restart
+  ok   editing a prompt file takes effect without a restart
+  ok   no runtime value is left outside the store
+
+context digest
+  ok   old exchanges are replaced by one summary
+  ok   a failing summariser falls back instead of breaking the run
+  ok   state from one run does not leak into the next
+  ok   the summariser uses its own model, ceiling and timeout
+
+endpoint profiles
+  ok   each role resolves its own endpoint, key, model and temperature
+  ok   depth maps to a role, and deep agents share the last one
+
+working memory
+  ok   memory merges without duplicating and stays capped
+  ok   material is chunked so a small model is never overloaded
+  ok   absorption is incremental: one chunk plus memory at a time
+  ok   one memory fold caps and parallelises summariser calls
+  ok   cancellation stops later memory summary batches
+  ok   a summariser that fails or babbles cannot corrupt memory
+  ok   memory folds back into itself when it outgrows its budget
+[test] Folded 8 exchanges into memory with 4 summariser call(s) across 4 chunk(s), 17k to 4k, 8 archived
+  ok   the fold keeps recent exchanges and leaves one memory message
+
+malformed answers
+[main_agent] Repaired the arguments of "fs_write", ignoring created, bytes_written, size_bytes
+  ok   arguments with a tool result appended are read, not lost
+  ok   arguments wrapped in prose or a fence are still read
+  ok   arguments that cannot be read are refused, never guessed
+[main_agent] Repaired the action envelope: moved version out of tool_calls.
+  ok   a misplaced version suffix is repaired without a retry
+  ok   fixed null envelope fields are defaulted without a retry
+  ok   model-owned tool call content is rejected rather than guessed
+  ok   a delegation missing depends_on is repaired, not rejected
+  ok   delegation policy violations are model-response errors, not run killers
+[main_agent] Repaired the action envelope: moved version out of tool_calls.
+  ok   a leaked version pair as a single trailing string is recovered, prose is not
+[main_agent] Repaired the action envelope: defaulted version; cleaned Markdown links from fs_read.path.
+  ok   missing fixed version and linked path text are normalised
+  ok   an unreadable answer is handed back instead of ending the run
+  ok   compaction reports itself once, not twice
+  ok   events carry a run/scope/iteration correlation envelope
+  ok   no prompt or comment invents a tool that does not exist
+  ok   every delegation example in the prompt actually resolves
+  ok   the workspace boundary holds on a case insensitive filesystem
+  ok   a sub-agent is not sent what it cannot use
+  ok   a sub-agent's skills can be inlined or indexed
+  ok   the personas catalogue only goes to an agent that can delegate
+  ok   the strict schema obeys the rules strict mode imposes
+  ok   the orchestrator prompt stays short without losing a rule
+[main_agent] The answer claims work the runtime did not do: claimed fs_write, which the runtime never executed; claimed terminal_exec, which the runtime never executed; claimed implementation, but nothing was delegated; claimed 1 changed file(s), but no write ran
+  ok   a claim the runtime cannot support is reported
+  ok   a rule section only reaches the agents it applies to
+  ok   filtering keeps whole sections, never half of one
+
+registry
+  ok   the shipped registries validate
+
+105/105 passed
+workspace: /tmp/semantic-test-dM17Sx
+
+semantic-engine integration
+  ok   missing or disabled binary returns practical hint without throwing
+  ok   code_find_symbol queries sidecar and maps symbols
+  ok   Content-Length framing handles messages split across chunks
+  ok   sidecar call times out cleanly and kills hanging process
+  ok   sidecar crash mid-call rejects without hanging
+  ok   semantic tool output enforces bounds on items and text length
+  ok   code_search, code_file_summary, code_dependencies, code_impact, code_find_tests, code_config_usage, code_context query correctly
+  ok   code_index_start and code_index_get manage index sessions
+  ok   code_index_status returns state missing when project-index does not exist
+  ok   code_diagnostics returns compiler errors with line and column
+  ok   code_callers, code_definition, code_organize_imports resolve live compiler queries
+  ok   code_rename previews with dry_run and applies only when requested
+  ok   shutdown leaves zero running sidecar processes
+  ok   HTTP client transport queries remote Semantic Engine when SEMANTIC_ENGINE_URL is configured
+
+14/14 passed
+  ok   canonical semantic routing keeps workspace local and isolates foreign projects
+  ok   stub gateway serves the /mcp/:projectId contract distinctly
+  ok   modular pool: code tools route to the context's project only
+  ok   a down worker degrades only its own project
+  ok   missing endpoint matrix in modular mode
+  ok   index sessions and run scope are pinned to their project
+  ok   result caching is keyed by projectId and index generation
+  ok   endpoint swap via registry + pool.reload suffices
+  ok   the semantic-engine skill gate follows the active project
+
+9/9 passed
+  skip semantic-engine is not built (run `npm run build` in semantic-engine/)
+
+0/0 passed (skipped)
+  ok   data home follows each platform convention
+  ok   an explicit data dir wins
+  ok   project ids are stable and cannot collide on a shared name
+  ok   read order: data directory first, then the legacy locations
+  ok   checkStaleness finds an index in the data directory
+  ok   checkStaleness still reads a pre-move legacy index
+
+6/6 passed
+  ok   CLI --project runs the task on the registered project
+  ok   CLI --project with an unknown id fails loudly
+  ok   CLI --project with a contradicting -w is refused
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "zzprojrun7b21e9"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   POST /api/projects/:projectId/tasks runs scoped to that project
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "zzprojrun7b21e9"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   legacy POST /api/tasks keeps working on the default project
+  ok   unknown project on the project route is a 404
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "zzprojrun7b21e9"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   the project route is available without rollout flags
+  ok   task validation mirrors the legacy route
+
+8/8 passed
+  ok   the data root resolver follows the گام ۱ order
+  ok   plan and memory live per project and never cross
+  ok   the project-awareness gate lifted for stores, kept for runtime_stats
+  ok   events route to the registered project's central store
+  ok   the journal separates runs per project and per run
+  ok   sessions and the archive are separated per project
+  ok   the settings overlay reads floor-with-cap and writes central only
+  ok   migration copies legacy state, stays idempotent, survives corruption
+  ok   CLI --migrate reports unknown projects and adopts with -w
+
+9/9 passed
+  ok   named Phase 18 modules exist
+  ok   lib/sessions, journal and eventstore stay facades over the repositories
+  ok   the persistence modules have no require cycle back to agent.js
+  ok   safeId matches the historical session file-name rule
+  ok   an existing session file is replayed without a manual migration
+  ok   a crash mid-write leaves the original JSON file intact
+  ok   a corrupt JSON document does not stop the runtime
+  ok   eventstore skips a truncated last line after a crash mid-append
+  ok   atomic session save writes valid JSON and leaves no temp file
+
+9/9 passed
+  ok   savePlan keeps the previous plan when the write crashes
+  ok   saveSession keeps the previous session when the write crashes
+  ok   saveProject keeps the previous project profile when the write crashes
+
+3/3 passed
+workspace: /tmp/mcp-test-IfMj6s
+
+wire protocol
+  ok   a decoder reads both framings, including one split mid-message
+  ok   two messages arriving in one chunk are not merged
+  ok   a tool result is unpacked out of its content envelope
+  ok   an event stream is split into events, not lines
+  ok   a websocket frame survives a round trip through the codec
+
+configuration
+  ok   the transport is inferred from what the entry actually has
+  ok   a broken entry is skipped and named, and the rest still load
+  ok   a token in the environment is read, never stored in the file
+  ok   the environment overrides the file, and the file overrides the registry
+  ok   every container shape people actually write is accepted
+
+transports
+  ok   stdio: a spawned server is reached, listed and called
+  ok   stdio: a server that answers in lines is understood too
+  ok   http: one post carries the call and brings the answer back
+  ok   http: an answer streamed as events is read past the notifications
+  ok   sse: the endpoint event is followed, and answers arrive on the stream
+  ok   websocket: the handshake completes and frames carry the calls
+
+failure
+  ok   a server that never answers times out instead of hanging
+  ok   a server that dies mid-call rejects the call it was holding
+  ok   a tool that fails is an error, whichever way the server says so
+  ok   an unreachable server fails the call, not the process
+
+manager and catalogue
+  ok   tools from several servers are namespaced instead of shadowing
+  ok   include and exclude decide what the model is allowed to see
+  ok   a published schema becomes a tool declaration the endpoint accepts
+  ok   a server that will not connect is left out, and the rest still work
+  ok   a server added at runtime is written down for the next run
+  ok   removing a server withdraws its tools immediately
+
+the runtime's own tools
+  ok   mcp_servers reports what is configured and why one is not connected
+  ok   mcp_tools lists the catalogue with the parameters each tool wants
+  ok   mcp_call reaches a server both by name and by namespaced tool
+  ok   a discovered tool is callable by its own name, like any other tool
+  ok   a failing MCP call is reported, never thrown into the run
+  ok   turning MCP off withdraws every server and its tools
+
+policy
+  ok   a restricted server needs approval, a default one does not
+  ok   MCP_APPROVAL can tighten every call, and never loosens a denial
+
+the semantic engine as an MCP server
+  ok   the engine is registered as a built-in server and called over MCP
+  ok   a workspace may replace the engine with its own server
+  ok   the canonical semantic module is shared by the MCP layer
+
+37/37 passed
+  ok   named Phase 20 modules exist
+  ok   canonical MCP modules expose one public connection and configuration surface
+  ok   the extracted MCP modules have no require cycle back to agent.js
+  ok   split and merged frames decode as separate JSON-RPC messages
+  ok   same-named tools on two servers do not collide
+  ok   a broken server is left out and does not crash the runtime
+  ok   all four transports are registered and Phase 9 project scope is preserved
+  ok   Phase 30 removes rollout flags while preserving the MCP surface
+
+8/8 passed
+
+archive
+  ok   every folded tool call becomes a retrievable record
+  ok   identical work is counted once instead of stored twice
+  ok   importance follows what the call did, not how it reads
+  ok   a failure is retrievable by its error text
+  ok   search can be narrowed by kind, agent and importance
+  ok   a full index rolls up cheap records and keeps the important ones
+  ok   a roll up digests what it merged instead of listing part of it
+  ok   merged bodies are reclaimed unless asked for
+  ok   segments follow the index instead of growing forever
+  ok   a corrupt index degrades to empty instead of throwing
+  ok   the archive can be switched off at runtime
+  ok   compaction hands a dropped exchange over before destroying it
+
+retrieval tools
+  ok   archive_search returns previews, never bodies
+  ok   archive_get refuses to browse without ids
+  ok   memory_get reports memory and the archive behind it
+
+scale
+  ok   a half million token run fits in a bounded archive
+
+16/16 passed
+end to end
+  ok   a direct final answer completes the run
+  ok   a tool graph runs in dependency order and feeds the model
+  ok   independent tools in one action run in parallel
+  ok   a dependency chain is executed in order
+  ok   a sub-agent can also run a parallel tool graph
+  ok   every agent is told how the tool graph works
+  ok   a refusal without any work is handed back once
+  ok   a declared block is accepted without a nudge
+  ok   the runtime nudges at most once
+  ok   a run that did work is never nudged
+  ok   template literals in file content are not treated as references
+  ok   a real reference still resolves next to literal code
+  ok   the same failure is not repeated forever
+  ok   a final answer is refused while the plan has open steps
+  ok   a completed plan lets the run finish
+  ok   the runtime context is refreshed every iteration
+  ok   a long run compacts before the ceiling and keeps going
+  ok   raising the timeout from the store extends a running deadline
+  ok   a failing tool is reported without ending the run
+  ok   native OpenAI tool calls are accepted
+  ok   delegation runs a sub-agent and returns its report
+  ok   a tool outside the profile is refused
+  ok   policy denies a destructive shell command
+  ok   unattended approval mode blocks tools that need approval
+  ok   a transient server error is retried
+  ok   a permanent client error is not retried
+  ok   the run deadline stops a slow endpoint
+  ok   the conversation stays inside the context budget
+  ok   what leaves the conversation is recalled from the archive
+  ok   a version pair misplaced in tool_calls is repaired and executed
+  ok   missing version and a Markdown-linked file path are repaired
+  ok   a retry that fixes the action but still omits version can proceed
+  ok   omitted fixed envelope fields do not spend a retry
+  ok   a truncated write receives a bounded-payload correction
+  ok   a successful correction resets the malformed retry budget
+  ok   a badly serialised tool call does not end the run
+  ok   a malformed action receives an exact corrective contract before retry
+  ok   unreadable answers stop the run once the budget is spent
+  ok   an endpoint that rejects the schema is answered without it
+  ok   the schema can be left out from the start
+  ok   a run nearly out of time is asked to finish, not killed
+  ok   a run that overruns says which budget stopped it
+  ok   an argument the tool does not take is reported, not swallowed
+  ok   a delegation that fails says so instead of vanishing
+  ok   a command that exits non-zero is not reported as ok
+  ok   an overwrite that removes most of a file says so
+  ok   an ad-hoc sub-agent composed the way the prompt shows it works
+  ok   an agent working alone with a full agent budget is reminded
+  ok   an agent that delegates is never reminded
+  ok   the runtime journals endpoint thinking and tools per agent
+  ok   a required before_task hook stops the model loop
+  ok   after_task tool hooks run only after files changed
+  ok   a required after_task hook marks the final answer incomplete
+  ok   after_task hooks still report when the main run throws
+  ok   agent hooks use registered profiles and report their evidence
+  ok   git_commit hooks commit only paths changed by this run
+  ok   PLAN_AUTOROUTE delegates an assigned step and records evidence
+  ok   the strict schema can be switched on and still runs
+
+58/58 passed
+cli
+  ok   --help exits cleanly and documents the usage
+  ok   --version prints the package version
+  ok   an unknown option is a usage error
+  ok   an option missing its value is a usage error
+  ok   an invalid approval mode is a usage error
+  ok   a missing workspace is a usage error
+  ok   --list-tools prints the catalogue
+  ok   --list-agents and --list-policy print the registries
+  ok   a task given as an argument reaches the model
+  ok   a task can be piped on stdin
+  ok   a task can be read from a file
+  ok   --json puts only the action on stdout
+  ok   --workspace confines the agent
+  ok   a flag belongs to the run, a setting belongs to the project
+  ok   --dry-run refuses calls that need approval
+  ok   a final action carrying an error exits non-zero
+  ok   an unreachable endpoint fails with a clear message
+  ok   --json reports a failure as a structured action
+  ok   a run without --workspace does not write runtime state into the repo root
+
+19/19 passed
+  ok   all CLI and REPL modules exist and bin facades point to them
+  ok   ArgParser normalizes every public command family
+  ok   ArgParser reports usage errors without process.exit when used directly
+  ok   CommandRegistry and HelpCommand keep deterministic dispatch
+  ok   OutputFormatter preserves structured failure output and duration
+  ok   REPL command vocabulary and InputReader preserve ordered input
+  ok   ApprovalPrompt renders through the injected reader and stream
+  ok   InteractiveCommand resolves the extracted REPL path
+  ok   ServeCommand validates command conflicts before binding a server
+  ok   the canonical Repl remains a CommonJS module
+
+10/10 passed
+interactive session
+  ok   the session announces its settings and exits cleanly
+  ok   history is carried from one task to the next
+  ok   /clear starts a new conversation
+  ok   an approval answered with y lets the tool run
+  ok   an approval answered with n refuses the tool
+  ok   /approve switches the mode for the rest of the session
+  ok   commands typed after a task run in order
+  ok   /help, /tools, /agents and /policy list the runtime
+  ok   an unknown command is reported without ending the session
+  ok   /save writes the last answer to a file
+  ok   Ctrl-C cancels the running task but keeps the session
+  ok   --interactive cannot be combined with --json
+
+12/12 passed
+modal service
+  ok   a modal is a backdrop with a dialog inside it
+  ok   the header and the footer are optional
+  ok   footer buttons run their handler
+  ok   a click on the backdrop closes, a click inside does not
+  ok   escape closes the topmost modal only
+  ok   a modal that is not dismissible ignores escape and the backdrop
+  ok   title, subtitle, body and footer can be replaced in place
+  ok   closing twice does not fire onClose twice
+  ok   markup in data cannot break out of a label
+
+console rendering
+  ok   an agent says who it belongs to and how deep it sits
+  ok   a graph is labelled by its shape and split into waves
+  ok   a row opens the full detail of what was executed
+  ok   a non-zero exit code is not drawn as a clean success
+  ok   a loaded skill is marked on the agent that loaded it
+  ok   runtime hooks are distinct rows in the execution card
+  ok   a new task archives the previous execution in a closed accordion
+  ok   the plan card renders phases, steps, agents and evidence live
+  ok   a loop is visible on the agent that is looping
+  ok   an answer the runtime could not read is shown on the agent
+  ok   approvals become one modal with a counter and approve all
+  ok   the conversation is drawn as bubbles, reasoning folded away
+  ok   markdown is rendered and Persian bubbles use RTL direction
+  ok   a user message's execution renders as a stage-by-stage block
+  ok   a git report is drawn as its own bubble with a branch
+  ok   a request in flight is visible while it is waiting
+  ok   opening a stored conversation redraws every card
+  ok   settings open in a modal from the header button
+  ok   execution and events open as modals from the header
+  ok   cards borrowed by a modal are on the page again after it closes
+  ok   the event stream keeps drawing after a modal round trip
+  ok   the events filter matches any part of a word, in the type or the text
+  ok   the events filter narrows to one type, and combines with the text
+  ok   the events filter survives the modal round trip
+  ok   a modal title given as a getter is read, not stringified
+  ok   discussion mode lives in the composer and renames the run button
+  ok   the project switcher lists projects and remembers the selection
+  ok   a scoped task posts to the project route
+  ok   the dashboard deep-link opens the named tab
+  ok   events from another project do not enter the current view
+  ok   a multi-project task is posted as labelled sequential runs
+
+40/40 passed
+  ok   the frontend domain module inventory is present
+  ok   index.html loads the native ESM bootstrap after Modal
+  ok   main.js imports the explicit domain graph and canonical renderer
+  ok   native frontend modules pass syntax checking without a bundler
+  ok   store.js declares isolated domain state and additive event reducers
+  ok   api.js uses relative URLs and encodes project routes
+  ok   event-stream.js keeps project filtering in the URL
+  ok   security-sensitive frontend helpers keep safe markdown and direction boundaries
+
+8/8 passed
+  ok   the visualizer module inventory and worker are present
+  ok   visualizer.html loads the native ESM graph and canonical renderer
+  ok   the visualizer API client scopes and encodes every graph request
+  ok   graph model focus, provenance filtering and layout remain deterministic
+  ok   graph store keeps project identity while resetting graph selection
+  ok   selection state computes bounded neighborhood focus without mutating graph data
+  ok   layout client has a deterministic fallback and worker failure path
+  ok   renderer and node inspector use safe text boundaries and preserve graph shapes
+  ok   main.js exposes the independent visualizer graph and canonical bootstrap
+
+9/9 passed
+personas
+  ok   15 selectable personas, observer separate
+  ok   discussion personas and profiles are registered
+transcript
+  ok   round 1 is isolated for every persona
+  ok   round 2+ shows the prior rounds, truncated
+  ok   the full transcript keeps round order
+prompts
+  ok   round one prompt forbids seeing the others
+  ok   cross-examination prompt demands a reaction
+observer
+  ok   invalid observer output degrades to a finish, not a crash
+  ok   fenced JSON is accepted
+  ok   an invalid decision at max rounds is forced to FINISH with a report
+loop detector
+  ok   identical messages across rounds are a loop
+  ok   every persona repeating is a loop
+  ok   an unaddressed concern that survives a round is a loop
+  ok   jaccard similarity is sane
+engine
+  ok   unknown persona is rejected before any model call
+  ok   the spec's example task: continue once, finish with the disagreement surfaced
+  ok   max rounds is a hard stop, with a forced final report
+  ok   a repeating group is stopped before the next round
+  ok   engine callbacks fire in order
+  ok   a round respects the parallel-agent budget
+tool
+  ok   discussion_start is registered and callable
+  ok   discussion_start validates its arguments
+  ok   discussion_start refuses to fake a real discussion
+
+23/23 passed
+  ok   TranscriptRepository saves and reloads complete round evidence atomically
+  ok   TranscriptRepository isolates lists by data root
+  ok   DiscussionContext ignores forged workspace arguments and uses the runtime project
+  ok   project discussion endpoint accepts a scoped discussion
+  ok   project discussion transcript is persisted and replayable through the API
+  ok   project B cannot see project A's transcript
+  ok   scoped discussion events carry the owning project id
+  ok   a scoped discussion requires project write permission
+
+8/8 passed
+web console
+  ok   the console serves its own page and assets
+  ok   static serving cannot escape the public directory
+  ok   the API refuses requests without the console token
+  ok   the state endpoint describes the runtime
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one file, console renderer"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a task streams events and produces an answer
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "saw 2 user messages"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a second task continues the same conversation
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a tool graph reports its shape, its waves and who ran it
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "read it"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a heavy result is streamed as a preview and fetched in full
+  ok   a loop is reported as an event, not only as a log line
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "written"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   an approval is streamed and honoured when approved
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "could not write"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a denied approval stops the tool
+  ok   the approval mode can be switched from the console
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "aggregated"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   delegation is reported as a tree
+  ok   every event reaches the console exactly once
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "slow"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a second task is refused while one is running
+  ok   an empty task is rejected
+  ok   settings are listed with their source and can be changed live
+  ok   an invalid or fixed setting is refused
+  ok   a settings change is streamed to every console
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "there is one file"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a conversation is stored with its events and calls
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "saw 2 user messages"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a stored conversation can be reopened and continued
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   reasoning reaches a live console, not only the history
+  ok   the project file remembers this workspace's settings
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   the console can keep cycling until the plan is done
+  ok   statistics report what the runtime executed
+
+discussion
+  ok   the discussion endpoint lists the selectable personas
+  ok   the discussion endpoint validates its request
+  ok   a discussion runs, streams its rounds, and reports
+
+28/28 passed
+  ok   the complete route inventory is unique and method-aware
+  ok   Router matches exact paths and named parameters without decoding twice
+  ok   RequestBody enforces the bounded JSON contract
+  ok   Response and SseHub preserve JSON and SSE wire shapes
+  ok   Middleware centralizes authentication, origin and rate limits
+  ok   domain services and controllers have explicit injected boundaries
+  ok   the canonical server exposes the route/controller graph
+  ok   the canonical server preserves authenticated API and public static contracts
+
+8/8 passed
+  ok   project isolation: same basename, independent artifacts and semantic
+  ok   tool isolation: read/write, terminal cwd, git, process sessions
+  ok   runtime isolation: concurrent runs, cancel, labelled delegation
+  ok   MCP isolation: tools/list and tools/call stay on one project
+  ok   persistence isolation: memory, plan, session, archive, events
+  ok   load: two heavy projects run, the third queues then finishes
+  ok   recovery: a crashed worker and a cancelled run leave the neighbour running
+  ok   load: a full queue rejects instead of hanging
+  ok   ten-step end-to-end acceptance scenario
+  ok   the MVP uses canonical context, prompt and semantic boundaries
+
+10/10 passed
+npm notice
+npm notice New major version of npm available! 10.9.8 -> 12.1.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.1.0
+npm notice To update run: npm install -g npm@12.1.0
+npm notice

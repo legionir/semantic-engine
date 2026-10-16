@@ -1,0 +1,3817 @@
+{
+  "generatedAt": "2026-09-22T13:13:40.519Z",
+  "fixture": "fixture2/",
+  "goldFile": "gold-2.json",
+  "gateBars": "macro precision >= 0.95 AND exact-class precision = 1.0; macro recall >= B1 AND > B0 (docs/GATES.md; measured, never changed)",
+  "softBars": "fixture-2 is generalization evidence: macro P >= 0.90 and macro R >= B1(f2) - 0.05 (reported, not gate-blocking)",
+  "freezeVerified": true,
+  "lexicon": {
+    "version": "1.0.0",
+    "patterns": 18
+  },
+  "summary": {
+    "macro": {
+      "AWARE": {
+        "precision": 1,
+        "recall": 1
+      },
+      "BLIND": {
+        "precision": 0.9270833333333334,
+        "recall": 0.7572916666666667
+      },
+      "NO_CHAIN": {
+        "precision": 1,
+        "recall": 0.96875
+      },
+      "NO_DEPENDEES": {
+        "precision": 0.96875,
+        "recall": 0.8385416666666666
+      },
+      "NO_HARD_SURFACE": {
+        "precision": 1,
+        "recall": 0.95
+      },
+      "NO_REFERRERS_EXPLICIT": {
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_SINGLETON": {
+        "precision": 0.9583333333333334,
+        "recall": 1
+      },
+      "NO_DEPTH": {
+        "precision": 1,
+        "recall": 0.96875
+      },
+      "NO_AMBIGUITY_EXPANSION": {
+        "precision": 1,
+        "recall": 0.9427083333333334
+      },
+      "B0": {
+        "precision": 0.5444261695906433,
+        "recall": 0.884375
+      },
+      "B1": {
+        "precision": 0.5895833333333333,
+        "recall": 0.8458333333333333
+      }
+    },
+    "micro": {
+      "AWARE": {
+        "tp": 39,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "BLIND": {
+        "tp": 26,
+        "fp": 3,
+        "fn": 13,
+        "precision": 0.896551724137931,
+        "recall": 0.6666666666666666
+      },
+      "NO_CHAIN": {
+        "tp": 38,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.9743589743589743
+      },
+      "NO_DEPENDEES": {
+        "tp": 31,
+        "fp": 1,
+        "fn": 8,
+        "precision": 0.96875,
+        "recall": 0.7948717948717948
+      },
+      "NO_HARD_SURFACE": {
+        "tp": 35,
+        "fp": 0,
+        "fn": 4,
+        "precision": 1,
+        "recall": 0.8974358974358975
+      },
+      "NO_REFERRERS_EXPLICIT": {
+        "tp": 39,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "NO_SINGLETON": {
+        "tp": 39,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.9512195121951219,
+        "recall": 1
+      },
+      "NO_DEPTH": {
+        "tp": 37,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0.9487179487179487
+      },
+      "NO_AMBIGUITY_EXPANSION": {
+        "tp": 36,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1,
+        "recall": 0.9230769230769231
+      }
+    }
+  },
+  "gates": null,
+  "softGateResult": {
+    "precision_ge_090": true,
+    "recall_ge_b1_minus_05": true
+  },
+  "calibration": {
+    "unresolvedCount": 2,
+    "unresolvedChecks": [
+      {
+        "name": "nodefs",
+        "sourcePath": "src/pipeline.ts",
+        "reasonContains": "unresolved namespace import",
+        "found": true
+      },
+      {
+        "name": "phantom",
+        "sourcePath": "src/island.ts",
+        "reasonContains": "unresolved import 'phantom'",
+        "found": true
+      }
+    ],
+    "hardBindingChecks": [
+      {
+        "sourcePath": "src/shadow.ts",
+        "line": 3,
+        "kind": "local-shadow",
+        "enclosing": "s-f",
+        "found": false
+      }
+    ],
+    "bindingHardEnclosings": [
+      "s2-fold",
+      "s2-page",
+      "s2-panel",
+      "s2-prize",
+      "s2-stage"
+    ],
+    "bindingHardCheck": false,
+    "ambiguousRefCount": 1,
+    "ambiguousRefs": [
+      {
+        "at": "src/verdict2.ts:2",
+        "candidates": [
+          "s2-rate-a",
+          "s2-rate-b"
+        ]
+      }
+    ],
+    "wrongExactRefs": [],
+    "fileDepCount": 18,
+    "fileDepCountExpected": 18,
+    "midEdgeCheck": null,
+    "viaMidYieldsCheck": null,
+    "unclassifiedOccurrences": 0,
+    "touchedUnresolved": null,
+    "touchedUnresolvedPass": null,
+    "touchedBindingHard": null,
+    "touchedBindingHardPass": null,
+    "deterministic": true,
+    "persistedLeg": {
+      "storeSchemaVersion": 1,
+      "graphEqualAfterReopen": true,
+      "handleResolvesAfterReopen": true,
+      "allTasksEqual": true,
+      "taskParity": true,
+      "tasks": [
+        {
+          "id": "U1",
+          "equal": true
+        },
+        {
+          "id": "U2",
+          "equal": true
+        },
+        {
+          "id": "U3",
+          "equal": true
+        },
+        {
+          "id": "U4",
+          "equal": true
+        },
+        {
+          "id": "U5",
+          "equal": true
+        },
+        {
+          "id": "U6",
+          "equal": true
+        },
+        {
+          "id": "U7",
+          "equal": true
+        },
+        {
+          "id": "U8",
+          "equal": true
+        },
+        {
+          "id": "U9",
+          "equal": true
+        },
+        {
+          "id": "U10",
+          "equal": true
+        },
+        {
+          "id": "U11",
+          "equal": true
+        },
+        {
+          "id": "U12",
+          "equal": true
+        },
+        {
+          "id": "U13",
+          "equal": true
+        },
+        {
+          "id": "U14",
+          "equal": true
+        },
+        {
+          "id": "U15",
+          "equal": true
+        },
+        {
+          "id": "U16",
+          "equal": true
+        }
+      ]
+    },
+    "incremental": {
+      "equal": true,
+      "invalidPathRejected": true,
+      "changedPaths": [
+        "src/decoy.ts"
+      ]
+    },
+    "b0b1Reproduction": null
+  },
+  "graphCounts": {
+    "references": 12,
+    "unresolved": 2,
+    "hardBindings": 3,
+    "fileDeps": 18,
+    "resolutionModes": {
+      "exact": 11,
+      "ambiguous": 1,
+      "heuristic": 0,
+      "unresolved": 0
+    }
+  },
+  "tasks": [
+    {
+      "id": "U1",
+      "seed": "s2-tokenize",
+      "goal": "Show all usages of tokenize",
+      "relevant": [
+        "s2-tokenize",
+        "s2-pairs",
+        "s2-triple",
+        "s2-stage"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R4",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 4,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 2
+      },
+      "b0": {
+        "set": [
+          "s2-bag",
+          "s2-fold",
+          "s2-limit",
+          "s2-note",
+          "s2-pairs",
+          "s2-picked",
+          "s2-stage",
+          "s2-tokenize",
+          "s2-triple"
+        ],
+        "tp": 4,
+        "fp": 5,
+        "fn": 0,
+        "precision": 0.4444444444444444,
+        "recall": 1,
+        "keywords": [
+          "usages",
+          "tokenize"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-bag",
+          "s2-fold",
+          "s2-limit",
+          "s2-note",
+          "s2-pairs",
+          "s2-picked",
+          "s2-stage",
+          "s2-tokenize",
+          "s2-triple"
+        ],
+        "tp": 4,
+        "fp": 5,
+        "fn": 0,
+        "precision": 0.4444444444444444,
+        "recall": 1,
+        "files": [
+          "src/barrel.ts",
+          "src/decoy.ts",
+          "src/fold.ts",
+          "src/ngrams.ts",
+          "src/pipeline.ts",
+          "src/tokens.ts"
+        ]
+      }
+    },
+    {
+      "id": "U2",
+      "seed": "s2-summary",
+      "goal": "Show summary and everything it depends on transitively",
+      "relevant": [
+        "s2-summary",
+        "s2-census",
+        "s2-pairs",
+        "s2-tokenize"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs",
+            "s2-summary",
+            "s2-tokenize"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 6,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-summary"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 3,
+          "precision": 1,
+          "recall": 0.25,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs",
+            "s2-summary",
+            "s2-tokenize"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 6,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-summary"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 3,
+          "precision": 1,
+          "recall": 0.25,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 6,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs",
+            "s2-summary",
+            "s2-tokenize"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 6,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs",
+            "s2-summary",
+            "s2-tokenize"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 6,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs",
+            "s2-summary",
+            "s2-tokenize"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 6,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-census",
+            "s2-summary"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.5,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs",
+            "s2-summary",
+            "s2-tokenize"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 6,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-summary"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1,
+        "recall": 0.25,
+        "keywords": [
+          "summary",
+          "everything",
+          "depends",
+          "transitively"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-census",
+          "s2-summary"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0.5,
+        "files": [
+          "src/count.ts",
+          "src/report.ts"
+        ]
+      }
+    },
+    {
+      "id": "U3",
+      "seed": "s2-census",
+      "goal": "What does census use?",
+      "relevant": [
+        "s2-census",
+        "s2-pairs"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-census",
+            "s2-summary"
+          ],
+          "tp": 1,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.5,
+          "recall": 0.5,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-census",
+            "s2-summary"
+          ],
+          "tp": 1,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.5,
+          "recall": 0.5,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "D3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-census",
+          "s2-summary"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.5,
+        "recall": 0.5,
+        "keywords": [
+          "census"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-census",
+          "s2-pairs",
+          "s2-summary",
+          "s2-triple"
+        ],
+        "tp": 2,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "files": [
+          "src/count.ts",
+          "src/ngrams.ts",
+          "src/report.ts"
+        ]
+      }
+    },
+    {
+      "id": "U4",
+      "seed": "s2-wrap",
+      "goal": "Where is wrap defined?",
+      "relevant": [
+        "s2-wrap"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-page",
+            "s2-panel",
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.3333333333333333,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-page",
+            "s2-panel",
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.3333333333333333,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-wrap"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-page",
+          "s2-panel",
+          "s2-wrap"
+        ],
+        "tp": 1,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.3333333333333333,
+        "recall": 1,
+        "keywords": [
+          "wrap",
+          "defined"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-page",
+          "s2-panel",
+          "s2-wrap"
+        ],
+        "tp": 1,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.3333333333333333,
+        "recall": 1,
+        "files": [
+          "src/panel2.ts",
+          "src/skin.ts",
+          "src/view.ts"
+        ]
+      }
+    },
+    {
+      "id": "U5",
+      "seed": "s2-limit",
+      "goal": "Show LIMIT itself",
+      "relevant": [
+        "s2-limit"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-limit"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "SINGLETON",
+            "cue": "S3",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-limit",
+          "s2-tokenize"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "keywords": [
+          "limit",
+          "itself"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-bag",
+          "s2-fold",
+          "s2-limit",
+          "s2-note",
+          "s2-pairs",
+          "s2-picked",
+          "s2-stage",
+          "s2-tokenize",
+          "s2-triple"
+        ],
+        "tp": 1,
+        "fp": 8,
+        "fn": 0,
+        "precision": 0.1111111111111111,
+        "recall": 1,
+        "files": [
+          "src/barrel.ts",
+          "src/decoy.ts",
+          "src/fold.ts",
+          "src/ngrams.ts",
+          "src/pipeline.ts",
+          "src/tokens.ts"
+        ]
+      }
+    },
+    {
+      "id": "U6",
+      "seed": "s2-stage",
+      "goal": "Show the re-export chain behind the staging step",
+      "relevant": [
+        "s2-stage",
+        "s2-tokenize"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-stage",
+            "s2-tokenize"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-stage"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1,
+          "recall": 0.5,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-stage"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1,
+          "recall": 0.5,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-stage",
+            "s2-tokenize"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-stage",
+            "s2-tokenize"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-stage",
+            "s2-tokenize"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-stage",
+            "s2-tokenize"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-stage",
+            "s2-tokenize"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-stage",
+            "s2-tokenize"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "CHAIN",
+            "cue": "C1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 1
+      },
+      "b0": {
+        "set": [
+          "s2-bag",
+          "s2-census",
+          "s2-fold",
+          "s2-limit",
+          "s2-note",
+          "s2-page",
+          "s2-pairs",
+          "s2-panel",
+          "s2-picked",
+          "s2-prize",
+          "s2-rate-a",
+          "s2-rate-b",
+          "s2-solo",
+          "s2-stage",
+          "s2-summary",
+          "s2-tokenize",
+          "s2-triple",
+          "s2-verdict",
+          "s2-wrap"
+        ],
+        "tp": 2,
+        "fp": 17,
+        "fn": 0,
+        "precision": 0.10526315789473684,
+        "recall": 1,
+        "keywords": [
+          "re",
+          "export",
+          "chain",
+          "staging",
+          "step"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-limit",
+          "s2-stage",
+          "s2-tokenize"
+        ],
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "files": [
+          "src/barrel.ts",
+          "src/pipeline.ts",
+          "src/tokens.ts"
+        ]
+      }
+    },
+    {
+      "id": "U7",
+      "seed": "s2-fold",
+      "goal": "Show references the resolver cannot bind (shadowed, re-exported, default-imported, namespace)",
+      "relevant": [
+        "s2-fold",
+        "s2-stage",
+        "s2-panel",
+        "s2-page",
+        "s2-prize"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-fold",
+            "s2-page",
+            "s2-panel",
+            "s2-prize",
+            "s2-stage"
+          ],
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-fold"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 4,
+          "precision": 1,
+          "recall": 0.2,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-fold",
+            "s2-page",
+            "s2-panel",
+            "s2-prize",
+            "s2-stage"
+          ],
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-fold",
+            "s2-page",
+            "s2-panel",
+            "s2-prize",
+            "s2-stage"
+          ],
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-fold"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 4,
+          "precision": 1,
+          "recall": 0.2,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-fold",
+            "s2-page",
+            "s2-panel",
+            "s2-prize",
+            "s2-stage"
+          ],
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-fold",
+            "s2-page",
+            "s2-panel",
+            "s2-prize",
+            "s2-stage"
+          ],
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-fold",
+            "s2-page",
+            "s2-panel",
+            "s2-prize",
+            "s2-stage"
+          ],
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-fold",
+            "s2-page",
+            "s2-panel",
+            "s2-prize",
+            "s2-stage"
+          ],
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "HARD_SURFACE",
+            "cue": "H1",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 2
+      },
+      "b0": {
+        "set": [
+          "s2-bag",
+          "s2-census",
+          "s2-fold",
+          "s2-limit",
+          "s2-note",
+          "s2-pairs",
+          "s2-picked",
+          "s2-rate-a",
+          "s2-rate-b",
+          "s2-solo",
+          "s2-stage",
+          "s2-summary",
+          "s2-tokenize",
+          "s2-triple",
+          "s2-wrap"
+        ],
+        "tp": 2,
+        "fp": 13,
+        "fn": 3,
+        "precision": 0.13333333333333333,
+        "recall": 0.4,
+        "keywords": [
+          "references",
+          "resolver",
+          "cannot",
+          "bind",
+          "shadowed",
+          "re",
+          "exported",
+          "default",
+          "imported",
+          "namespace"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-fold",
+          "s2-limit",
+          "s2-tokenize"
+        ],
+        "tp": 1,
+        "fp": 2,
+        "fn": 4,
+        "precision": 0.3333333333333333,
+        "recall": 0.2,
+        "files": [
+          "src/fold.ts",
+          "src/tokens.ts"
+        ]
+      }
+    },
+    {
+      "id": "U8",
+      "seed": "s2-rate-a",
+      "goal": "Show the rate function and its callers",
+      "relevant": [
+        "s2-rate-a",
+        "s2-rate-b",
+        "s2-verdict",
+        "s2-prize"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1,
+          "recall": 0.75,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 1,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-census",
+          "s2-fold",
+          "s2-limit",
+          "s2-pairs",
+          "s2-prize",
+          "s2-rate-a",
+          "s2-rate-b",
+          "s2-solo",
+          "s2-stage",
+          "s2-summary",
+          "s2-tokenize",
+          "s2-triple",
+          "s2-verdict",
+          "s2-wrap"
+        ],
+        "tp": 4,
+        "fp": 10,
+        "fn": 0,
+        "precision": 0.2857142857142857,
+        "recall": 1,
+        "keywords": [
+          "rate",
+          "function",
+          "callers"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-rate-a",
+          "s2-verdict"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0.5,
+        "files": [
+          "src/both.ts",
+          "src/judge.ts",
+          "src/marks/a.ts"
+        ]
+      }
+    },
+    {
+      "id": "U9",
+      "seed": "s2-verdict",
+      "goal": "Which rate function does verdict call?",
+      "relevant": [
+        "s2-verdict",
+        "s2-rate-a",
+        "s2-rate-b"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-verdict"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-verdict"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-rate-a",
+            "s2-rate-b",
+            "s2-verdict"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-census",
+          "s2-fold",
+          "s2-limit",
+          "s2-pairs",
+          "s2-prize",
+          "s2-rate-a",
+          "s2-rate-b",
+          "s2-solo",
+          "s2-stage",
+          "s2-summary",
+          "s2-tokenize",
+          "s2-triple",
+          "s2-verdict",
+          "s2-wrap"
+        ],
+        "tp": 3,
+        "fp": 11,
+        "fn": 0,
+        "precision": 0.21428571428571427,
+        "recall": 1,
+        "keywords": [
+          "rate",
+          "function",
+          "verdict",
+          "call"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-rate-a",
+          "s2-rate-b",
+          "s2-verdict"
+        ],
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/judge.ts",
+          "src/marks/a.ts",
+          "src/marks/b.ts"
+        ]
+      }
+    },
+    {
+      "id": "U10",
+      "seed": "s2-panel",
+      "goal": "Show panel",
+      "relevant": [
+        "s2-panel"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-panel"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-panel"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "panel"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-panel",
+          "s2-wrap"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "files": [
+          "src/skin.ts",
+          "src/view.ts"
+        ]
+      }
+    },
+    {
+      "id": "U11",
+      "seed": "s2-page",
+      "goal": "Show the page builder and every place it is applied",
+      "relevant": [
+        "s2-page"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-page"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R2",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-page"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "page",
+          "builder",
+          "place",
+          "applied"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-page",
+          "s2-wrap"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "files": [
+          "src/panel2.ts",
+          "src/skin.ts"
+        ]
+      }
+    },
+    {
+      "id": "U12",
+      "seed": "s2-solo",
+      "goal": "Show solo",
+      "relevant": [
+        "s2-solo"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-solo"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-solo"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "solo"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-solo"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/island.ts"
+        ]
+      }
+    },
+    {
+      "id": "U13",
+      "seed": "s2-picked",
+      "goal": "Show picked",
+      "relevant": [
+        "s2-picked"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-picked"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 1,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-bag",
+          "s2-note",
+          "s2-picked"
+        ],
+        "tp": 1,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.3333333333333333,
+        "recall": 1,
+        "keywords": [
+          "picked"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-bag",
+          "s2-limit",
+          "s2-note",
+          "s2-picked",
+          "s2-tokenize"
+        ],
+        "tp": 1,
+        "fp": 4,
+        "fn": 0,
+        "precision": 0.2,
+        "recall": 1,
+        "files": [
+          "src/decoy.ts",
+          "src/tokens.ts"
+        ]
+      }
+    },
+    {
+      "id": "U14",
+      "seed": "s2-tokenize",
+      "goal": "tokenize",
+      "relevant": [
+        "s2-tokenize",
+        "s2-pairs",
+        "s2-triple",
+        "s2-stage"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-pairs",
+            "s2-stage",
+            "s2-tokenize",
+            "s2-triple"
+          ],
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 4,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 2
+      },
+      "b0": {
+        "set": [
+          "s2-bag",
+          "s2-fold",
+          "s2-limit",
+          "s2-note",
+          "s2-pairs",
+          "s2-picked",
+          "s2-stage",
+          "s2-tokenize",
+          "s2-triple"
+        ],
+        "tp": 4,
+        "fp": 5,
+        "fn": 0,
+        "precision": 0.4444444444444444,
+        "recall": 1,
+        "keywords": [
+          "tokenize"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-bag",
+          "s2-fold",
+          "s2-limit",
+          "s2-note",
+          "s2-pairs",
+          "s2-picked",
+          "s2-stage",
+          "s2-tokenize",
+          "s2-triple"
+        ],
+        "tp": 4,
+        "fp": 5,
+        "fn": 0,
+        "precision": 0.4444444444444444,
+        "recall": 1,
+        "files": [
+          "src/barrel.ts",
+          "src/decoy.ts",
+          "src/fold.ts",
+          "src/ngrams.ts",
+          "src/pipeline.ts",
+          "src/tokens.ts"
+        ]
+      }
+    },
+    {
+      "id": "U15",
+      "seed": "s2-pairs",
+      "goal": "Show pairs and its consumers",
+      "relevant": [
+        "s2-pairs",
+        "s2-census"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-no-cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-census",
+            "s2-pairs"
+          ],
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "R5",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 2,
+        "ambiguous": 0,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-census",
+          "s2-pairs",
+          "s2-triple"
+        ],
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "keywords": [
+          "pairs",
+          "consumers"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-census",
+          "s2-limit",
+          "s2-pairs",
+          "s2-tokenize",
+          "s2-triple"
+        ],
+        "tp": 2,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.4,
+        "recall": 1,
+        "files": [
+          "src/barrel.ts",
+          "src/count.ts",
+          "src/ngrams.ts",
+          "src/tokens.ts"
+        ]
+      }
+    },
+    {
+      "id": "U16",
+      "seed": "s2-prize",
+      "goal": "Which rate does prize call?",
+      "relevant": [
+        "s2-prize",
+        "s2-rate-a",
+        "s2-rate-b"
+      ],
+      "modes": {
+        "AWARE": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "BLIND": {
+          "symbols": [
+            "s2-prize"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": null,
+            "reason": "default-blind",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_CHAIN": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPENDEES": {
+          "symbols": [
+            "s2-prize"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "REFERRERS",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_HARD_SURFACE": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_REFERRERS_EXPLICIT": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_SINGLETON": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_DEPTH": {
+          "symbols": [
+            "s2-prize",
+            "s2-rate-a",
+            "s2-rate-b"
+          ],
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        },
+        "NO_AMBIGUITY_EXPANSION": {
+          "symbols": [
+            "s2-prize"
+          ],
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "meta": {
+            "direction": "DEPENDEES",
+            "cue": "AV",
+            "reason": "cue",
+            "depth": 1,
+            "truncated": false
+          }
+        }
+      },
+      "resolution": {
+        "exact": 0,
+        "ambiguous": 1,
+        "heuristic": 0,
+        "unresolved": 0,
+        "hardBindings": 0
+      },
+      "b0": {
+        "set": [
+          "s2-prize",
+          "s2-rate-a",
+          "s2-rate-b",
+          "s2-verdict"
+        ],
+        "tp": 3,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.75,
+        "recall": 1,
+        "keywords": [
+          "rate",
+          "prize",
+          "call"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s2-prize"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0.3333333333333333,
+        "files": [
+          "src/both.ts",
+          "src/verdict2.ts"
+        ]
+      }
+    }
+  ]
+}

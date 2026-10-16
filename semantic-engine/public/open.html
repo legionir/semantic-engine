@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semantic Engine — Settings</title>
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/open.css">
+</head>
+<body class="open-body">
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="16 8 13.5 13.5 8 16 10.5 10.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><path d="M11 11l8 8M16 16l2-2M18 18l2-2"/></symbol>
+</svg>
+
+<header class="bar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <strong class="brand-name">Semantic Engine</strong>
+    <span class="status">
+      <span class="dot" id="statusDot"></span>
+      <span class="muted" id="statusText" role="status" aria-live="polite">Connecting…</span>
+    </span>
+  </div>
+  <div class="bar-tools">
+    <div class="bar-group">
+      <label class="chip select has-icon" title="Access token (--token)">
+        <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg>
+        <span class="chip-label">token</span>
+        <input type="password" id="tokenInput" placeholder="my-secret-token" autocomplete="off" style="width:150px;background:transparent;border:none;color:var(--text);outline:none;font:inherit;">
+      </label>
+      <button type="button" id="saveTokenBtn" class="chip button has-icon">
+        <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Save token</span>
+      </button>
+    </div>
+    <span class="bar-sep" aria-hidden="true"></span>
+    <nav class="bar-group bar-actions">
+      <a href="/visualizer.html" class="chip button has-icon" id="openVisualizerLink" title="Visualizer">
+        <svg class="ic" aria-hidden="true"><use href="#i-compass"/></svg><span>Visualizer</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="open-main">
+  <div class="wizard">
+
+    <!-- 1 · Project -->
+    <section class="card" id="cardProject">
+      <div class="card-head">
+        <h2><span class="step-num">1</span> Project location</h2>
+        <p class="muted">The project to index and analyse. It starts as the folder the server was launched from; type another path or browse for one.</p>
+      </div>
+
+      <div class="form-stack">
+        <div class="field">
+          <label class="field-label" for="pathInput">Project folder</label>
+          <div class="path-row">
+            <input type="text" id="pathInput" class="text-input" placeholder="/home/user/my-project" spellcheck="false">
+            <button type="button" id="browseBtn" class="btn">Browse</button>
+            <button type="button" id="useCwdBtn" class="btn ghost" title="Directory the server was started in">Server folder</button>
+          </div>
+        </div>
+
+        <div class="browser" id="browser" hidden>
+          <div class="browser-head">
+            <button type="button" id="upBtn" class="btn ghost small">↑ Up</button>
+            <code id="browserPath" class="path-code"></code>
+          </div>
+          <ul class="browser-list" id="browserList"></ul>
+          <div class="browser-foot">
+            <button type="button" id="selectDirBtn" class="btn">Select this folder</button>
+            <button type="button" id="closeBrowserBtn" class="btn ghost">Close</button>
+          </div>
+        </div>
+
+        <div class="selected-project" id="selectedProject" hidden>
+          <span class="badge" id="projStatusBadge">—</span>
+          <code id="selectedPathCode" class="path-code"></code>
+        </div>
+        <dl class="paths" id="pathsInfo" hidden>
+          <div><dt>Index data</dt><dd><code id="indexPathCode"></code></dd></div>
+          <div><dt>Settings file</dt><dd><code id="configPathCode"></code></dd></div>
+          <div><dt>Embedding models</dt><dd><code id="modelsDirCode"></code></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- 2 · Scanning -->
+    <section class="card" id="cardScan">
+      <div class="card-head">
+        <h2><span class="step-num">2</span> Scanning</h2>
+        <p class="muted">Controls how the code is walked and parsed.</p>
+      </div>
+
+      <div class="form-stack">
+        <div class="group">
+          <h3 class="group-title">Parameters</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label class="field-label" for="scanEngine">Parser</label>
+              <select id="scanEngine" class="select-box">
+                <option value="tree-sitter" selected>tree-sitter (accurate)</option>
+                <option value="heuristic">heuristic (light and fast)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="maxDepth">Max depth <span class="muted">(0 = unlimited)</span></label>
+              <input type="number" id="maxDepth" class="text-input" value="0" min="0">
+            </div>
+            <div class="field">
+              <label class="field-label" for="maxFileSize">Max file size (MB)</label>
+              <input type="number" id="maxFileSize" class="text-input" value="5" min="1" step="1">
+            </div>
+            <div class="field">
+              <label class="field-label" for="extraIgnore">Extra ignore patterns <span class="muted">(comma separated)</span></label>
+              <input type="text" id="extraIgnore" class="text-input" placeholder="**/*.snap, vendor/**" spellcheck="false">
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h3 class="group-title">Options</h3>
+          <div class="check-list">
+            <label class="check-item"><input type="checkbox" id="useGitignore" checked>
+              <span><b>Respect <code>.gitignore</code></b><small>Skip files git ignores</small></span></label>
+            <label class="check-item"><input type="checkbox" id="skipHidden" checked>
+              <span><b>Skip hidden directories</b><small>Folders that start with a dot</small></span></label>
+            <label class="check-item"><input type="checkbox" id="wantBlueprint" checked>
+              <span><b>Write <code>blueprint.json</code></b><small>Architecture map of the modules</small></span></label>
+            <label class="check-item"><input type="checkbox" id="wantLspDiagnostics" checked>
+              <span><b>Language-server diagnostics</b><small>Deep scan: compiler errors and warnings. Slower.</small></span></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · Embeddings -->
+    <section class="card" id="cardEmbedding">
+      <div class="card-head">
+        <h2><span class="step-num">3</span> Embeddings &amp; provider</h2>
+        <p class="muted">Semantic search needs embeddings. Use a local model stored on this machine, or connect a provider.</p>
+      </div>
+
+      <div class="form-stack">
+        <div class="check-list single">
+          <label class="check-item"><input type="checkbox" id="embeddingEnabled" checked>
+            <span><b>Build embeddings for semantic search</b><small>Adds vector chunks to the index</small></span></label>
+        </div>
+
+        <div id="embeddingConfig" class="form-stack">
+          <div class="group">
+            <h3 class="group-title">Provider</h3>
+            <div class="grid-2">
+              <div class="field">
+                <label class="field-label" for="providerSelect">Provider</label>
+                <select id="providerSelect" class="select-box"></select>
+              </div>
+              <div class="field" id="baseUrlField">
+                <label class="field-label" for="baseUrlInput">Base URL</label>
+                <input type="text" id="baseUrlInput" class="text-input" placeholder="http://localhost:11434" spellcheck="false">
+              </div>
+              <div class="field" id="apiKeyField" hidden>
+                <label class="field-label" for="apiKeyInput">API key <span class="muted">(optional, not saved)</span></label>
+                <input type="password" id="apiKeyInput" class="text-input" placeholder="sk-…" autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <!-- local models: download + choose -->
+          <div class="group" id="localModelsGroup">
+            <h3 class="group-title">Local models
+              <span class="muted" id="modelsDirNote"></span>
+            </h3>
+            <div class="notice" id="runtimeNotice" hidden></div>
+            <ul class="model-list" id="localModelList"></ul>
+          </div>
+
+          <!-- remote models -->
+          <div class="group" id="remoteModelsGroup" hidden>
+            <h3 class="group-title">Model</h3>
+            <div class="form-stack tight">
+              <div class="fetch-row">
+                <button type="button" id="fetchModelsBtn" class="btn">Connect and load models</button>
+                <span class="muted" id="fetchStatus"></span>
+              </div>
+              <div class="field">
+                <label class="field-label" for="modelSelect">Embedding model</label>
+                <select id="modelSelect" class="select-box"><option value="">— connect a provider first —</option></select>
+              </div>
+              <div class="check-list single">
+                <label class="check-item"><input type="checkbox" id="useDefaultModel" checked>
+                  <span><b>Use the provider's default model</b></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="check-list single">
+            <label class="check-item"><input type="checkbox" id="normalizeVectors" checked>
+              <span><b>Normalise vectors</b><small>Recommended for cosine similarity</small></span></label>
+          </div>
+          <p class="hint muted" id="providerHint"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · Chat -->
+    <section class="card" id="cardLlm">
+      <div class="card-head">
+        <h2><span class="step-num">4</span> Chat model (LLM)</h2>
+        <p class="muted">Point this at an OpenAI-compatible endpoint to chat about the project from the Visualizer. The assistant reaches your code only through the index tools, never the files or database directly.</p>
+      </div>
+
+      <div class="form-stack">
+        <div class="group">
+          <h3 class="group-title">Endpoint</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label class="field-label" for="llmBaseUrl">Base URL <span class="muted">(OpenAI-compatible)</span></label>
+              <input type="text" id="llmBaseUrl" class="text-input" placeholder="http://localhost:11434/v1" spellcheck="false">
+            </div>
+            <div class="field">
+              <label class="field-label" for="llmApiKey">API key <span class="muted">(optional, kept in memory only)</span></label>
+              <input type="password" id="llmApiKey" class="text-input" placeholder="empty, or sk-none if a value is required" autocomplete="off">
+            </div>
+          </div>
+          <div class="fetch-row spaced">
+            <button type="button" id="llmFetchBtn" class="btn">Connect and load models</button>
+            <span class="muted" id="llmFetchStatus"></span>
+          </div>
+          <p class="hint muted">Some gateways insist on a non-empty key even when they do not verify it; any placeholder such as <code>sk-none</code> works there. To keep a key across restarts, export it in the environment variable named in the settings file.</p>
+        </div>
+
+        <div class="group">
+          <h3 class="group-title">Model</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label class="field-label" for="llmModelSelect">Chat model <span class="muted">(type it, or pick from the list)</span></label>
+              <input type="text" id="llmModelSelect" class="text-input" list="llmModelList" placeholder="for example qwen2.5-coder or gpt-4o-mini" spellcheck="false">
+              <datalist id="llmModelList"></datalist>
+            </div>
+            <div class="field">
+              <label class="field-label" for="llmTemp">Temperature</label>
+              <input type="number" id="llmTemp" class="text-input" value="0.2" min="0" max="2" step="0.1">
+            </div>
+          </div>
+        </div>
+
+        <div class="run-row">
+          <button type="button" id="llmSaveBtn" class="btn primary">Save chat model</button>
+          <span class="muted" id="llmSaveStatus"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="card actions-card">
+      <div class="run-row">
+        <button type="button" id="startIndexBtn" class="btn primary large has-icon" disabled>
+          <svg class="ic" aria-hidden="true"><use href="#i-play"/></svg><span>Start indexing</span>
+        </button>
+        <button type="button" id="saveDefaultsBtn" class="btn" title="Write the values above to the settings file so every start uses them">Save as defaults</button>
+        <button type="button" id="cancelIndexBtn" class="btn ghost has-icon" hidden>
+          <svg class="ic" aria-hidden="true"><use href="#i-stop"/></svg><span>Cancel</span>
+        </button>
+        <a href="/visualizer.html" id="gotoVisualizerBtn" class="btn ghost has-icon" hidden>
+          <svg class="ic" aria-hidden="true"><use href="#i-compass"/></svg><span>Open Visualizer</span>
+        </a>
+        <span class="muted" id="defaultsStatus"></span>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap" hidden>
+        <div class="progress-head">
+          <span id="progressPhase">Ready…</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <pre class="log" id="jobLog"></pre>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script src="/open.js"></script>
+</body>
+</html>

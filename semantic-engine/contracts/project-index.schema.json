@@ -1,0 +1,1310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-coder.local/schemas/project-index.schema.json",
+  "title": "ProjectIndex",
+  "description": "خروجی خام و کامل Semantic Engine. منبع حقیقت سطح فایل/سیمبل. Blueprint از روی همین فایل derive می‌شود و نباید داده‌ی خودش را مستقل تولید کند.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "root",
+    "generatedAt",
+    "languages",
+    "files",
+    "symbols",
+    "graphs",
+    "diagnostics",
+    "metrics"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "root": {
+      "type": "string",
+      "description": "مسیر ریشه‌ی workspace"
+    },
+    "rootPath": {
+      "type": "string",
+      "description": "مسیر مطلق ریشهٔ workspace. `root` فقط نام کوتاه است و برای خواندن فایل به کار نمی‌آید (SE-EXP-05)."
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generatorVersion": {
+      "type": "string",
+      "description": "نسخه‌ی Semantic Engine"
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "زبان‌های شناسایی‌شده در پروژه"
+    },
+    "incremental": {
+      "type": "object",
+      "description": "اطلاعات مربوط به آخرین اسکن incremental، برای اینکه مصرف‌کننده بداند خروجی کامل است یا partial",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "full",
+            "incremental"
+          ]
+        },
+        "baseGeneratedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "اگر incremental است، به کدام full-scan قبلی متصل است"
+        },
+        "changedFileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removedFileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "diagnosticsRun": {
+      "type": "object",
+      "description": "نتیجهٔ مرحلهٔ diagnostics زبان‌سرور. فقط وقتی نوشته می‌شود که آن مرحله اجرا شده باشد؛ نبودش یعنی «بررسی نشده»، نه «چیزی پیدا نشد»",
+      "additionalProperties": false,
+      "required": ["filesWithFindings", "filesSkippedByBudget", "budgetMs"],
+      "properties": {
+        "filesWithFindings": { "type": "integer", "minimum": 0 },
+        "filesSkippedByBudget": { "type": "integer", "minimum": 0 },
+        "budgetMs": { "type": "integer", "minimum": 0 },
+        "completedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commit": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "isDirty": {
+          "type": "boolean"
+        },
+        "remoteUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fileEntry"
+      }
+    },
+    "symbols": {
+      "type": "array",
+      "description": "تمام symbol های پروژه، FLAT (نه تودرتو). ارتباط parent/child با parentId مشخص می‌شود، نه nesting — تا serialize سبک بماند.",
+      "items": {
+        "$ref": "#/$defs/symbolEntry"
+      }
+    },
+    "graphs": {
+      "type": "object",
+      "description": "تنها منبع حقیقت برای روابط بین symbol/file ها. CallGraph و TypeGraph و DependencyGraph اینجا مرکزی نگه داشته می‌شوند. symbolEntry.calls/calledBy فقط id این edge ها یا symbol مقصد را reference می‌کنند و داده را تکرار نمی‌کنند.",
+      "required": [
+        "callGraph",
+        "typeGraph",
+        "dependencyGraph"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "callGraph": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/callEdge"
+          }
+        },
+        "typeGraph": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/typeEdge"
+          }
+        },
+        "dependencyGraph": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependencyEdge"
+          }
+        },
+        "reverseDependencyGraph": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reverseDependencyEdge"
+          },
+          "description": "reverse dependencies: چه فایل‌هایی به from وابسته‌اند"
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "description": "diagnostics سطح پروژه (تجمیع از diagnostics هر فایل، برای query سریع بدون پیمایش files[])",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "metrics": {
+      "$ref": "#/$defs/projectMetrics"
+    },
+    "vectorChunks": {
+      "type": "array",
+      "description": "chunk های آماده‌ی embedding، هرکدام متصل به یک symbol یا file",
+      "items": {
+        "$ref": "#/$defs/vectorChunk"
+      }
+    },
+    "languageSupport": {
+      "type": "object",
+      "description": "سطح پشتیبانی هر زبانِ موجود در پروژه — SE-SYM-16 و SE-GRAPH-08. «چیزی پیدا نشد» با «این زبان را در این سطح نمی‌فهمم» یکی نیست.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "symbols",
+          "callGraph"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "symbols": {
+            "enum": [
+              "full",
+              "structural",
+              "heuristic"
+            ]
+          },
+          "callGraph": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fileEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "language",
+        "encoding",
+        "size",
+        "lines",
+        "hash",
+        "modified",
+        "binary",
+        "testFile",
+        "generated"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "شناسه‌ی پایدار فایل، معمولاً hash(relativePath). تغییر محتوا = تغییر id نیست؛ hash محتوا در فیلد hash جدا نگه‌داری می‌شود تا rename باعث از دست رفتن تاریخچه نشود."
+        },
+        "path": {
+          "type": "string"
+        },
+        "language": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "encoding": {
+          "type": "string",
+          "default": "utf8"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hash": {
+          "type": "string",
+          "description": "sha1 محتوای فایل، برای تشخیص staleness"
+        },
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "binary": {
+          "type": "boolean"
+        },
+        "truncated": {
+          "type": "boolean",
+          "default": false,
+          "description": "محتوای فایل برای تحلیل بریده شده چون از maxFileSizeBytes بزرگ‌تر بود. hash همچنان روی کل فایل است، ولی symbol و متریک ناقص‌اند."
+        },
+        "role": {
+          "enum": [
+            "service",
+            "controller",
+            "repository",
+            "model",
+            "util",
+            "config",
+            "test",
+            "component",
+            "hook",
+            "middleware",
+            "type-definition",
+            "entrypoint",
+            "unknown"
+          ]
+        },
+        "entryPoint": {
+          "type": "boolean",
+          "default": false
+        },
+        "testFile": {
+          "type": "boolean",
+          "default": false
+        },
+        "generated": {
+          "type": "boolean",
+          "default": false,
+          "description": "فایل auto-generated (مثل .d.ts یا migration) است"
+        },
+        "exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/exportEntry"
+          }
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/importEntry"
+          }
+        },
+        "symbolIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "ارجاع به symbols[].id تعریف‌شده در این فایل. خودِ symbol اینجا تکرار نمی‌شود."
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic"
+          }
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "ارجاع سریع به symbolIds در ترتیب ظاهرشدن در فایل، برای رندر outline بدون پیمایش کامل"
+        },
+        "metrics": {
+          "$ref": "#/$defs/fileMetrics"
+        },
+        "gitMetrics": {
+          "$ref": "#/$defs/gitFileMetrics"
+        },
+        "configUsages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/configUsageEntry"
+          },
+          "description": "استفاده‌های شناسایی‌شده از متغیرهای محیطی یا config در فایل"
+        },
+        "lsp": {
+          "$ref": "#/$defs/lspInfo"
+        },
+        "aiMetadata": {
+          "$ref": "#/$defs/aiMetadata"
+        },
+        "blueprintRef": {
+          "type": "object",
+          "description": "اشاره‌ی سبک به موجودیت متناظر در blueprint.json، نه کپی داده",
+          "additionalProperties": false,
+          "properties": {
+            "moduleId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "exportEntry": {
+      "type": "object",
+      "required": [
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "named",
+            "default",
+            "re-export",
+            "namespace"
+          ]
+        },
+        "symbolId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reExportFrom": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "در صورت re-export، مسیر مبدا"
+        },
+        "typeOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "صادرات صرفاً تایپی (export type)."
+        }
+      }
+    },
+    "importEntry": {
+      "type": "object",
+      "required": [
+        "from",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "package",
+            "local",
+            "builtin"
+          ]
+        },
+        "resolvedFileId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "اگر type=local، id فایل مقصد پس از resolve شدن path/tsconfig"
+        },
+        "specifiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "imported"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "imported": {
+                "type": "string"
+              },
+              "local": {
+                "type": "string"
+              },
+              "isDefault": {
+                "type": "boolean",
+                "default": false
+              },
+              "isNamespace": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "dynamic": {
+          "type": "boolean",
+          "default": false
+        },
+        "typeOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "وابستگی صرفاً تایپی (import type). در زمان اجرا وجود ندارد، پس یال گراف وابستگی نیست."
+        }
+      }
+    },
+    "symbolEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "fileId",
+        "parentId",
+        "kind",
+        "name",
+        "line",
+        "endLine",
+        "source",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "یکتا و پایدار در کل پروژه، مثلاً hash(fileId + fqName + kind)"
+        },
+        "fileId": {
+          "type": "string",
+          "description": "ارجاع به fileEntry.id"
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ارجاع به symbolEntry.id والد؛ null یعنی top-level. جایگزین nesting عمیق children[]."
+        },
+        "kind": {
+          "enum": [
+            "class",
+            "interface",
+            "enum",
+            "struct",
+            "trait",
+            "function",
+            "method",
+            "variable",
+            "constant",
+            "namespace",
+            "module",
+            "property",
+            "type-alias",
+            "decorator"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "fullyQualifiedName": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string",
+          "description": "برای سمبل فراخوانی‌شدنی: نام + پارامترها (+ بازگشتی). برای سمبل اعلانی (class / interface / enum / struct / trait / type-alias / namespace / module) خودِ اعلانِ فشرده، مثل «class Repository implements Storage» — `Name()` برای یک کلاس بی‌معناست (SE-SYM-19)"
+        },
+        "visibility": {
+          "enum": [
+            "public",
+            "private",
+            "protected",
+            "internal"
+          ]
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "documentation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "deprecated": {
+          "type": "boolean",
+          "default": false
+        },
+        "exported": {
+          "type": "boolean",
+          "default": false
+        },
+        "async": {
+          "type": "boolean",
+          "default": false
+        },
+        "generator": {
+          "type": "boolean",
+          "default": false
+        },
+        "abstract": {
+          "type": "boolean",
+          "default": false
+        },
+        "static": {
+          "type": "boolean",
+          "default": false
+        },
+        "readonly": {
+          "type": "boolean",
+          "default": false
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameter"
+          }
+        },
+        "returnType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "throws": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sideEffects": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "null یعنی هنوز تحلیل نشده (نیاز به تحلیل عمیق‌تر دارد)"
+        },
+        "generics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extends": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "نام یا symbolId والدها"
+        },
+        "implements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "complexity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "referenceCount": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "تعداد ارجاع cross-file؛ در فاز dependency پر می‌شود"
+        },
+        "calls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "آرایه‌ای از symbolId هایی که این symbol صدا می‌زند. جزئیات edge (مثل conditional/async) در graphs.callGraph است، نه اینجا."
+        },
+        "calledBy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "آرایه‌ای از symbolId هایی که این symbol را صدا می‌زنند"
+        },
+        "testIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "آرایه‌ای از fileId تست‌های مرتبط با این symbol"
+        },
+        "source": {
+          "enum": [
+            "lsp",
+            "tree-sitter",
+            "heuristic"
+          ],
+          "description": "طبق استراتژی fallback: lsp > tree-sitter > heuristic"
+        },
+        "confidence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false
+        },
+        "defaultValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rest": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "callEdge": {
+      "type": "object",
+      "required": [
+        "id",
+        "caller",
+        "callee",
+        "kind",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "caller": {
+          "type": "string",
+          "description": "symbolId، یا fileId وقتی فراخوانی در سطح ماژول است (callerKind را ببینید)"
+        },
+        "callerKind": {
+          "enum": [
+            "symbol",
+            "file"
+          ],
+          "description": "آیا caller یک symbol است یا یک فایل. نبودش یعنی symbol."
+        },
+        "callee": {
+          "type": "string",
+          "description": "symbolId، یا در صورت external یک نام رشته‌ای مثل package.method"
+        },
+        "kind": {
+          "enum": [
+            "direct",
+            "conditional",
+            "async",
+            "callback",
+            "external",
+            "recursive"
+          ]
+        },
+        "line": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/edgeProvenance"
+        }
+      }
+    },
+    "typeEdge": {
+      "type": "object",
+      "required": [
+        "parent",
+        "child",
+        "kind",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "parent": {
+          "type": "string",
+          "description": "symbolId"
+        },
+        "child": {
+          "type": "string",
+          "description": "symbolId"
+        },
+        "kind": {
+          "enum": [
+            "extends",
+            "implements"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/edgeProvenance"
+        }
+      }
+    },
+    "dependencyEdge": {
+      "type": "object",
+      "required": [
+        "from",
+        "to",
+        "kind",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "fileId"
+        },
+        "to": {
+          "type": "string",
+          "description": "fileId، یا `pkg:<name>` برای هرچه فایل این پروژه نیست"
+        },
+        "kind": {
+          "enum": [
+            "import",
+            "package",
+            "dynamic-import"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/edgeProvenance"
+        }
+      }
+    },
+    "reverseDependencyEdge": {
+      "type": "object",
+      "required": [
+        "from",
+        "to",
+        "kind",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "fileId یا symbolId که مورد dependency قرار گرفته"
+        },
+        "to": {
+          "type": "string",
+          "description": "fileId یا symbolId وابسته"
+        },
+        "kind": {
+          "enum": [
+            "imported-by",
+            "called-by",
+            "extends",
+            "implements"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/edgeProvenance"
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "severity",
+        "message",
+        "line",
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info",
+            "hint"
+          ]
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "description": "منبع diagnostic، مثلاً typescript، eslint، pyright — برای پشتیبانی چندزبانه ضروری است"
+        },
+        "fileId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "lspInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "renameSupported": {
+          "type": "boolean",
+          "default": false
+        },
+        "completionSupported": {
+          "type": "boolean",
+          "default": false
+        },
+        "hoverSamples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "symbolId": {
+                "type": "string"
+              },
+              "hover": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "available"
+      ]
+    },
+    "gitFileMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "متریک‌های git سطح فایل: churn، مالکیت، hotspot",
+      "properties": {
+        "commitCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "تعداد commit هایی که این فایل در آن‌ها تغییر کرده"
+        },
+        "lastCommitDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "تاریخ آخرین commit فایل"
+        },
+        "lastCommitHash": {
+          "type": "string"
+        },
+        "topContributors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "author": {
+                "type": "string"
+              },
+              "commitCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "email": {
+                "type": "string",
+                "description": "شناسهٔ پایدار نویسنده. تجمیع بر اساس نام نمایشی، دو نفر هم‌نام را یکی می‌کند و یک نفر که نامش را عوض کرده را دو نفر."
+              }
+            }
+          }
+        },
+        "hotspotScore": {
+          "type": "number",
+          "minimum": 0,
+          "description": "churn نرمال‌شده × پیچیدگی نرمال‌شده × ۱۰۰، محدود به ۱۰۰. churn نرمال‌شده = commitCount ÷ بیشترین commitCount در پروژه. پیچیدگی نرمال‌شده = max(1, cyclomaticComplexity) ÷ ۱۰. عدد نسبی است و فقط درون یک پروژه قابل مقایسه است."
+        },
+        "churnRank": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "رتبهٔ فایل از نظر تعداد commit (1 = بیشترین churn)"
+        }
+      },
+      "required": [
+        "commitCount",
+        "hotspotScore"
+      ]
+    },
+    "configUsageEntry": {
+      "type": "object",
+      "required": [
+        "kind",
+        "key",
+        "line"
+      ],
+      "additionalProperties": false,
+      "description": "یک استفادهٔ شناسایی‌شده از env/config در کد",
+      "properties": {
+        "kind": {
+          "enum": [
+            "env",
+            "config-get",
+            "dotenv",
+            "env-file-reference"
+          ],
+          "description": "نوع استفاده: env variable، config getter، dotenv load، یا ارجاع به فایل env"
+        },
+        "key": {
+          "type": "string",
+          "description": "نام متغیر یا کلید config"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "context": {
+          "type": "string",
+          "description": "خط/قطعه کد حاوی استفاده برای نمایش"
+        }
+      }
+    },
+    "fileMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "loc": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blankLines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commentLines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "classes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "functions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "methods": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "imports": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exports": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cyclomaticComplexity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxNestingDepth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "todoCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fixmeCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "projectMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "totalFiles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalLoc": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalSymbols": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "avgCyclomaticComplexity": {
+          "type": "number"
+        },
+        "languageBreakdown": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "totalFiles",
+        "totalLoc",
+        "totalSymbols",
+        "avgCyclomaticComplexity",
+        "languageBreakdown"
+      ]
+    },
+    "aiMetadata": {
+      "type": "object",
+      "description": "خروجی فاز LLM-based (فاز جدا در build plan). فرمول امتیازها باید در docs/scoring.md مستند شود، نه فقط عدد خام.",
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "businessDomains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "designPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frameworks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "relatedFileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "estimatedTokenCost": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aiScore": {
+          "type": "object",
+          "description": "همه‌ی امتیازهای مربوط به اولویت‌بندی خواندن، در یک آبجکت جمع شده (طبق پیشنهاد رفع همپوشانی importance/semanticWeight/...)",
+          "additionalProperties": false,
+          "required": [
+            "importance",
+            "readPriority",
+            "hotness"
+          ],
+          "properties": {
+            "importance": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "readPriority": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "hotness": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "factors": {
+              "type": "object",
+              "description": "تفکیک عوامل مؤثر در امتیاز، برای تفسیرپذیری (نه black-box)",
+              "additionalProperties": false,
+              "properties": {
+                "referenceCountWeight": {
+                  "type": "number"
+                },
+                "recentGitChangeWeight": {
+                  "type": "number"
+                },
+                "importCountWeight": {
+                  "type": "number"
+                },
+                "entryPointBonus": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "vectorChunk": {
+      "type": "object",
+      "required": [
+        "id",
+        "fileId",
+        "unit",
+        "content",
+        "startLine",
+        "endLine",
+        "tokenEstimate"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fileId": {
+          "type": "string"
+        },
+        "symbolId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "enum": [
+            "class",
+            "interface",
+            "function",
+            "method",
+            "module"
+          ]
+        },
+        "content": {
+          "type": "string"
+        },
+        "startLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tokenEstimate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contentHash": {
+          "type": "string",
+          "description": "هش محتوای chunk. شناسه هویتی است و به محتوا وابسته نیست (SE-VEC-09)؛ کهنگی از این فیلد فهمیده می‌شود."
+        },
+        "embeddingModel": {
+          "type": "string",
+          "description": "مدلی که embedding را ساخته. تعویض مدل، بردارهای قبلی را بی‌اعتبار می‌کند."
+        },
+        "embedding": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "vector embedding محلی یا API-based، اگر generator فعال باشد"
+        }
+      }
+    },
+    "edgeProvenance": {
+      "type": "object",
+      "description": "از کجا آمدن یال و میزان اعتماد به آن. بدون این، یال حاصل از تطبیق نام سراسری از یال خوانده‌شده از AST قابل تفکیک نیست.",
+      "required": [
+        "extractor",
+        "confidence",
+        "basis"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "extractor": {
+          "enum": [
+            "lsp",
+            "tree-sitter",
+            "typescript-api",
+            "heuristic"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "basis": {
+          "enum": [
+            "resolved",
+            "ast",
+            "import-resolved",
+            "declared",
+            "name-match",
+            "unresolved"
+          ]
+        },
+        "location": {
+          "type": "object",
+          "required": [
+            "file",
+            "line"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "line": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

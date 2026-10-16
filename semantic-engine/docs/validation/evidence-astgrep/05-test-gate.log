@@ -1,0 +1,17 @@
+=== CMD: npm run test:gate (ast-grep integration) ===
+TIMESTAMP: 2026-09-21T23:11:45Z
+
+> @aicoder/semantic-engine@0.1.0 test:gate
+> npm run fixture && node scripts/check-tests.js && node scripts/check-artifact-location.js
+
+
+> @aicoder/semantic-engine@0.1.0 fixture
+> node scripts/gen-fixture.js
+
+fixture written to /home/user/semantic-engine-structured-ai/semantic-engine/test-fixture (62 files)
+Test Suites: 234 passed, 234 total
+Tests:       3114 passed, 3114 total
+
+all suites ran
+artifact location gate: ok
+EXIT_CODE:0

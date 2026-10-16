@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-coder.local/schemas/ai-tools.schema.json",
+  "title": "SemanticEngineAiTools",
+  "description": "Input/output schemas for AI tools exposed by Semantic Engine",
+  "type": "object",
+  "properties": {
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" }
+    }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "required": ["name", "description", "inputSchema"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "inputSchema": { "type": "object" }
+      }
+    },
+    "find_symbol": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "kind": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+        "language": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+        "path": { "type": "string" },
+        "exportedOnly": { "type": "boolean" },
+        "limit": { "type": "integer" }
+      }
+    },
+    "get_dependencies": {
+      "type": "object",
+      "required": ["id", "direction"],
+      "properties": {
+        "id": { "type": "string" },
+        "direction": { "enum": ["forward", "backward"] },
+        "level": { "enum": ["file", "symbol"] },
+        "depth": { "type": "integer" },
+        "kind": { "enum": ["import", "package", "dynamic-import", "called-by", "all"] },
+        "limit": { "type": "integer" }
+      }
+    },
+    "get_file_summary": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "fileId": { "type": "string" }
+      }
+    },
+    "semantic_search": {
+      "type": "object",
+      "required": ["query"],
+      "properties": {
+        "query": { "type": "string" },
+        "filters": {
+          "type": "object",
+          "properties": {
+            "language": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+            "kind": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+            "path": { "type": "string" },
+            "exportedOnly": { "type": "boolean" }
+          }
+        },
+        "limit": { "type": "integer" },
+        "useEmbeddings": { "type": "boolean" }
+      }
+    },
+    "assemble_context": {
+      "type": "object",
+      "required": ["task"],
+      "properties": {
+        "task": { "type": "string" },
+        "targetFiles": { "type": "array", "items": { "type": "string" } },
+        "targetSymbols": { "type": "array", "items": { "type": "string" } },
+        "maxTokens": { "type": "integer" },
+        "includeTests": { "type": "boolean" },
+        "includeRecentChanges": { "type": "boolean" },
+        "dependencyDepth": { "type": "integer" }
+      }
+    },
+    "impact_analysis": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "level": { "enum": ["file", "symbol"] },
+        "depth": { "type": "integer" },
+        "limit": { "type": "integer" }
+      }
+    },
+    "find_tests": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "fileId": { "type": "string" },
+        "symbolId": { "type": "string" },
+        "limit": { "type": "integer" }
+      }
+    },
+    "get_recent_changes": {
+      "type": "object",
+      "required": ["workspaceRoot"],
+      "properties": {
+        "workspaceRoot": { "type": "string" },
+        "path": { "type": "string" },
+        "limit": { "type": "integer" },
+        "since": { "type": "string" }
+      }
+    },
+    "get_config_usage": {
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "path": { "type": "string" },
+        "kind": { "enum": ["env", "config-get", "dotenv", "env-file-reference"] },
+        "limit": { "type": "integer" }
+      }
+    }
+  }
+}

@@ -1,0 +1,645 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-coder.local/schemas/blueprint.schema.json",
+  "title": "Blueprint",
+  "description": "منبع حقیقت معماری/بیزینسی پروژه. این سند DERIVED از project-index.schema.json است — هیچ id ای در اینجا نباید مستقل از project-index تولید شود؛ symbolIndex[].id و graph node ها باید دقیقاً برابر project-index.symbols[].id / files[].id باشند. کاملاً auto-generated توسط Semantic Engine؛ انسان فقط override می‌کند.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "meta",
+    "architectureOverview",
+    "moduleMap",
+    "folderStructure",
+    "dependencyGraph",
+    "entityTechnicalMapping",
+    "apiMap",
+    "workflowExecutionMap",
+    "symbolIndex",
+    "technicalConstraints"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "id",
+        "projectName",
+        "generatedAt",
+        "sourceProjectIndex",
+        "lastSyncedCommit",
+        "driftScore",
+        "generatorVersion"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "projectName": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sourceProjectIndex": {
+          "type": "object",
+          "description": "اشاره‌ی صریح به نسخه‌ای از project-index.json که این Blueprint از روی آن derive شده. بدون این فیلد، sync-pذیری قابل اثبات نیست.",
+          "required": [
+            "generatedAt",
+            "schemaVersion"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "generatedAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "برابر project-index.generatedAt در لحظه‌ی derive"
+            },
+            "schemaVersion": {
+              "type": "string"
+            },
+            "fileCountAtSync": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "lastSyncedCommit": {
+          "type": "string",
+          "description": "آخرین git commit hash که Blueprint نسبت به آن sync شده"
+        },
+        "driftScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "نسبت فایل‌هایی که hash‌شان در project-index فعلی نسبت به لحظه‌ی آخرین derive تغییر کرده. محاسبه: changedFiles / totalFiles."
+        },
+        "generatorVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "architectureOverview": {
+      "type": "object",
+      "required": [
+        "layers",
+        "dataFlow"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "layers": {
+          "type": "array",
+          "description": "می‌تواند placeholder خالی باشد اگر فاز AI Metadata هنوز اجرا نشده (طبق build plan فاز ۶ نسبت به فاز ۷)",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "responsibility"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "مثلاً Domain, Application, Infra"
+              },
+              "responsibility": {
+                "type": "string"
+              },
+              "moduleIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "derivedFrom": {
+                "enum": [
+                  "ai-inference",
+                  "manual-override",
+                  "heuristic"
+                ],
+                "default": "heuristic"
+              }
+            }
+          }
+        },
+        "dataFlow": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to",
+              "description"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "moduleId"
+              },
+              "to": {
+                "type": "string",
+                "description": "moduleId"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "moduleMap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "path",
+          "responsibility",
+          "fileIds"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^mod-[a-z0-9-]+$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "responsibility": {
+            "type": "string"
+          },
+          "fileIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "ارجاع به project-index.files[].id — نه کپی مسیر"
+          },
+          "dependsOnModuleIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "folderStructure": {
+      "$ref": "#/$defs/folderNode"
+    },
+    "dependencyGraph": {
+      "type": "object",
+      "description": "این گراف در سطح module/file است (نه symbol-level؛ آن در project-index.graphs است). node/edge اینجا باید از project-index.graphs.dependencyGraph aggregate شود، نه مستقل استخراج شود.",
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/graphNode"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/graphEdge"
+          }
+        }
+      }
+    },
+    "entityTechnicalMapping": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "conceptualEntityId",
+          "modelName",
+          "storage",
+          "fields",
+          "symbolId"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "conceptualEntityId": {
+            "type": "string",
+            "description": "ارجاع به entities[].id در Master Spec (سند بیزینسی خارج از این schema)"
+          },
+          "symbolId": {
+            "type": "string",
+            "description": "ارجاع به project-index.symbols[].id — کلاس/interface مدل واقعی"
+          },
+          "modelName": {
+            "type": "string"
+          },
+          "storage": {
+            "enum": [
+              "sql",
+              "nosql",
+              "in-memory",
+              "file"
+            ]
+          },
+          "tableOrCollectionName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ormType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "مثلاً TypeORM, Prisma, Mongoose"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "nullable": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "isPrimaryKey": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "references": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "ارجاع به فیلد یا مدل دیگر در صورت foreign key"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "apiMap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "method",
+          "path",
+          "handlerSymbolId",
+          "authRequired"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^api-[a-z0-9-]+$"
+          },
+          "method": {
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "OPTIONS",
+              "HEAD"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "handlerSymbolId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ارجاع به project-index.symbols[].id. مقدار null یعنی handler یک تابعِ درجاست و symbol مستقلی ندارد — ساختنِ شناسه‌ای که وجود ندارد بدتر از اعلامِ نبودش است (SE-BP-02)."
+          },
+          "requestSchemaRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "responseSchemaRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "authRequired": {
+            "type": ["boolean", "null"],
+            "description": "SE-SEC-001: true/false فقط با شاهد؛ null یعنی «بررسی‌نشده از روی نحو» — نبودِ شاهد، شاهدِ باز بودن نیست."
+          },
+          "middlewareSymbolIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "ارجاع به symbol های middleware اعمال‌شده روی این route، به ترتیب اجرا"
+          },
+          "relatedFeatureId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ارجاع به features[].id در Master Spec"
+          },
+          "handlerName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "نامِ handler اگر یک ارجاعِ نام‌دار باشد."
+          },
+          "fileId": {
+            "type": "string",
+            "description": "فایلی که مسیر در آن ثبت شده."
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "framework": {
+            "enum": [
+              "express",
+              "fastify",
+              "nestjs"
+            ]
+          },
+          "derivedFrom": {
+            "enum": [
+              "static-analysis",
+              "ai-inference"
+            ],
+            "description": "چطور این مسیر پیدا شد. static-analysis یعنی از نحو خوانده شده، نه حدس زده."
+          }
+        }
+      }
+    },
+    "workflowExecutionMap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "workflowId",
+          "steps"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "workflowId": {
+            "type": "string",
+            "description": "ارجاع به workflows[].id در Master Spec"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "symbolId",
+                "order"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "symbolId": {
+                  "type": "string",
+                  "description": "ارجاع به project-index.symbols[].id — file/line از همانجا قابل استخراج است، اینجا تکرار نمی‌شود"
+                },
+                "order": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "condition": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "شرط اجرای این مرحله در صورت وجود (مثلاً branch)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "symbolIndex": {
+      "type": "array",
+      "description": "یک نمای فشرده (index-view) از project-index.symbols برای دسترسی سریع در سطح Blueprint. id ها باید دقیقاً برابر project-index.symbols[].id باشند — این آرایه چیزی را دوباره استخراج نمی‌کند، فقط subset پرکاربرد (نام، محل، اهمیت) را برای مصرف سریع در کنار هم می‌گذارد.",
+      "items": {
+        "$ref": "#/$defs/symbolIndexEntry"
+      }
+    },
+    "technicalConstraints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "pattern",
+          "description",
+          "enforcement"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^tc-[a-z0-9-]+$"
+          },
+          "pattern": {
+            "type": "string",
+            "description": "مثلاً Repository, CQRS, Layered Architecture"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enforcement": {
+            "enum": [
+              "lint-rule",
+              "code-review",
+              "manual",
+              "ci-check"
+            ]
+          },
+          "violatingFileIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "فایل‌هایی که فعلاً این constraint را نقض می‌کنند (در صورت شناسایی)"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "folderNode": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "fileId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "در صورت type=file، ارجاع به project-index.files[].id"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/folderNode"
+          }
+        }
+      }
+    },
+    "graphNode": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "برابر project-index.files[].id یا moduleMap[].id — نه یک شناسه‌ی جدید"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "module"
+          ]
+        }
+      }
+    },
+    "graphEdge": {
+      "type": "object",
+      "required": [
+        "from",
+        "to",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "imports",
+            "depends-on"
+          ]
+        },
+        "weight": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "تعداد import های واقعی بین این دو node، برای تشخیص coupling سنگین"
+        }
+      }
+    },
+    "symbolIndexEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "fileId",
+        "line"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "MUST equal project-index.symbols[].id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "class",
+            "interface",
+            "enum",
+            "struct",
+            "trait",
+            "function",
+            "method",
+            "variable",
+            "constant",
+            "namespace",
+            "module",
+            "property",
+            "type-alias",
+            "decorator"
+          ]
+        },
+        "fileId": {
+          "type": "string",
+          "description": "ارجاع به project-index.files[].id"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "signature": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "importanceScore": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "کپی سبک از project-index aiMetadata.aiScore.importance برای دسترسی سریع، منبع اصلی همچنان project-index است"
+        }
+      }
+    }
+  }
+}

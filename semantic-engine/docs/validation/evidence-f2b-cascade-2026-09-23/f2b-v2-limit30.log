@@ -1,0 +1,147 @@
+web console
+  ok   the console serves its own page and assets
+  ok   static serving cannot escape the public directory
+  ok   the API refuses requests without the console token
+  ok   the state endpoint describes the runtime
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one file, console renderer"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a task streams events and produces an answer
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "saw 2 user messages"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a second task continues the same conversation
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a tool graph reports its shape, its waves and who ran it
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "read it"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a heavy result is streamed as a preview and fetched in full
+  ok   a loop is reported as an event, not only as a log line
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "written"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   an approval is streamed and honoured when approved
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "could not write"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  FAIL a denied approval stops the tool
+       timed out waiting for a condition
+  FAIL the approval mode can be switched from the console
+       429 == 200
+  FAIL delegation is reported as a tree
+       timed out waiting for a condition
+  FAIL every event reaches the console exactly once
+       timed out waiting for a condition
+  FAIL a second task is refused while one is running
+       unexpected status 429
+  FAIL an empty task is rejected
+       429 == 400
+  FAIL settings are listed with their source and can be changed live
+       429 == 200
+  FAIL an invalid or fixed setting is refused
+       429 == 400
+  FAIL a settings change is streamed to every console
+       timed out waiting for a condition
+  FAIL a conversation is stored with its events and calls
+       timed out waiting for a condition
+  FAIL a stored conversation can be reopened and continued
+       429 == 201
+  FAIL reasoning reaches a live console, not only the history
+       timed out waiting for a condition
+  FAIL the project file remembers this workspace's settings
+       timed out waiting for a condition
+  FAIL the console can keep cycling until the plan is done
+       timed out waiting for a condition
+  FAIL statistics report what the runtime executed
+       429 == 200
+
+discussion
+  FAIL the discussion endpoint lists the selectable personas
+       429 == 200
+  FAIL the discussion endpoint validates its request
+       429 == 400
+  FAIL a discussion runs, streams its rounds, and reports
+       timed out waiting for a condition
+
+10/28 passed

@@ -1,0 +1,15 @@
+=== CMD: npx jest src/core/codeintel/Phase2Structural.test.ts --runInBand (post-fix) ===
+TIMESTAMP: 2026-09-21T22:04:09Z
+PASS src/core/codeintel/Phase2Structural.test.ts
+  Phase 2 structural adapter
+    ✓ matches named metavariables deterministically (5 ms)
+    ✓ bounds and reports truncation
+    ✓ validates JSON and minimal YAML rule packs (11 ms)
+    ✓ syntax dump is deterministic and preserves lines (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        0.22 s, estimated 1 s
+Ran all test suites matching /src\/core\/codeintel\/Phase2Structural.test.ts/i.
+EXIT_CODE:0

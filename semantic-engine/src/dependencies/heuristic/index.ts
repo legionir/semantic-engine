@@ -1,0 +1,1 @@
+export { HeuristicDependencyExtractor } from './HeuristicDependencyExtractor';

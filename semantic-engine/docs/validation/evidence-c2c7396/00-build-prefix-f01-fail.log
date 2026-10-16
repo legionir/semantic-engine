@@ -1,0 +1,14 @@
+=== CMD: npm run build (PRISTINE c2c7396 reproduction of F-01 failure) ===
+NOTE: isolated worktree at detached HEAD c2c7396, created 2026-09-22 to re-capture the pre-fix failure that was originally observed on 2026-09-21T21:51Z but not written to a log file (path error). No source modifications in this worktree; 'git status' verified clean before build.
+TIMESTAMP: 2026-09-21T22:46:06Z
+WORKTREE_REVISION: c2c7396d93022db649412fb6dc0c390700ef7c6a
+
+> @aicoder/semantic-engine@0.1.0 build
+> tsc -p ./
+
+src/ai/tools/Phase4ControlledTools.ts(22,293): error TS2345: Argument of type '{ id: string; name: ConstraintKind; kind: ConstraintKind; path: string | undefined; source: string; metadata: Phase4Edge; }[]' is not assignable to parameter of type 'readonly AiToolResultItem[]'.
+  Type '{ id: string; name: ConstraintKind; kind: ConstraintKind; path: string | undefined; source: string; metadata: Phase4Edge; }' is not assignable to type 'AiToolResultItem'.
+    Types of property 'metadata' are incompatible.
+      Type 'Phase4Edge' is not assignable to type 'Record<string, unknown>'.
+        Index signature for type 'string' is missing in type 'Phase4Edge'.
+EXIT_CODE:2

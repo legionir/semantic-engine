@@ -1,0 +1,69 @@
+{
+  "spike": "Spike-S",
+  "version": "1.0.0",
+  "frozenAt": "2026-09-22T00:00:00.000Z",
+  "frozenBeforeFirstRun": true,
+  "fixture": "fixture/",
+  "index": "fixture/index.json",
+  "notes": [
+    "Golds frozen BEFORE the first pilot run. Relevant sets are utility judgments from goal text (method-agnostic); they must not be tuned to any method's output.",
+    "No external adopted retrieval tool exists: docs/phase0-adopt-vs-build.md is dependency-only with an in-house rule. Comparison is B0/B1 only.",
+    "Fixture sources need not compile: the pilot is syntactic (regex import scan + word occurrences). Utility golds still judge semantic relevance.",
+    "Pilot = Phase3SemanticGraphPilot.referencesFor(seed) from src/core/codeintel/Phase3SemanticGraph.ts (method M1, single-query, plan-literal)."
+  ],
+  "method": {
+    "M1_pilot": "seed symbol + enclosing index symbols of referencesFor(seed). Enclosing = smallest-span index symbol with same file and line in [line,endLine]; refs on import/comment/top-level lines with no enclosing symbol contribute nothing but are counted as unenclosed refs.",
+    "B0_keywords": "goal tokens (lowercase, split on [^a-z0-9]+) minus STOPWORDS; a file matches if its content contains ANY keyword as a case-insensitive substring (union/OR). Result = all index symbols of matched files. Union is preregistered because a recall baseline must be generous; intersection would be a precision rule.",
+    "B1_closure": "seed file + depth-1 both-direction import closure from an INDEPENDENT regex scan (no pilot code reuse): files that import the seed file plus files the seed file imports (import and export-from forms, relative specifiers resolved with .ts/.tsx/.js//index.ts probes). Result = all index symbols of those files.",
+    "STOPWORDS": ["a", "an", "the", "of", "to", "in", "on", "and", "or", "is", "are", "was", "were", "be", "been", "show", "shows", "showed", "all", "find", "finds", "found", "where", "what", "which", "who", "whom", "whose", "that", "this", "these", "those", "it", "its", "for", "with", "from", "by", "at", "as", "into", "me", "my", "list", "lists", "listed", "every", "each", "behind", "through", "back", "over", "under", "do", "does", "did", "can", "could", "should", "would", "there", "their", "have", "has", "had", "not", "no", "if", "then", "than", "so", "such", "only", "just", "like", "uses", "use", "used", "using"],
+    "metrics": "Per-task exact-match set precision/recall vs relevant. PRIMARY: macro-average (mean of per-task P/R). Secondary: micro (global TP/FP/FN). Gate bars from docs/GATES.md, measured never changed: macro precision >= 0.95; macro recall >= B1 macro recall AND > B0 macro recall."
+  },
+  "tasks": [
+    {"id": "T1", "seed": "s-add", "goal": "Show all usages of add", "relevant": ["s-add", "s-total", "s-double", "s-r", "s-r2", "s-v"], "rationale": "Direct call sites. s-f excluded: shadowed param rebinding is not a usage (tests wrong-exact claim). s-grand excluded: indirect consumer, no add occurrence."},
+    {"id": "T2", "seed": "s-sub", "goal": "Show the subtraction helper and every place it is applied", "relevant": ["s-sub", "s-r"], "rationale": "Only application site is s-r. Descriptive goal (no symbol name) probes keyword brittleness."},
+    {"id": "T3", "seed": "s-pi", "goal": "Show the PI constant and where it is used", "relevant": ["s-pi", "s-r2"], "rationale": "Only use site is s-r2."},
+    {"id": "T4", "seed": "s-total", "goal": "Show total and everything that consumes it", "relevant": ["s-total", "s-double", "s-grand"], "rationale": "Usage discovery: same-file consumer s-double plus cross-file s-grand."},
+    {"id": "T5", "seed": "s-grand", "goal": "Trace grand back to its sources through the import chain", "relevant": ["s-grand", "s-total", "s-double", "s-v"], "rationale": "One-hop value chain. Tests transitive/graph-walk blindness of single-query references."},
+    {"id": "T6", "seed": "s-v", "goal": "Show the re-export chain behind v (mid/footbridge modules)", "relevant": ["s-v", "s-grand", "s-add"], "rationale": "v calls add via the mid re-export; grand consumes v. mid.ts has no symbols so the hop itself is unrepresentable as a symbol."},
+    {"id": "T7", "seed": "s-f", "goal": "Show function f and its shadowed parameter", "relevant": ["s-f"], "rationale": "Singleton: f is unreferenced; the shadowing is a calibration probe, not a symbol."},
+    {"id": "T8", "seed": "s-fmt1", "goal": "Find the helper that formats output", "relevant": ["s-fmt1", "s-fmt2", "s-o"], "rationale": "Vague goal (B0 expected empty). Both overloads relevant; o is the call site. Ambiguity must surface, not silently pick one."},
+    {"id": "T9", "seed": "s-store", "goal": "Show the Store class and its consumers", "relevant": ["s-store", "s-s"], "rationale": "Default-export class consumed via default import at s-s. app.ts does NOT import Store in this fixture."},
+    {"id": "T10", "seed": "s-double", "goal": "Show references the resolver cannot bind (shadowed, re-exported, default-imported)", "relevant": ["s-double", "s-f", "s-v", "s-s"], "rationale": "Unbindable-surface goal: shadow site s-f, re-export consumer s-v, default-import consumer s-s, plus seed."},
+    {"id": "T11", "seed": "s-o", "goal": "Which fmt overload does o call?", "relevant": ["s-o", "s-fmt1", "s-fmt2"], "rationale": "Both overloads relevant to the question; a syntactic pilot cannot decide between them."},
+    {"id": "T12", "seed": "s-r", "goal": "Show r", "relevant": ["s-r"], "rationale": "Trivial no-hallucination control: r is unreferenced."},
+    {"id": "T13", "seed": "s-lonely", "goal": "Show lonely", "relevant": ["s-lonely"], "rationale": "Trivial control; file also carries the missing-file import (calibration)."},
+    {"id": "T14", "seed": "s-s", "goal": "Show s", "relevant": ["s-s"], "rationale": "Trivial control; s itself is a default-import consumer (calibration)."},
+    {"id": "T15", "seed": "s-r2", "goal": "Show r2", "relevant": ["s-r2"], "rationale": "Trivial control: r2 is unreferenced."},
+    {"id": "T16", "seed": "s-add", "goal": "Where is add called?", "relevant": ["s-add", "s-total", "s-double", "s-r", "s-r2", "s-v"], "rationale": "Same-seed phrasing variant of T1 (naming)."},
+    {"id": "T17", "seed": "s-add", "goal": "List every call site of the add function", "relevant": ["s-add", "s-total", "s-double", "s-r", "s-r2", "s-v"], "rationale": "Same-seed phrasing variant of T1 (naming)."},
+    {"id": "T18", "seed": "s-add", "goal": "add", "relevant": ["s-add", "s-total", "s-double", "s-r", "s-r2", "s-v"], "rationale": "Same-seed minimal phrasing of T1."},
+    {"id": "T19", "seed": "s-add", "goal": "Which modules depend on the addition helper?", "relevant": ["s-add", "s-total", "s-double", "s-r", "s-r2", "s-v"], "rationale": "Same-seed paraphrase of T1 without the symbol name (B0 expected empty)."},
+    {"id": "T20", "seed": "s-add", "goal": "Show me everything that uses addition", "relevant": ["s-add", "s-total", "s-double", "s-r", "s-r2", "s-v"], "rationale": "Same-seed paraphrase of T1 without the symbol name (B0 expected empty)."}
+  ],
+  "calibration": {
+    "globalUnresolved": [
+      {"name": "fs", "sourcePath": "src/app.ts", "reasonContains": "unresolved import", "why": "namespace import + non-relative bare specifier"},
+      {"name": "Store", "sourcePath": "src/admin.ts", "reasonContains": "'default'", "why": "default import; index names the class Store so default binding has no candidate"},
+      {"name": "ghost", "sourcePath": "src/unused.ts", "reasonContains": "'ghost'", "why": "missing file ./ghost"},
+      {"name": "add", "sourcePath": "src/via.ts", "reasonContains": "'./mid'", "why": "re-export hop: mid.ts resolves but exports no indexed symbol named add"}
+    ],
+    "globalUnresolvedCount": 4,
+    "ambiguousRefsExpected": ">=1 ref with confidence=ambiguous over the fmt overloads (T8 seed s-fmt1)",
+    "touchedUnresolvedPerTask": {"T1": ">=1", "T2": "0", "T3": "0", "T4": ">=1", "T5": ">=1", "T6": ">=1", "T7": "0", "T8": "0", "T9": ">=1", "T10": ">=1", "T11": "0", "T12": "0", "T13": ">=1", "T14": ">=1", "T15": "0", "T16": ">=1", "T17": ">=1", "T18": ">=1", "T19": ">=1", "T20": ">=1"},
+    "touchedUnresolvedRule": "unresolved entries with sourceFileId in files(gold+seed) OR name in names(gold+seed). Calibration only; never used for retrieval.",
+    "exactClaimAudit": "List every confidence=exact ref whose enclosing symbol is NOT in the task gold (wrong-exact). No fixed count: reported and hand-audited. Known suspect: shadow.ts param/use refs (scope-blind exact)."
+  },
+  "fileDeps": {
+    "expectedDepCount": 12,
+    "expectedUnresolvedSpecifiers": ["fs", "./ghost"],
+    "expectedQuirks": [
+      "mid.ts export-from is invisible to the import-only regex: no mid edge at all (expected gap).",
+      "via->./mid resolves the FILE (resolved=true) but yields zero symbols, so the dep reads resolved while the import lands in unresolved (expected inconsistency to report)."
+    ]
+  },
+  "incremental": {
+    "expectedEquality": true,
+    "changedPaths": ["src/use.ts"],
+    "note": "Pilot contract is conservative full-rebuild fallback; equality must hold exactly (JSON deep-equal)."
+  }
+}

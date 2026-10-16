@@ -1,0 +1,145 @@
+{
+  "name": "@aicoder/semantic-engine",
+  "version": "0.1.0",
+  "description": "Semantic code index for a repository: symbols, dependencies, call graph and AI-facing metadata, as a CLI and a library.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/legionir/structured-ai.git",
+    "directory": "semantic-engine"
+  },
+  "keywords": [
+    "code-index",
+    "static-analysis",
+    "tree-sitter",
+    "mcp",
+    "call-graph",
+    "symbols"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "semantic-engine": "./bin/semantic-engine.js",
+    "semantic-engine-mcp": "./dist/ai/mcp/cli.js"
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "public/",
+    "contracts/",
+    "tree-sitter-grammars/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src",
+    "pretest": "node scripts/gen-fixture.js",
+    "test": "jest",
+    "test:gate": "npm run fixture && node scripts/check-tests.js && node scripts/check-artifact-location.js",
+    "fixture": "node scripts/gen-fixture.js",
+    "validate": "node scripts/validate-project-index.js",
+    "snapshot": "node scripts/snapshot.js",
+    "snapshot:update": "node scripts/snapshot.js --update",
+    "check:audit": "node scripts/check-audit-coverage.js",
+    "benchmark": "npm run build && npm run fixture && node scripts/benchmark.js"
+  },
+  "dependencies": {
+    "@ast-grep/napi": "0.45.3",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "chokidar": "^3.6.0",
+    "minimatch": "^9.0.0",
+    "typescript": "~5.9.3",
+    "vscode-jsonrpc": "^8.2.1",
+    "web-tree-sitter": "^0.26.11"
+  },
+  "optionalDependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "sqlite3": "^6.0.1",
+    "tree-sitter-javascript": "^0.25.0",
+    "tree-sitter-typescript": "^0.23.2",
+    "usearch": "^2.25.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "eslint": "^9.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "private": true,
+  "//private": "Not published to npm yet: this package lives inside the structured-ai repository and is consumed from source or via the bin/ launchers. The publishing metadata (name, version, files, bin, main, types, repository) is kept accurate so that flipping private to false is the only change a release needs.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./ai": {
+      "types": "./dist/ai/index.d.ts",
+      "default": "./dist/ai/index.js"
+    },
+    "./ai/registry": {
+      "types": "./dist/ai/AiToolRegistry.d.ts",
+      "default": "./dist/ai/AiToolRegistry.js"
+    },
+    "./ai/reader": {
+      "types": "./dist/ai/ProjectIndexReader.d.ts",
+      "default": "./dist/ai/ProjectIndexReader.js"
+    },
+    "./ai/handler": {
+      "types": "./dist/ai/AiToolCommandHandler.d.ts",
+      "default": "./dist/ai/AiToolCommandHandler.js"
+    },
+    "./scanner": {
+      "types": "./dist/scanner/WorkspaceScanner.d.ts",
+      "default": "./dist/scanner/WorkspaceScanner.js"
+    },
+    "./vector": {
+      "types": "./dist/vector/VectorStore.d.ts",
+      "default": "./dist/vector/VectorStore.js"
+    },
+    "./vector/indexer": {
+      "types": "./dist/vector/VectorIndexer.d.ts",
+      "default": "./dist/vector/VectorIndexer.js"
+    },
+    "./export": {
+      "types": "./dist/export/JsonExporter.d.ts",
+      "default": "./dist/export/JsonExporter.js"
+    },
+    "./export/blueprint": {
+      "types": "./dist/export/BlueprintExporter.d.ts",
+      "default": "./dist/export/BlueprintExporter.js"
+    },
+    "./graphs": {
+      "types": "./dist/graphs/index.d.ts",
+      "default": "./dist/graphs/index.js"
+    },
+    "./symbols": {
+      "types": "./dist/symbols/SymbolExtractorManager.d.ts",
+      "default": "./dist/symbols/SymbolExtractorManager.js"
+    },
+    "./dependencies": {
+      "types": "./dist/dependencies/DependencyExtractorManager.d.ts",
+      "default": "./dist/dependencies/DependencyExtractorManager.js"
+    },
+    "./incremental": {
+      "types": "./dist/incremental/IncrementalEngine.d.ts",
+      "default": "./dist/incremental/IncrementalEngine.js"
+    },
+    "./types": {
+      "types": "./dist/core/types/project-index.types.d.ts",
+      "default": "./dist/core/types/project-index.types.js"
+    }
+  }
+}

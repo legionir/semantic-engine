@@ -1,0 +1,169 @@
+{
+  "name": "spike-s-goal-retrieval-cue-lexicon",
+  "version": "1.0.0",
+  "frozenAt": "2026-09-22T00:00:00.000Z",
+  "language": "en",
+  "status": "FROZEN for design review. Any edit requires a version bump and a dated DECISIONS.md entry. Not yet ratified for implementation.",
+  "notes": [
+    "Cue lexicon for goal-aware retrieval direction selection (Spike-S extension, D-0022).",
+    "Goal text may ONLY select a retrieval direction/class from a fixed enum. It never names symbols, files, or influences resolution.",
+    "Anti-gaming rule: no pattern may contain, match, or special-case any identifier, file name, or symbol name from fixture-1, fixture-2, or any gold set. Patterns are generic English retrieval-intent vocabulary only. Verified by scripts/check-cue-lexicon.js before any benchmark run.",
+    "Exactly one directional class fires per goal (priority order below). AMBIGUITY_EXPANSION and DEPTH are additive and always available.",
+    "Deterministic: all matches are case-insensitive; tie-breaks are span-then-pattern-id; no randomness, no scores."
+  ],
+  "defaults": {
+    "direction": "REFERRERS",
+    "depth": 1,
+    "maxSymbols": 64,
+    "maxDepth": 6,
+    "defaultJustification": "Incoming usage is the dominant retrieval intent; a bare seed name with no cue (e.g. a single identifier) means 'this and its usages'."
+  },
+  "priority": ["HARD_SURFACE", "CHAIN", "SINGLETON", "DEPENDEES", "REFERRERS"],
+  "additiveBehaviors": {
+    "AMBIGUITY_EXPANSION": "If the seed symbol name maps to N same-name index symbols (overloads / cross-file duplicates), all N are included and references to that name contribute enclosing symbols with confidence=ambiguous. Always on (resolution-level behavior, not a cue).",
+    "DEPTH": "M1 raises dependees/chain walk depth from 1 to defaults.maxDepth (budget-bounded)."
+  },
+  "targetReferringTokens": {
+    "pronouns": ["it", "its", "them", "they"],
+    "seedName": "case-insensitive word-boundary match of the seed symbol's name in the goal text"
+  },
+  "tieBreak": {
+    "withinClass": "earliest match span start; then longer match; then pattern id lexicographic",
+    "acrossClasses": "priority list; the highest-priority class with at least one match wins and is the only direction applied"
+  },
+  "budgetBehavior": {
+    "maxSymbols": 64,
+    "ranking": "seed first; then hop distance ascending; then bindingKind rank (index-symbol > local-shadow > routed > unresolved); then symbolKey lexicographic",
+    "onTruncation": "emit truncated=true with droppedCount; overall result confidence capped at heuristic"
+  },
+  "patterns": [
+    {
+      "id": "H1",
+      "class": "HARD_SURFACE",
+      "regex": "\\b(?:cannot|can't|fails?\\s+to|unable\\s+to)\\s+(?:bind|resolve|be\\s+bound)\\b",
+      "flags": "i",
+      "behavior": "Scan: seed + enclosing index symbols of every binding-hard reference (bindingKind in {local-shadow, re-export-routed, default-routed, namespace-routed, unresolved-use}). Unresolved import declarations with no use site contribute no enclosing symbol but are reported in the audit.",
+      "note": "Generic binding-failure intent. Category elaborations (shadowed/re-exported/default-imported) are deliberately NOT lexicon words."
+    },
+    {
+      "id": "H2",
+      "class": "HARD_SURFACE",
+      "regex": "\\b(?:unresolved|unresolvable|unboundable)\\b|\\bbinding\\s+failures?\\b",
+      "flags": "i",
+      "behavior": "Same scan as H1."
+    },
+    {
+      "id": "C1",
+      "class": "CHAIN",
+      "regex": "\\bchains?\\b",
+      "flags": "i",
+      "behavior": "Bidirectional one-hop walk: seed + enclosing symbols of references to the seed (referrers) + symbols the seed references (dependees). Depth 1 unless M1 also fires."
+    },
+    {
+      "id": "C2",
+      "class": "CHAIN",
+      "regex": "\\btrace\\b[^.?!]{0,40}?\\b(?:chain|through|across)\\b",
+      "flags": "i",
+      "behavior": "Same as C1."
+    },
+    {
+      "id": "S1",
+      "class": "SINGLETON",
+      "regex": "\\b(?:definition|declaration|origin)\\s+of\\b",
+      "flags": "i",
+      "behavior": "Seed only; if the seed is reached through a re-export route, return the origin symbol of the route."
+    },
+    {
+      "id": "S2",
+      "class": "SINGLETON",
+      "regex": "\\bwhere\\s+is\\b[^.?!]{0,40}?\\bdefined\\b",
+      "flags": "i",
+      "behavior": "Same as S1."
+    },
+    {
+      "id": "S3",
+      "class": "SINGLETON",
+      "regex": "\\b(?:itself|alone|exactly\\s+that)\\b",
+      "flags": "i",
+      "behavior": "Seed only."
+    },
+    {
+      "id": "D1",
+      "class": "DEPENDEES",
+      "regex": "\\b(?:sources?|inputs?|dependencies|deps|origins?)\\s+(?:of|for|behind)\\b",
+      "flags": "i",
+      "behavior": "Outgoing: seed + symbols the seed references (one hop; M1 extends depth)."
+    },
+    {
+      "id": "D2",
+      "class": "DEPENDEES",
+      "regex": "\\b(?:its|their|the|his|her)\\s+(?:sources?|inputs?|dependencies|deps|origins?)\\b",
+      "flags": "i",
+      "behavior": "Same as D1."
+    },
+    {
+      "id": "D3",
+      "class": "DEPENDEES",
+      "regex": "\\bwhat\\s+(?:does|do)\\s+\\S+\\s+(?:use|call|import|need|require|consume|reference)s?\\b",
+      "flags": "i",
+      "behavior": "Same as D1."
+    },
+    {
+      "id": "D4",
+      "class": "DEPENDEES",
+      "regex": "\\b(?:built|based|derived|constructed)\\s+on\\b",
+      "flags": "i",
+      "behavior": "Same as D1."
+    },
+    {
+      "id": "R1",
+      "class": "REFERRERS",
+      "regex": "\\busages?\\b",
+      "flags": "i",
+      "behavior": "Incoming: seed + enclosing index symbols of references to the seed. Same as the default direction."
+    },
+    {
+      "id": "R2",
+      "class": "REFERRERS",
+      "regex": "\\b(?:is|are|was|were)\\b[^.?!]{0,40}?\\b(?:used|applied|called|referenced|imported|consumed)\\b",
+      "flags": "i",
+      "behavior": "Passive voice => the seed is the object being used: referrers. Position-independent."
+    },
+    {
+      "id": "R3",
+      "class": "REFERRERS",
+      "regex": "\\b(?:call|usage|use|reference|import|consumer|dependent|access)\\s+(?:sites?|points?|edges?)\\b",
+      "flags": "i",
+      "behavior": "Noun compound: referrers."
+    },
+    {
+      "id": "R4",
+      "class": "REFERRERS",
+      "regex": "\\b(?:consumers?|users?|callers?|importers?|dependents?|references?|usages?)\\s+(?:of|for)\\b",
+      "flags": "i",
+      "behavior": "Noun + of/for: referrers."
+    },
+    {
+      "id": "R5",
+      "class": "REFERRERS",
+      "regex": "\\b(?:its|their|the|his|her)\\s+(?:consumers?|users?|callers?|importers?|dependents?)\\b",
+      "flags": "i",
+      "behavior": "Possessive incoming-actor noun: referrers. Disjoint from D2 by noun list (actors vs sources/inputs/dependencies)."
+    },
+    {
+      "id": "AV",
+      "class": "POSITION_RESOLVED",
+      "regex": "\\b(?:uses?|using|calls?|consumes?|imports?|references?|needs?|requires?|depends?\\s+on)\\b",
+      "flags": "i",
+      "behavior": "Active verb; direction by position of the nearest target-referring token (seed name word-boundary or pronoun it/its/them/they): token AFTER the verb => REFERRERS ('everything that uses X'); token BEFORE the verb and none after => DEPENDEES ('X calls Y', 'which fmt overload does o call'); no target-referring token found => REFERRERS (fallback; incoming-usage is the dominant intent for bare active verbs, e.g. 'depend on the addition helper'). The resolved class then competes in the priority list. Past-participle forms (used/called/...) are excluded here; they belong to R2.",
+      "note": "Past participles are matched only by R2 via the passive-auxiliary requirement, so 'called' never fires AV."
+    },
+    {
+      "id": "M1",
+      "class": "DEPTH_MODIFIER",
+      "regex": "\\b(?:transitively|transitive|recursively|all\\s+the\\s+way|full\\s+closure|closure)\\b",
+      "flags": "i",
+      "behavior": "Additive: raises dependees/chain depth from 1 to defaults.maxDepth (6), budget-bounded."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+=== CMD: npx jest src/core/codeintel/Phase2Transactions.test.ts --runInBand ===
+TIMESTAMP: 2026-09-21T22:00:53Z
+PASS src/core/codeintel/Phase2Transactions.test.ts
+  Phase 2 transactional edits
+    ✓ preview is read-only and apply requires explicit approval (22 ms)
+    ✓ rejects stale snapshots and overlapping edits (4 ms)
+    ✓ journals and restores originals on rollback (6 ms)
+    ✓ plans against an unsaved overlay without persisting it (2 ms)
+    ✓ denies traversal and protected paths (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        0.254 s, estimated 1 s
+Ran all test suites matching /src\/core\/codeintel\/Phase2Transactions.test.ts/i.
+EXIT_CODE:0

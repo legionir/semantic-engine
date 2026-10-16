@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2022",
+    "outDir": "dist",
+    "rootDir": "src",
+    "lib": ["ES2022"],
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    // node10 و نه node16: تنظیم node16/nodenext الزام می‌کند که "module"
+    // هم node16 باشد، و آن حالت سه خطای واقعی را آشکار می‌کند که اصلاحشان
+    // خارج از این فاز است (از جمله ESM بودن @xenova/transformers).
+    "moduleResolution": "node10",
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

@@ -1,0 +1,22 @@
+=== CMD: npm run test:gate ===
+TIMESTAMP: 2026-09-21T21:56:54Z
+
+> @aicoder/semantic-engine@0.1.0 test:gate
+> npm run fixture && node scripts/check-tests.js && node scripts/check-artifact-location.js
+
+
+> @aicoder/semantic-engine@0.1.0 fixture
+> node scripts/gen-fixture.js
+
+fixture written to /home/user/semantic-engine-structured-ai/semantic-engine/test-fixture (62 files)
+Test Suites: 2 failed, 228 passed, 230 total
+Tests:       2 failed, 3071 passed, 3073 total
+
+failing tests:
+  Phase 2 structural adapter › matches named metavariables deterministically
+  Phase 2 structural adapter › bounds and reports truncation
+
+error: 2 test suite(s) did not run.
+A suite that fails to compile reports zero tests, so the test count
+stays green while the suite is dead. Fix the suite, do not ignore it.
+EXIT_CODE:1

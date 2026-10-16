@@ -1,0 +1,2010 @@
+{
+  "generatedAt": "2026-09-21T23:25:13.830Z",
+  "gateBars": "macro precision >= 0.95; macro recall >= B1 AND > B0 (docs/GATES.md; measured, never changed)",
+  "summary": {
+    "macro": {
+      "m1": {
+        "precision": 0.9249999999999998,
+        "recall": 0.7416666666666668
+      },
+      "b0": {
+        "precision": 0.5819696969696969,
+        "recall": 0.7875
+      },
+      "b1": {
+        "precision": 0.6033333333333333,
+        "recall": 0.8958333333333333
+      }
+    },
+    "micro": {
+      "m1": {
+        "tp": 48,
+        "fp": 7,
+        "fn": 19,
+        "precision": 0.8727272727272727,
+        "recall": 0.7164179104477612
+      },
+      "b0": {
+        "tp": 49,
+        "fp": 103,
+        "fn": 18,
+        "precision": 0.3223684210526316,
+        "recall": 0.7313432835820896
+      },
+      "b1": {
+        "tp": 57,
+        "fp": 50,
+        "fn": 10,
+        "precision": 0.5327102803738317,
+        "recall": 0.8507462686567164
+      }
+    },
+    "gates": {
+      "precision_ge_095": false,
+      "recall_ge_b1": false,
+      "recall_gt_b0": false
+    }
+  },
+  "calibration": {
+    "unresolvedCount": 4,
+    "unresolvedExpected": 4,
+    "unresolvedChecks": [
+      {
+        "name": "fs",
+        "sourcePath": "src/app.ts",
+        "reasonContains": "unresolved import",
+        "why": "namespace import + non-relative bare specifier",
+        "found": true
+      },
+      {
+        "name": "Store",
+        "sourcePath": "src/admin.ts",
+        "reasonContains": "'default'",
+        "why": "default import; index names the class Store so default binding has no candidate",
+        "found": true
+      },
+      {
+        "name": "ghost",
+        "sourcePath": "src/unused.ts",
+        "reasonContains": "'ghost'",
+        "why": "missing file ./ghost",
+        "found": true
+      },
+      {
+        "name": "add",
+        "sourcePath": "src/via.ts",
+        "reasonContains": "'./mid'",
+        "why": "re-export hop: mid.ts resolves but exports no indexed symbol named add",
+        "found": true
+      }
+    ],
+    "ambiguousRefCount": 1,
+    "ambiguousRefs": [
+      {
+        "at": "src/usesfmt.ts:2",
+        "key": "src/dup.ts::fmt::function",
+        "candidates": [
+          "s-fmt1",
+          "s-fmt2"
+        ]
+      }
+    ],
+    "touchedUnresolvedPerTask": {
+      "T1": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/via.ts#add"
+        ]
+      },
+      "T2": {
+        "expected": "0",
+        "actual": 0,
+        "pass": true,
+        "hits": []
+      },
+      "T3": {
+        "expected": "0",
+        "actual": 0,
+        "pass": true,
+        "hits": []
+      },
+      "T4": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/app.ts#fs"
+        ]
+      },
+      "T5": {
+        "expected": ">=1",
+        "actual": 2,
+        "pass": true,
+        "hits": [
+          "src/app.ts#fs",
+          "src/via.ts#add"
+        ]
+      },
+      "T6": {
+        "expected": ">=1",
+        "actual": 2,
+        "pass": true,
+        "hits": [
+          "src/app.ts#fs",
+          "src/via.ts#add"
+        ]
+      },
+      "T7": {
+        "expected": "0",
+        "actual": 0,
+        "pass": true,
+        "hits": []
+      },
+      "T8": {
+        "expected": "0",
+        "actual": 0,
+        "pass": true,
+        "hits": []
+      },
+      "T9": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/admin.ts#Store"
+        ]
+      },
+      "T10": {
+        "expected": ">=1",
+        "actual": 2,
+        "pass": true,
+        "hits": [
+          "src/via.ts#add",
+          "src/admin.ts#Store"
+        ]
+      },
+      "T11": {
+        "expected": "0",
+        "actual": 0,
+        "pass": true,
+        "hits": []
+      },
+      "T12": {
+        "expected": "0",
+        "actual": 0,
+        "pass": true,
+        "hits": []
+      },
+      "T13": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/unused.ts#ghost"
+        ]
+      },
+      "T14": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/admin.ts#Store"
+        ]
+      },
+      "T15": {
+        "expected": "0",
+        "actual": 0,
+        "pass": true,
+        "hits": []
+      },
+      "T16": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/via.ts#add"
+        ]
+      },
+      "T17": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/via.ts#add"
+        ]
+      },
+      "T18": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/via.ts#add"
+        ]
+      },
+      "T19": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/via.ts#add"
+        ]
+      },
+      "T20": {
+        "expected": ">=1",
+        "actual": 1,
+        "pass": true,
+        "hits": [
+          "src/via.ts#add"
+        ]
+      }
+    },
+    "touchedPassCount": 20,
+    "wrongExactRefs": [
+      {
+        "task": "T1",
+        "ref": "src/shadow.ts:2",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T1",
+        "ref": "src/shadow.ts:3",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T10",
+        "ref": "src/app.ts:5",
+        "enclosing": "s-grand"
+      },
+      {
+        "task": "T16",
+        "ref": "src/shadow.ts:2",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T16",
+        "ref": "src/shadow.ts:3",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T17",
+        "ref": "src/shadow.ts:2",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T17",
+        "ref": "src/shadow.ts:3",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T18",
+        "ref": "src/shadow.ts:2",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T18",
+        "ref": "src/shadow.ts:3",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T19",
+        "ref": "src/shadow.ts:2",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T19",
+        "ref": "src/shadow.ts:3",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T20",
+        "ref": "src/shadow.ts:2",
+        "enclosing": "s-f"
+      },
+      {
+        "task": "T20",
+        "ref": "src/shadow.ts:3",
+        "enclosing": "s-f"
+      }
+    ]
+  },
+  "fileDeps": {
+    "count": 12,
+    "expected": 12,
+    "unresolvedSpecifiers": [
+      "./ghost",
+      "fs"
+    ],
+    "deps": [
+      {
+        "from": "src/admin.ts",
+        "to": "src/store.ts",
+        "specifier": "./store",
+        "resolved": true
+      },
+      {
+        "from": "src/app.ts",
+        "to": "src/use.ts",
+        "specifier": "./use",
+        "resolved": true
+      },
+      {
+        "from": "src/app.ts",
+        "to": "src/use.ts",
+        "specifier": "./use",
+        "resolved": true
+      },
+      {
+        "from": "src/app.ts",
+        "to": "src/via.ts",
+        "specifier": "./via",
+        "resolved": true
+      },
+      {
+        "from": "src/app.ts",
+        "to": null,
+        "specifier": "fs",
+        "resolved": false
+      },
+      {
+        "from": "src/calc.ts",
+        "to": "src/math.ts",
+        "specifier": "./math",
+        "resolved": true
+      },
+      {
+        "from": "src/calc.ts",
+        "to": "src/math.ts",
+        "specifier": "./math",
+        "resolved": true
+      },
+      {
+        "from": "src/shadow.ts",
+        "to": "src/math.ts",
+        "specifier": "./math",
+        "resolved": true
+      },
+      {
+        "from": "src/unused.ts",
+        "to": null,
+        "specifier": "./ghost",
+        "resolved": false
+      },
+      {
+        "from": "src/use.ts",
+        "to": "src/math.ts",
+        "specifier": "./math",
+        "resolved": true
+      },
+      {
+        "from": "src/usesfmt.ts",
+        "to": "src/dup.ts",
+        "specifier": "./dup",
+        "resolved": true
+      },
+      {
+        "from": "src/via.ts",
+        "to": "src/mid.ts",
+        "specifier": "./mid",
+        "resolved": true
+      }
+    ]
+  },
+  "incremental": {
+    "equal": true,
+    "expected": true,
+    "invalidPathRejected": true
+  },
+  "graphCounts": {
+    "references": 13,
+    "unresolved": 4,
+    "fileDeps": 12,
+    "snapshotId": "3b4dbfb5a123825d02fa72368f669e6b9859a644c9a9181183c39af7bbb0053f"
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "seed": "s-add",
+      "goal": "Show all usages of add",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "m1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-r",
+          "s-r2",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "refCount": 8,
+        "unenclosedRefs": 2,
+        "refs": [
+          {
+            "at": "src/calc.ts:4",
+            "conf": "exact",
+            "enclosing": "s-r2"
+          },
+          {
+            "at": "src/calc.ts:3",
+            "conf": "exact",
+            "enclosing": "s-r"
+          },
+          {
+            "at": "src/shadow.ts:2",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/shadow.ts:3",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:2",
+            "conf": "exact",
+            "enclosing": "s-total"
+          },
+          {
+            "at": "src/use.ts:3",
+            "conf": "exact",
+            "enclosing": "s-double"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "keywords": [
+          "usages",
+          "add"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T2",
+      "seed": "s-sub",
+      "goal": "Show the subtraction helper and every place it is applied",
+      "relevant": [
+        "s-sub",
+        "s-r"
+      ],
+      "m1": {
+        "set": [
+          "s-sub"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.5,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "subtraction",
+          "helper",
+          "place",
+          "applied"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 2,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.25,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T3",
+      "seed": "s-pi",
+      "goal": "Show the PI constant and where it is used",
+      "relevant": [
+        "s-pi",
+        "s-r2"
+      ],
+      "m1": {
+        "set": [
+          "s-pi",
+          "s-r2"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "refCount": 1,
+        "unenclosedRefs": 0,
+        "refs": [
+          {
+            "at": "src/calc.ts:4",
+            "conf": "exact",
+            "enclosing": "s-r2"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub"
+        ],
+        "tp": 2,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.4,
+        "recall": 1,
+        "keywords": [
+          "pi",
+          "constant"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 2,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.25,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T4",
+      "seed": "s-total",
+      "goal": "Show total and everything that consumes it",
+      "relevant": [
+        "s-total",
+        "s-double",
+        "s-grand"
+      ],
+      "m1": {
+        "set": [
+          "s-grand",
+          "s-total"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.6666666666666666,
+        "refCount": 1,
+        "unenclosedRefs": 0,
+        "refs": [
+          {
+            "at": "src/app.ts:5",
+            "conf": "exact",
+            "enclosing": "s-grand"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-double",
+          "s-grand",
+          "s-total"
+        ],
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "total",
+          "everything",
+          "consumes"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-grand",
+          "s-pi",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 3,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "files": [
+          "src/app.ts",
+          "src/math.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T5",
+      "seed": "s-grand",
+      "goal": "Trace grand back to its sources through the import chain",
+      "relevant": [
+        "s-grand",
+        "s-total",
+        "s-double",
+        "s-v"
+      ],
+      "m1": {
+        "set": [
+          "s-grand"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1,
+        "recall": 0.25,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-double",
+          "s-f",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 4,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.4,
+        "recall": 1,
+        "keywords": [
+          "trace",
+          "grand",
+          "sources",
+          "import",
+          "chain"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-double",
+          "s-grand",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/app.ts",
+          "src/use.ts",
+          "src/via.ts"
+        ]
+      }
+    },
+    {
+      "id": "T6",
+      "seed": "s-v",
+      "goal": "Show the re-export chain behind v (mid/footbridge modules)",
+      "relevant": [
+        "s-v",
+        "s-grand",
+        "s-add"
+      ],
+      "m1": {
+        "set": [
+          "s-grand",
+          "s-v"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.6666666666666666,
+        "refCount": 1,
+        "unenclosedRefs": 0,
+        "refs": [
+          {
+            "at": "src/app.ts:5",
+            "conf": "exact",
+            "enclosing": "s-grand"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 3,
+        "fp": 13,
+        "fn": 0,
+        "precision": 0.1875,
+        "recall": 1,
+        "keywords": [
+          "re",
+          "export",
+          "chain",
+          "v",
+          "mid",
+          "footbridge",
+          "modules"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-grand",
+          "s-v"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.6666666666666666,
+        "files": [
+          "src/app.ts",
+          "src/mid.ts",
+          "src/via.ts"
+        ]
+      }
+    },
+    {
+      "id": "T7",
+      "seed": "s-f",
+      "goal": "Show function f and its shadowed parameter",
+      "relevant": [
+        "s-f"
+      ],
+      "m1": {
+        "set": [
+          "s-f"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 1,
+        "fp": 15,
+        "fn": 0,
+        "precision": 0.0625,
+        "recall": 1,
+        "keywords": [
+          "function",
+          "f",
+          "shadowed",
+          "parameter"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-f",
+          "s-pi",
+          "s-sub"
+        ],
+        "tp": 1,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.25,
+        "recall": 1,
+        "files": [
+          "src/math.ts",
+          "src/shadow.ts"
+        ]
+      }
+    },
+    {
+      "id": "T8",
+      "seed": "s-fmt1",
+      "goal": "Find the helper that formats output",
+      "relevant": [
+        "s-fmt1",
+        "s-fmt2",
+        "s-o"
+      ],
+      "m1": {
+        "set": [
+          "s-fmt1",
+          "s-o"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.6666666666666666,
+        "refCount": 1,
+        "unenclosedRefs": 0,
+        "refs": [
+          {
+            "at": "src/usesfmt.ts:2",
+            "conf": "ambiguous",
+            "enclosing": "s-o"
+          }
+        ]
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "helper",
+          "formats",
+          "output"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-fmt1",
+          "s-fmt2",
+          "s-o"
+        ],
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/dup.ts",
+          "src/usesfmt.ts"
+        ]
+      }
+    },
+    {
+      "id": "T9",
+      "seed": "s-store",
+      "goal": "Show the Store class and its consumers",
+      "relevant": [
+        "s-store",
+        "s-s"
+      ],
+      "m1": {
+        "set": [
+          "s-store"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1,
+        "recall": 0.5,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-s",
+          "s-store"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "store",
+          "class",
+          "consumers"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-s",
+          "s-store"
+        ],
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/admin.ts",
+          "src/store.ts"
+        ]
+      }
+    },
+    {
+      "id": "T10",
+      "seed": "s-double",
+      "goal": "Show references the resolver cannot bind (shadowed, re-exported, default-imported)",
+      "relevant": [
+        "s-double",
+        "s-f",
+        "s-v",
+        "s-s"
+      ],
+      "m1": {
+        "set": [
+          "s-double",
+          "s-grand"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 3,
+        "precision": 0.5,
+        "recall": 0.25,
+        "refCount": 1,
+        "unenclosedRefs": 0,
+        "refs": [
+          {
+            "at": "src/app.ts:5",
+            "conf": "exact",
+            "enclosing": "s-grand"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-lonely",
+          "s-pi",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 3,
+        "fp": 8,
+        "fn": 1,
+        "precision": 0.2727272727272727,
+        "recall": 0.75,
+        "keywords": [
+          "references",
+          "resolver",
+          "cannot",
+          "bind",
+          "shadowed",
+          "re",
+          "exported",
+          "default",
+          "imported"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-grand",
+          "s-pi",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 1,
+        "fp": 5,
+        "fn": 3,
+        "precision": 0.16666666666666666,
+        "recall": 0.25,
+        "files": [
+          "src/app.ts",
+          "src/math.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T11",
+      "seed": "s-o",
+      "goal": "Which fmt overload does o call?",
+      "relevant": [
+        "s-o",
+        "s-fmt1",
+        "s-fmt2"
+      ],
+      "m1": {
+        "set": [
+          "s-o"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1,
+        "recall": 0.3333333333333333,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 3,
+        "fp": 13,
+        "fn": 0,
+        "precision": 0.1875,
+        "recall": 1,
+        "keywords": [
+          "fmt",
+          "overload",
+          "o",
+          "call"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-fmt1",
+          "s-fmt2",
+          "s-o"
+        ],
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/dup.ts",
+          "src/usesfmt.ts"
+        ]
+      }
+    },
+    {
+      "id": "T12",
+      "seed": "s-r",
+      "goal": "Show r",
+      "relevant": [
+        "s-r"
+      ],
+      "m1": {
+        "set": [
+          "s-r"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 1,
+        "fp": 15,
+        "fn": 0,
+        "precision": 0.0625,
+        "recall": 1,
+        "keywords": [
+          "r"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub"
+        ],
+        "tp": 1,
+        "fp": 4,
+        "fn": 0,
+        "precision": 0.2,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts"
+        ]
+      }
+    },
+    {
+      "id": "T13",
+      "seed": "s-lonely",
+      "goal": "Show lonely",
+      "relevant": [
+        "s-lonely"
+      ],
+      "m1": {
+        "set": [
+          "s-lonely"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-lonely"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "keywords": [
+          "lonely"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-lonely"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "files": [
+          "src/unused.ts"
+        ]
+      }
+    },
+    {
+      "id": "T14",
+      "seed": "s-s",
+      "goal": "Show s",
+      "relevant": [
+        "s-s"
+      ],
+      "m1": {
+        "set": [
+          "s-s"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-fmt1",
+          "s-fmt2",
+          "s-grand",
+          "s-lonely",
+          "s-o",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-s",
+          "s-store",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 1,
+        "fp": 14,
+        "fn": 0,
+        "precision": 0.06666666666666667,
+        "recall": 1,
+        "keywords": [
+          "s"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-s",
+          "s-store"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "files": [
+          "src/admin.ts",
+          "src/store.ts"
+        ]
+      }
+    },
+    {
+      "id": "T15",
+      "seed": "s-r2",
+      "goal": "Show r2",
+      "relevant": [
+        "s-r2"
+      ],
+      "m1": {
+        "set": [
+          "s-r2"
+        ],
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "refCount": 0,
+        "unenclosedRefs": 0,
+        "refs": []
+      },
+      "b0": {
+        "set": [
+          "s-r",
+          "s-r2"
+        ],
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "keywords": [
+          "r2"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub"
+        ],
+        "tp": 1,
+        "fp": 4,
+        "fn": 0,
+        "precision": 0.2,
+        "recall": 1,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts"
+        ]
+      }
+    },
+    {
+      "id": "T16",
+      "seed": "s-add",
+      "goal": "Where is add called?",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "m1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-r",
+          "s-r2",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "refCount": 8,
+        "unenclosedRefs": 2,
+        "refs": [
+          {
+            "at": "src/calc.ts:4",
+            "conf": "exact",
+            "enclosing": "s-r2"
+          },
+          {
+            "at": "src/calc.ts:3",
+            "conf": "exact",
+            "enclosing": "s-r"
+          },
+          {
+            "at": "src/shadow.ts:2",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/shadow.ts:3",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:2",
+            "conf": "exact",
+            "enclosing": "s-total"
+          },
+          {
+            "at": "src/use.ts:3",
+            "conf": "exact",
+            "enclosing": "s-double"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "keywords": [
+          "add",
+          "called"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T17",
+      "seed": "s-add",
+      "goal": "List every call site of the add function",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "m1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-r",
+          "s-r2",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "refCount": 8,
+        "unenclosedRefs": 2,
+        "refs": [
+          {
+            "at": "src/calc.ts:4",
+            "conf": "exact",
+            "enclosing": "s-r2"
+          },
+          {
+            "at": "src/calc.ts:3",
+            "conf": "exact",
+            "enclosing": "s-r"
+          },
+          {
+            "at": "src/shadow.ts:2",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/shadow.ts:3",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:2",
+            "conf": "exact",
+            "enclosing": "s-total"
+          },
+          {
+            "at": "src/use.ts:3",
+            "conf": "exact",
+            "enclosing": "s-double"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-fmt1",
+          "s-fmt2",
+          "s-lonely",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1,
+        "keywords": [
+          "call",
+          "site",
+          "add",
+          "function"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T18",
+      "seed": "s-add",
+      "goal": "add",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "m1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-r",
+          "s-r2",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "refCount": 8,
+        "unenclosedRefs": 2,
+        "refs": [
+          {
+            "at": "src/calc.ts:4",
+            "conf": "exact",
+            "enclosing": "s-r2"
+          },
+          {
+            "at": "src/calc.ts:3",
+            "conf": "exact",
+            "enclosing": "s-r"
+          },
+          {
+            "at": "src/shadow.ts:2",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/shadow.ts:3",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:2",
+            "conf": "exact",
+            "enclosing": "s-total"
+          },
+          {
+            "at": "src/use.ts:3",
+            "conf": "exact",
+            "enclosing": "s-double"
+          }
+        ]
+      },
+      "b0": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total",
+          "s-v"
+        ],
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "keywords": [
+          "add"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T19",
+      "seed": "s-add",
+      "goal": "Which modules depend on the addition helper?",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "m1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-r",
+          "s-r2",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "refCount": 8,
+        "unenclosedRefs": 2,
+        "refs": [
+          {
+            "at": "src/calc.ts:4",
+            "conf": "exact",
+            "enclosing": "s-r2"
+          },
+          {
+            "at": "src/calc.ts:3",
+            "conf": "exact",
+            "enclosing": "s-r"
+          },
+          {
+            "at": "src/shadow.ts:2",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/shadow.ts:3",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:2",
+            "conf": "exact",
+            "enclosing": "s-total"
+          },
+          {
+            "at": "src/use.ts:3",
+            "conf": "exact",
+            "enclosing": "s-double"
+          }
+        ]
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "modules",
+          "depend",
+          "addition",
+          "helper"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    },
+    {
+      "id": "T20",
+      "seed": "s-add",
+      "goal": "Show me everything that uses addition",
+      "relevant": [
+        "s-add",
+        "s-total",
+        "s-double",
+        "s-r",
+        "s-r2",
+        "s-v"
+      ],
+      "m1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-r",
+          "s-r2",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "refCount": 8,
+        "unenclosedRefs": 2,
+        "refs": [
+          {
+            "at": "src/calc.ts:4",
+            "conf": "exact",
+            "enclosing": "s-r2"
+          },
+          {
+            "at": "src/calc.ts:3",
+            "conf": "exact",
+            "enclosing": "s-r"
+          },
+          {
+            "at": "src/shadow.ts:2",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/shadow.ts:3",
+            "conf": "exact",
+            "enclosing": "s-f"
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:4",
+            "conf": "exact",
+            "enclosing": null
+          },
+          {
+            "at": "src/use.ts:2",
+            "conf": "exact",
+            "enclosing": "s-total"
+          },
+          {
+            "at": "src/use.ts:3",
+            "conf": "exact",
+            "enclosing": "s-double"
+          }
+        ]
+      },
+      "b0": {
+        "set": [],
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "precision": 1,
+        "recall": 0,
+        "keywords": [
+          "everything",
+          "addition"
+        ]
+      },
+      "b1": {
+        "set": [
+          "s-add",
+          "s-double",
+          "s-f",
+          "s-pi",
+          "s-r",
+          "s-r2",
+          "s-sub",
+          "s-total"
+        ],
+        "tp": 5,
+        "fp": 3,
+        "fn": 1,
+        "precision": 0.625,
+        "recall": 0.8333333333333334,
+        "files": [
+          "src/calc.ts",
+          "src/math.ts",
+          "src/mid.ts",
+          "src/shadow.ts",
+          "src/use.ts"
+        ]
+      }
+    }
+  ]
+}

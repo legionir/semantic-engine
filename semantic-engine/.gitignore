@@ -1,0 +1,31 @@
+# Dependencies
+**/node_modules/
+
+# Compiled extension output
+out/
+dist/
+
+# AI Coder runtime state (sessions, embedding index, user skills) — these are
+# machine/session-specific and should not be committed.
+.sessions/
+.aicoder/
+
+# Packaged extension artifacts
+*.vsix
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Editor / OS cruft
+.DS_Store
+Thumbs.db
+
+# Stray test output
+incr-test.log
+*-test.log
+tmp-test/
+tmp-schema-test/
+tmp-schema-test-phase-c/
+test-fixture/
+tmp-phase4-test/
+tmp-snapshot/

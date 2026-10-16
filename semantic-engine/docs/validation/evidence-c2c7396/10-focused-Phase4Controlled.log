@@ -1,0 +1,18 @@
+=== CMD: npx jest src/core/codeintel/Phase4Controlled.test.ts --runInBand ===
+TIMESTAMP: 2026-09-21T22:01:00Z
+PASS src/core/codeintel/Phase4Controlled.test.ts
+  Phase 4 controlled expansion
+    ✓ provider statuses are explicit and Python parser is deterministic (4 ms)
+    ✓ constraint graph retains test and index provenance (1 ms)
+    ✓ context builder enforces budget and produces stable snapshot (13 ms)
+    ✓ context builder rejects invalid budgets and protected paths (17 ms)
+    ✓ impact analysis excludes heuristic edges unless explicitly requested (1 ms)
+    ✓ semantic rename creates a plan and never applies it (5 ms)
+    ✓ rename rejects invalid identifiers before planning (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        0.268 s, estimated 1 s
+Ran all test suites matching /src\/core\/codeintel\/Phase4Controlled.test.ts/i.
+EXIT_CODE:0

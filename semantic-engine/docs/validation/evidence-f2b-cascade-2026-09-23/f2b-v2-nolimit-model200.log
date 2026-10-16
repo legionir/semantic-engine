@@ -1,0 +1,242 @@
+web console
+  ok   the console serves its own page and assets
+  ok   static serving cannot escape the public directory
+  ok   the API refuses requests without the console token
+  ok   the state endpoint describes the runtime
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one file, console renderer"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a task streams events and produces an answer
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "saw 2 user messages"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a second task continues the same conversation
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a tool graph reports its shape, its waves and who ran it
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "read it"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a heavy result is streamed as a preview and fetched in full
+  ok   a loop is reported as an event, not only as a log line
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "written"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   an approval is streamed and honoured when approved
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "could not write"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a denied approval stops the tool
+  ok   the approval mode can be switched from the console
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "aggregated"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   delegation is reported as a tree
+  ok   every event reaches the console exactly once
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "slow"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a second task is refused while one is running
+  ok   an empty task is rejected
+  ok   settings are listed with their source and can be changed live
+  ok   an invalid or fixed setting is refused
+  ok   a settings change is streamed to every console
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "there is one file"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a conversation is stored with its events and calls
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "saw 2 user messages"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a stored conversation can be reopened and continued
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "done"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   reasoning reaches a live console, not only the history
+  ok   the project file remembers this workspace's settings
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "one step done, stopping this run"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   the console can keep cycling until the plan is done
+  ok   statistics report what the runtime executed
+
+discussion
+  ok   the discussion endpoint lists the selectable personas
+  ok   the discussion endpoint validates its request
+  FAIL a discussion runs, streams its rounds, and reports
+       409 == 202
+
+27/28 passed

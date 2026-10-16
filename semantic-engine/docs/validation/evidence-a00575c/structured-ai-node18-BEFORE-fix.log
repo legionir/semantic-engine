@@ -1,0 +1,215 @@
+  ok   ISO timestamps, run ids, temp paths and pids collapse to tokens
+  ok   workspace replacement wins over the temp-dir rule
+  ok   volatile numbers are key-driven; contractual numbers survive
+  ok   object keys are sorted recursively and array order is preserved
+  ok   normalizeJson accepts raw provider payloads
+  ok   epochs below the threshold are not mistaken for timestamps
+
+6/6 passed
+  ok   action envelope keeps its top-level keys and version
+  ok   valid tool_call, delegate and final actions parse and validate
+  ok   malformed text raises the documented model-response error
+  ok   a tool call without id is rejected with the documented message
+  ok   registered-agent delegation rejects empty persona/skills/tools arrays
+  ok   required-field matrix from the fixture still matches the validator
+
+6/6 passed
+  ok   every emitted event carries the full correlation envelope
+  ok   payload fields override context; unknown context patches are ignored
+  ok   source-extracted event names match the fixture inventory
+  ok   documented key payloads exist on live emissions
+  ok   normalizer collapses volatile event fields deterministically
+
+5/5 passed
+  ok   main agent messages match the captured structure
+  ok   sub-agent messages match the captured structure
+  ok   normalized main prompt is deterministic across rebuilds
+
+=== Agent Iteration 1 ===
+[main_agent] Action: final
+[main_agent] Final answer arrived with no work performed; handing the objective back once.
+
+=== Agent Iteration 2 ===
+[main_agent] Action: final
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "contract capture"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   the request body keeps its contract shape
+  ok   system prompt edits reach the next rebuild (live reload)
+
+5/5 passed
+  ok   canonical tool schemas preserve the legacy snapshot and stable names
+  ok   every declaration has the model function contract
+  ok   registry validation and executable parity agree
+  ok   the public facade exposes callable names without leaking private helpers
+  ok   tool execution keeps identity in context and returns the legacy result shape
+
+5/5 passed
+  ok   the captured method/path inventory matches the live route boundary
+  ok   each documented response contract declares a stable status and required keys
+  ok   dynamic API paths preserve encoded project and discussion identity
+  ok   JSON responses retain status, content type and error-key contracts
+  ok   project and approval serializers keep additive identity fields
+
+5/5 passed
+  ok   the extracted persistence modules expose the documented boundaries
+  ok   JSON repository writes round-trip and corrupt input uses the caller fallback
+  ok   an interrupted atomic replacement leaves the previous JSON document intact
+  ok   safe identifiers and schema versions are stable and additive
+  ok   JSONL repositories preserve valid records while skipping a truncated tail
+
+5/5 passed
+  ok   the discussion facade exposes the stable specialist and lifecycle boundary
+  ok   discussion request validation keeps task, persona and round limits explicit
+  ok   the injected LLM adapter returns only the discussion content contract
+  ok   DiscussionService uses trusted project context and labels every lifecycle event
+  ok   list and load never cross a project's transcript boundary
+  ok   context resolution never treats a forged workspace argument as project identity
+
+6/6 passed
+  ok   removed facade files are absent and canonical replacements are present
+  ok   the six rollout flags are gone from the settings contract
+  ok   canonical public entrypoints no longer select a legacy implementation
+  ok   runtime source imports canonical paths and has no mode lookup
+
+4/4 passed
+  ok   the extracted modules and legacy facade expose the same engine
+  ok   PolicyMatcher applies conditions and last-match-wins precedence
+  ok   PolicyRegistry indexes groups and reloads declarative policy
+  ok   policy validation stays in the policy registry with legacy messages
+  ok   ApprovalStore owns pending records without changing the Map contract
+  ok   ApprovalManager preserves auto, prompt and deny modes with project attribution
+  ok   pending handler delegates UI storage while the manager keeps policy ownership
+  ok   PolicyEngine sends every decision through the audit callback
+
+8/8 passed
+  ok   the event module inventory and legacy facade are present
+  ok   EventTypes exactly covers the documented event inventory
+  ok   EventContext isolates concurrent scope and project attribution
+  ok   EventValidator enforces the envelope but permits additive unknown names
+  ok   EventBus preserves payload precedence, sequence and legacy shape
+  ok   EventProjector filters cross-project events and aggregates global metadata
+  ok   EventRedactor masks secrets and bounds source material without mutating events
+  ok   Observability remains a consumer boundary, not an event producer
+
+8/8 passed
+  ok   register + get + list round-trip with documented defaults
+  ok   two projects with the same basename get different ids
+  ok   re-registering a root returns the existing project (spelling variants included)
+  ok   a symlinked path spelling identifies the same root
+  ok   ids persist to disk and come back through a fresh registry
+  ok   rename keeps the id; update merges permissions
+  ok   identity fields are immutable via update
+  ok   remove targets only its own project
+  ok   registering a missing or non-directory root fails clearly
+  ok   registered project context points at the central dataRoot
+  ok   default project: registered workspace resolves the record, else a synthetic legacy context
+  ok   the synthetic default writes nothing to the registry file
+  ok   a corrupt registry file fails loudly, never silently resets
+  ok   resolveProjectForRun accepts a record AND an already-built context
+  ok   createProjectContext is idempotent on a context
+  ok   normalizeProjectInput maps both shapes and rejects anything else
+  ok   an explicit project is ownership-validated, not taken on faith
+  ok   a project option of the wrong shape names both accepted shapes
+  ok   the canonical runtime validates an explicit project id
+  ok   removed rollout environment variables cannot bypass project validation
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "projects phase probe"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   the canonical default project runs and scopes its Run context
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "projects phase probe"
+  },
+  "data": null,
+  "error": null,
+  "action": "final",
+  "performed": null
+}
+  ok   a registered project rooted elsewhere runs through its own context
+
+22/22 passed
+  ok   redact masks bearer tokens and secret fields
+  ok   a scoped token cannot access another project
+  ok   MCP project-scoped servers are hidden from other projects
+  ok   catalogueEntries and call honour MCP scope
+  ok   global MCP approval is cached per gateway and audited per project
+  ok   GET /api/projects lists registered projects
+  ok   a scoped token only lists its allowed projects
+  ok   token limited to A cannot read B (403)
+  ok   unknown project is 404
+  ok   PATCH and GET /state stay on the named project
+
+=== FINAL RESPONSE ===
+
+{
+  "version": "1.0",
+  "action": "final",
+  "tool_calls": null,
+  "delegations": null,
+  "response": {
+    "type": "text",
+    "content": "ok"
+  },
+  "data": null,
+  "error": null,
+  "performed": null
+}
+  ok   POST /api/projects/:id/chat is accepted like tasks
+  ok   project B's events do not appear on A's stream
+  ok   GET /api/events?projectId= filters the same way
+  ok   cancel on A does not cancel B's runs
+  ok   legacy /api/state still works for the master token
+  ok   POST /api/projects validates rootPath
+  ok   scoped tokens cannot register a new project
+
+17/17 passed
+/home/user/semantic-engine-structured-ai/structured-ai/agent/mcp/McpManager.js:705
+                client => client.close().catch(() => {})
+                                 ^
+
+TypeError: client.close is not a function
+    at /home/user/semantic-engine-structured-ai/structured-ai/agent/mcp/McpManager.js:705:34
+    at Array.map (<anonymous>)
+    at McpManager.shutdown (/home/user/semantic-engine-structured-ai/structured-ai/agent/mcp/McpManager.js:704:40)
+    at Object.shutdown [as _shutdown] (/home/user/semantic-engine-structured-ai/structured-ai/agent/tools/mcp/McpTools.js:443:20)
+    at Object.shutdown (/home/user/semantic-engine-structured-ai/structured-ai/agent/tools/ToolRuntime.js:301:14)
+    at Object.close (/home/user/semantic-engine-structured-ai/structured-ai/web/server/ServerImplementation.js:2891:25)
+    at WebServer.close (/home/user/semantic-engine-structured-ai/structured-ai/web/server/WebServer.js:204:35)
+    at main (/home/user/semantic-engine-structured-ai/structured-ai/test/projects/project-api.test.js:521:22)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+Node.js v18.20.8

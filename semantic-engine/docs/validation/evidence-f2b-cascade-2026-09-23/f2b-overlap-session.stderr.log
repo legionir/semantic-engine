@@ -1,0 +1,9 @@
+[F2bV2 +1ms] armed limitOverride=none modelDelay=0ms gitDelay=2000ms
+[F2bV2 +5ms] RateLimiter patched via /home/user/semantic-engine-structured-ai/structured-ai/web/server/Middleware.js
+[F2bV2 +207ms] git launch #1
+[F2bV2 +229ms] state-poll -> status=done pending=0 gitReport=false
+[F2bV2 +253ms] state-poll -> status=done pending=0 gitReport=false
+[F2bV2 +275ms] state-poll -> status=idle pending=0 gitReport=false
+[F2bV2 +2236ms] git completion #1 dur=27ms (+delay 2000ms)
+[F2bV2 +3789ms] state-poll -> status=idle pending=0 gitReport=true
+[F2bV2 +3792ms] SUMMARY wall=3792ms api=6 state=4 events=0 tasks=1 clear=0 sessions=1 429=0 409=0 other4xx=0 modelCalls=1 tests=0 limiterPatched=true limiterCalls=6 limiterDenied=0 limiterMaxCount=6 git launches=1 completions=1 avgMs=27 maxMs=27 first429=none other={}

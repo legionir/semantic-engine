@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-coder.local/schemas/config.schema.json",
+  "title": "SemanticEngineConfig",
+  "description": "کلیدهای پیکربندی Semantic Engine. همان نام‌کلیدهای contributes.configuration در package.json، تا یک تنظیم در VS Code و در اجرای مستقل دقیقاً یک معنی داشته باشد. src/host/configSchemaSync.test.ts این آینه بودن را نگه می‌دارد.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "semanticEngine.dataDir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null,
+      "description": "Directory holding generated data (indexes, blueprints, SQLite databases, locks, logs) instead of the workspace root. Defaults to the platform data directory: $XDG_DATA_HOME/semantic-engine on Linux, ~/Library/Application Support/SemanticEngine on macOS, %LOCALAPPDATA%/SemanticEngine on Windows. Also settable with SEMANTIC_ENGINE_DATA_DIR."
+    },
+    "semanticEngine.artifactLocation": {
+      "type": "string",
+      "enum": [
+        "in-root",
+        "external"
+      ],
+      "default": "external",
+      "description": "Where artifacts are written: 'external' (default) writes under semanticEngine.dataDir, 'in-root' keeps the legacy <workspace>/.semantic-engine for backward compatibility. An explicit --out always wins."
+    },
+    "semanticEngine.treeSitter.grammarDir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null,
+      "description": "Directory containing tree-sitter WASM grammar files. Defaults to 'tree-sitter-grammars' in the workspace root."
+    },
+    "semanticEngine.embedding.enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Generate real vector embeddings for chunks using a local ONNX model."
+    },
+    "semanticEngine.embedding.model": {
+      "type": "string",
+      "default": "Xenova/all-MiniLM-L6-v2",
+      "description": "Local embedding model name (Xenova/transformers)."
+    },
+    "semanticEngine.embedding.cacheDir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null,
+      "description": "Directory to cache the local embedding model. Defaults to Hugging Face cache directory."
+    },
+    "semanticEngine.vectorSearch.backend": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "brute-force",
+        "usearch"
+      ],
+      "default": "auto",
+      "description": "Vector search backend: auto switches to usearch for large datasets."
+    },
+    "semanticEngine.vectorSearch.usearchThreshold": {
+      "type": "number",
+      "minimum": 10,
+      "default": 500,
+      "description": "Minimum number of vector chunks to use usearch backend in auto mode."
+    },
+    "semanticEngine.llm.enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use a real LLM for AI metadata generation (requires API key)."
+    },
+    "semanticEngine.llm.provider": {
+      "type": "string",
+      "enum": [
+        "openai",
+        "openrouter",
+        "ollama"
+      ],
+      "default": "openai",
+      "description": "LLM provider type."
+    },
+    "semanticEngine.llm.baseUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null,
+      "description": "Custom base URL for OpenAI-compatible API (e.g., http://localhost:11434/v1 for Ollama)."
+    },
+    "semanticEngine.llm.model": {
+      "type": "string",
+      "default": "gpt-4o-mini",
+      "description": "LLM model name."
+    },
+    "semanticEngine.llm.temperature": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2,
+      "default": 0.2,
+      "description": "LLM sampling temperature."
+    },
+    "semanticEngine.llm.maxTokens": {
+      "type": "number",
+      "minimum": 1,
+      "default": 1024,
+      "description": "Maximum tokens per LLM completion."
+    },
+    "semanticEngine.llm.apiKeyEnvVar": {
+      "type": "string",
+      "default": "SEMANTIC_ENGINE_LLM_API_KEY",
+      "description": "Name of the environment variable holding the LLM API key. The key itself is never stored in settings, which are synced in plain text."
+    },
+    "semanticEngine.lsp.enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use a language server for symbol extraction and diagnostics. Off by default: on this repository the language server costs 7.7s and 809MB where tree-sitter costs 213ms and 65MB."
+    },
+    "semanticEngine.lsp.requestTimeoutMs": {
+      "type": "integer",
+      "minimum": 100,
+      "default": 15000,
+      "description": "How long a single language server request may take before it is cancelled."
+    },
+    "semanticEngine.lsp.idleTimeoutMs": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 600000,
+      "description": "Shut a language server down after this long without use. 0 keeps it alive for the whole session."
+    },
+    "semanticEngine.lsp.warmupTimeoutMs": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 120000,
+      "description": "How long to wait for a server that indexes on startup (gopls, rust-analyzer) before continuing without it."
+    },
+    "semanticEngine.lsp.maxServerMemoryMB": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 2048,
+      "description": "Restart a language server whose resident memory passes this. 0 disables the limit."
+    },
+    "semanticEngine.lsp.servers": {
+      "type": "object",
+      "default": {},
+      "description": "Per-server overrides keyed by server id, for example {\"pyright\": {\"command\": \"/opt/pyright-langserver\"}} or {\"gopls\": {\"disabled\": true}}. Nothing is ever installed automatically."
+    }
+  }
+}

@@ -1,0 +1,16 @@
+MODES (fixture2)  macro P / macro R
+  full (goal-aware)                          1.000 / 1.000
+  all-off (blind, fixes only)                0.927 / 0.757
+  -CHAIN                                     1.000 / 0.969
+  -DEPENDEES                                 0.969 / 0.839
+  -HARD_SURFACE                              1.000 / 0.950
+  -REFERRERS-explicit (R1-R5 off, AV kept)   1.000 / 1.000
+  -SINGLETON                                 0.958 / 1.000
+  -DEPTH                                     1.000 / 0.969
+  -AMBIGUITY_EXPANSION                       1.000 / 0.943
+  B0 keywords                                0.544 / 0.884
+  B1 depth-1 closure                         0.590 / 0.846
+SOFT   P>=0.90: true | R>=B1-0.05: true
+INCR   equal=true invalidRejected=true deterministic=true
+STORE  graphEqual=true handleResolves=true taskParity=true
+WROTE  docs/validation/spike-s/results-regate-fixture2.json

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Intelligence Visualizer</title>
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/visualizer.css">
+</head>
+<body class="visualizer-body">
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9l-4.7 1.3L12 15l-1.8-4.7L5.5 9l4.7-1.3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 14a2 2 0 0 1-2 2H8l-4 3V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8M16 7h4M4 17h4M12 17h8"/><circle cx="14" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></symbol>
+</svg>
+
+<header class="bar visualizer-bar">
+  <div class="brand">
+    <a href="/" class="chip button" title="Back to Console">← Console</a>
+    <span class="dot live"></span>
+    <strong>Project Intelligence</strong>
+    <span class="muted" id="projectTitle">Loading project…</span>
+  </div>
+
+  <!-- View Switcher Tabs -->
+  <nav class="views-nav">
+    <button type="button" class="view-tab active" data-view="architecture">🏗 Architecture</button>
+    <button type="button" class="view-tab" data-view="module">📦 Modules</button>
+    <button type="button" class="view-tab" data-view="dependencies">🔗 Dependencies & Calls</button>
+    <button type="button" class="view-tab" data-view="workflow">⚡ Workflows</button>
+    <button type="button" class="view-tab" data-view="impact">💥 Impact Analysis</button>
+    <button type="button" class="view-tab" data-view="business-mapping">💼 Business → Code</button>
+    <button type="button" class="view-tab" data-view="test-intelligence">🧪 Test Map</button>
+    <button type="button" class="view-tab" data-view="hotspots">🔥 Git Hotspots</button>
+  </nav>
+
+  <!-- Search to Graph Bar -->
+  <div class="search-box">
+    <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+    <input type="search" id="graphSearch" placeholder="Search symbols, files, concepts…" aria-label="Search the graph" autocomplete="off">
+    <div id="searchResults" class="search-dropdown" hidden></div>
+  </div>
+
+  <div class="bar-tools">
+    <div class="bar-group">
+      <label class="chip select" title="Focus depth around selected node">
+        <span class="chip-label">depth</span>
+        <select id="focusDepth">
+          <option value="1">1 hop</option>
+          <option value="2" selected>2 hops</option>
+          <option value="3">3 hops</option>
+        </select>
+      </label>
+      <label class="chip toggle" title="Filter by edge provenance">
+        <input type="checkbox" id="filterResolvedOnly">
+        <span>resolved only</span>
+      </label>
+    </div>
+
+    <span class="bar-sep" aria-hidden="true"></span>
+
+    <nav class="bar-group bar-actions" aria-label="Graph controls">
+      <button type="button" id="autoArrangeBtn" class="chip button has-icon" title="Automatic layout">
+        <svg class="ic" aria-hidden="true"><use href="#i-sparkle"/></svg><span>Auto Arrange</span>
+      </button>
+      <button type="button" id="fitGraphBtn" class="chip button has-icon" title="Fit graph to screen">
+        <svg class="ic" aria-hidden="true"><use href="#i-fit"/></svg><span>Fit</span>
+      </button>
+      <button type="button" id="resetFocusBtn" class="chip button has-icon" title="Clear selection and focus">
+        <svg class="ic" aria-hidden="true"><use href="#i-reset"/></svg><span>Reset</span>
+      </button>
+      <button type="button" id="aiChatToggle" class="chip button has-icon" title="Ask the AI about this project">
+        <svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>AI Chat</span>
+      </button>
+      <a href="/open.html" class="chip button has-icon" id="settingsLink" title="Open settings: project, indexing, LLM">
+        <svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg><span>Settings</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="visualizer-layout">
+
+  <!-- Left: Breadcrumb / LoD Level Indicator -->
+  <div class="lod-breadcrumb">
+    <span class="lod-step active" id="lodStep1">Project</span>
+    <span class="lod-sep">/</span>
+    <span class="lod-step" id="lodStep2">Module</span>
+    <span class="lod-sep">/</span>
+    <span class="lod-step" id="lodStep3">File</span>
+    <span class="lod-sep">/</span>
+    <span class="lod-step" id="lodStep4">Symbol</span>
+  </div>
+
+  <!-- Center: Graph Canvas -->
+  <div class="canvas-container" id="canvasContainer">
+    <div id="graphOverlay" class="graph-overlay">
+      <div id="graphStats" class="graph-stats">Nodes: <span id="nodeCount">0</span> · Edges: <span id="edgeCount">0</span></div>
+    </div>
+    <svg id="graphSvg" class="graph-svg"></svg>
+  </div>
+
+  <!-- Right: 360° Node / Symbol Inspector Sidebar -->
+  <aside class="inspector-sidebar" id="inspectorSidebar">
+    <div class="inspector-head">
+      <div class="node-badge-wrapper">
+        <span class="node-type-badge" id="inspType">symbol</span>
+        <h3 id="inspTitle">Select a node</h3>
+      </div>
+      <button type="button" class="close-btn" id="closeInspectorBtn">✕</button>
+    </div>
+
+    <div class="inspector-body" id="inspectorBody">
+      <p class="empty-hint">Click on any node in the graph to inspect full architectural metadata, calls, dependencies, tests, and diagnostics.</p>
+
+      <div id="inspectorDetails" hidden>
+        <!-- Identity -->
+        <div class="insp-section">
+          <h4>Identity</h4>
+          <dl class="insp-facts" id="inspIdentity"></dl>
+        </div>
+
+        <!-- Location -->
+        <div class="insp-section">
+          <h4>Location</h4>
+          <dl class="insp-facts" id="inspLocation"></dl>
+        </div>
+
+        <!-- Metrics -->
+        <div class="insp-section" id="inspMetricsSection">
+          <h4>Metrics</h4>
+          <div class="metrics-grid" id="inspMetrics"></div>
+        </div>
+
+        <!-- Signature -->
+        <div class="insp-section">
+          <h4>Signature</h4>
+          <pre id="inspSignature" class="code-preview">-</pre>
+        </div>
+
+        <!-- Relationships -->
+        <div class="insp-section">
+          <h4>Relationships <span class="insp-count" id="inspConnCount"></span></h4>
+          <ul id="inspConnections" class="insp-list"></ul>
+        </div>
+
+        <!-- Covering tests -->
+        <div class="insp-section">
+          <h4>Covering Tests</h4>
+          <ul id="inspTests" class="insp-list"></ul>
+        </div>
+
+        <!-- Everything else the backend sent -->
+        <div class="insp-section" id="inspRawSection">
+          <h4>All Metadata <span class="insp-count" id="inspRawCount"></span></h4>
+          <dl class="insp-facts" id="inspRaw"></dl>
+        </div>
+
+        <!-- Actions -->
+        <div class="insp-actions">
+          <button type="button" class="action-btn primary" id="btnAiExplain">Explain with AI</button>
+          <button type="button" class="action-btn" id="btnExploreNeighborhood">Explore Focus View</button>
+          <button type="button" class="action-btn" id="btnAnalyzeImpact">Analyze Impact</button>
+        </div>
+        <div id="aiExplainBox" class="ai-explain-box" hidden></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- AI Chat Panel -->
+<aside class="ai-chat-panel" id="aiChatPanel" hidden>
+  <div class="ai-chat-head">
+    <div class="ai-chat-title">
+      <strong>AI Chat</strong>
+      <span class="muted" id="aiChatModel">No model configured</span>
+    </div>
+    <button type="button" class="close-btn" id="aiChatClose" title="Close chat" aria-label="Close chat">&times;</button>
+  </div>
+  <div class="ai-chat-body" id="aiChatBody">
+    <div class="ai-chat-hint">
+      <p>Ask anything about this project &mdash; for example:</p>
+      <ul>
+        <li>What does <code>AuthService</code> do?</li>
+        <li>What breaks if I change this function?</li>
+        <li>Which tests cover the login flow?</li>
+      </ul>
+      <p class="muted">The assistant reads your code only through the index tools, never the raw files.</p>
+    </div>
+  </div>
+  <div class="ai-chat-input">
+    <textarea id="aiChatInput" rows="2" placeholder="Ask a question…  (Enter to send, Shift+Enter for a new line)"></textarea>
+    <button type="button" id="aiChatSend" class="action-btn primary">Send</button>
+  </div>
+  <div class="ai-chat-foot muted" id="aiChatFoot">
+    Configure a model in <a href="/open.html#llm" target="_blank" rel="noopener">Settings &rarr; LLM</a>
+  </div>
+</aside>
+
+<script src="/visualizer.js"></script>
+</body>
+</html>
