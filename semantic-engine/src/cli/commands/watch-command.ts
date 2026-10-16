@@ -22,7 +22,7 @@ import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
 import { loadGlobalConfig, scannerOverridesFrom } from '../../core/config/GlobalConfig';
 import { normalizeWorkspaceRoot } from '../../core/config/ProjectPaths';
-import { waitForShutdown } from './serve-command';
+import { waitForShutdown } from './serviceSupervisor';
 
 export const PID_FILE_NAME = 'watch.pid';
 
