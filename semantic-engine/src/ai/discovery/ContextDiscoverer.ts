@@ -114,6 +114,18 @@ export interface ContextDiscovererOptions {
   readonly embeddingGenerator?: IEmbeddingGenerator;
 }
 
+interface Entity {
+  readonly id: string;
+  readonly kind: 'file' | 'symbol';
+  readonly name: string;
+  readonly path?: string;
+  readonly line?: number;
+  readonly hops: number;
+  readonly origin: CandidateOrigin;
+  readonly reason: string;
+  readonly moduleId?: string;
+}
+
 export class ContextDiscoverer {
   private readonly search: SemanticSearchTool;
   private readonly ranker = new ContextRanker();
@@ -153,10 +165,68 @@ export class ContextDiscoverer {
     */
     const terms = queryTerms(input.task);
 
-    // ── ۱. دانه از جست‌وجو ────────────────────────────────────────
     const seeds = new Map<string, DiscoverySeed>();
     const keywordById = new Map<string, number>();
+    const searchSeeds = await this.collectSearchSeeds(input, seedLimit, seeds, keywordById);
+    const { modules, blueprintSeeds } = this.collectBlueprintSeeds(terms, filesPerModule, includeTests, seeds);
 
+    if (seeds.size === 0) {
+      return {
+        candidates: [],
+        seeds: [],
+        modules,
+        truncated: false,
+        stats: { searchSeeds: 0, blueprintSeeds: 0, expanded: 0, visitedCount: 0, droppedCount: 0 },
+      };
+    }
+
+    // ── ۳. گسترش گرافی ────────────────────────────────────────────
+    const seedIds = Array.from(seeds.keys());
+    const seedWeights: Record<string, number> = {};
+    for (const [id, seed] of seeds) seedWeights[id] = seed.weight;
+
+    const exploration = this.subgraphExplorer().explore(seedIds, {
+      maxDepth: expansionDepth,
+      maxNodes,
+      direction: 'both',
+      seedWeights,
+    });
+
+    const hopsById = new Map<string, number>();
+    for (const node of exploration.nodes) {
+      const previous = hopsById.get(node.id);
+      if (previous === undefined || node.depth < previous) hopsById.set(node.id, node.depth);
+    }
+    // دانه‌هایی که اصلاً در گراف نیستند (مثلاً نمادِ بدون یال) نباید
+    // به‌خاطر نبودشان در گراف حذف شوند.
+    for (const id of seedIds) if (!hopsById.has(id)) hopsById.set(id, 0);
+
+    const candidates = this.rankEntities(this.buildEntities(hopsById, seeds, includeTests), keywordById);
+    const diversified = this.diversify(candidates, maxPerFile);
+    const expanded = diversified.filter(c => c.origin === 'expansion').length;
+
+    return {
+      candidates: diversified.slice(0, limit),
+      seeds: Array.from(seeds.values()),
+      modules,
+      truncated: diversified.length > limit || candidates.length > diversified.length || exploration.truncated,
+      stats: {
+        searchSeeds,
+        blueprintSeeds,
+        expanded,
+        visitedCount: exploration.visitedCount,
+        droppedCount: exploration.droppedCount,
+      },
+    };
+  }
+
+  /** ۱. دانه از جست‌وجو (و پل از نماد به فایلِ صاحبش). */
+  private async collectSearchSeeds(
+    input: DiscoverInput,
+    seedLimit: number,
+    seeds: Map<string, DiscoverySeed>,
+    keywordById: Map<string, number>
+  ): Promise<number> {
     const searchResult = await this.search.execute({ query: input.task, limit: seedLimit });
     for (const item of searchResult.items) {
       const score = item.relevanceScore ?? 0;
@@ -194,7 +264,16 @@ export class ContextDiscoverer {
       });
     }
 
-    // ── ۲. دانه از blueprint ──────────────────────────────────────
+    return searchResult.items.length;
+  }
+
+  /** ۲. دانه از blueprint: فقط چند فایلِ مهمِ هر ماژول. */
+  private collectBlueprintSeeds(
+    terms: readonly string[],
+    filesPerModule: number,
+    includeTests: boolean,
+    seeds: Map<string, DiscoverySeed>
+  ): { readonly modules: ReturnType<BlueprintIndex['matchModules']>; readonly blueprintSeeds: number } {
     const modules = this.options.blueprint?.matchModules(terms) ?? [];
     let blueprintSeeds = 0;
 
@@ -227,56 +306,15 @@ export class ContextDiscoverer {
       }
     }
 
-    if (seeds.size === 0) {
-      return {
-        candidates: [],
-        seeds: [],
-        modules,
-        truncated: false,
-        stats: {
-          searchSeeds: 0,
-          blueprintSeeds: 0,
-          expanded: 0,
-          visitedCount: 0,
-          droppedCount: 0,
-        },
-      };
-    }
+    return { modules, blueprintSeeds };
+  }
 
-    // ── ۳. گسترش گرافی ────────────────────────────────────────────
-    const seedIds = Array.from(seeds.keys());
-    const seedWeights: Record<string, number> = {};
-    for (const [id, seed] of seeds) seedWeights[id] = seed.weight;
-
-    const exploration = this.subgraphExplorer().explore(seedIds, {
-      maxDepth: expansionDepth,
-      maxNodes,
-      direction: 'both',
-      seedWeights,
-    });
-
-    const hopsById = new Map<string, number>();
-    for (const node of exploration.nodes) {
-      const previous = hopsById.get(node.id);
-      if (previous === undefined || node.depth < previous) hopsById.set(node.id, node.depth);
-    }
-    // دانه‌هایی که اصلاً در گراف نیستند (مثلاً نمادِ بدون یال) نباید
-    // به‌خاطر نبودشان در گراف حذف شوند.
-    for (const id of seedIds) if (!hopsById.has(id)) hopsById.set(id, 0);
-
-    // ── ۴. رتبه‌بندی ──────────────────────────────────────────────
-    interface Entity {
-      readonly id: string;
-      readonly kind: 'file' | 'symbol';
-      readonly name: string;
-      readonly path?: string;
-      readonly line?: number;
-      readonly hops: number;
-      readonly origin: CandidateOrigin;
-      readonly reason: string;
-      readonly moduleId?: string;
-    }
-
+  /** ۴ (الف). فایل/نمادهای دیده‌شده را به موجودیت‌های قابل رتبه‌بندی تبدیل می‌کند. */
+  private buildEntities(
+    hopsById: ReadonlyMap<string, number>,
+    seeds: ReadonlyMap<string, DiscoverySeed>,
+    includeTests: boolean
+  ): Entity[] {
     const entities: Entity[] = [];
 
     for (const [id, hops] of hopsById) {
@@ -316,6 +354,14 @@ export class ContextDiscoverer {
       });
     }
 
+    return entities;
+  }
+
+  /** ۴ (ب). رتبه‌بندی با سیگنال‌های ایندکس. */
+  private rankEntities(
+    entities: readonly Entity[],
+    keywordById: ReadonlyMap<string, number>
+  ): DiscoveredCandidate[] {
     const churnRanks: number[] = [];
     for (const f of this.reader.getAllFiles()) {
       const rank = f.gitMetrics?.churnRank;
@@ -353,7 +399,7 @@ export class ContextDiscoverer {
       ...(churnRanks.length > 0 ? { churnRankOutOf: Math.max(...churnRanks) } : {}),
     });
 
-    const candidates: DiscoveredCandidate[] = ranked.map(r => {
+    return ranked.map(r => {
       const e = r.payload as Entity;
       return {
         id: e.id,
@@ -368,7 +414,10 @@ export class ContextDiscoverer {
         reason: e.reason,
       };
     });
+  }
 
+  /** سقفِ نامزد از هر فایل، پس از رتبه‌بندی و پیش از `limit`. */
+  private diversify(candidates: readonly DiscoveredCandidate[], maxPerFile: number): DiscoveredCandidate[] {
     /*
     | SE-AI-20 — تنوع پیش از برش.
     |
@@ -387,21 +436,7 @@ export class ContextDiscoverer {
       diversified.push(candidate);
     }
 
-    const expanded = diversified.filter(c => c.origin === 'expansion').length;
-
-    return {
-      candidates: diversified.slice(0, limit),
-      seeds: Array.from(seeds.values()),
-      modules,
-      truncated: diversified.length > limit || candidates.length > diversified.length || exploration.truncated,
-      stats: {
-        searchSeeds: searchResult.items.length,
-        blueprintSeeds,
-        expanded,
-        visitedCount: exploration.visitedCount,
-        droppedCount: exploration.droppedCount,
-      },
-    };
+    return diversified;
   }
 
   private moduleIdOf(fileId: string): string | undefined {
