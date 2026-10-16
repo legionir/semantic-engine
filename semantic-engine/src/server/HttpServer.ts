@@ -453,7 +453,8 @@ export class HttpServer {
     | target is split by hand instead, so the pathname stays exactly as sent
     | (as before) and only the query goes through URLSearchParams.
     */
-    const rawTarget = (req.url || '/').split('#')[0]!;
+    /* Absolute-form targets (`GET http://host/x`, sent by proxies) reduce to their path. */
+    const rawTarget = (req.url || '/').split('#')[0]!.replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^/?]*/, '') || '/';
     const queryStart = rawTarget.indexOf('?');
     const pathname = (queryStart === -1 ? rawTarget : rawTarget.slice(0, queryStart)) || '/';
     const query: Record<string, string> = {};

@@ -73,7 +73,8 @@ describe('LSP-04 — رجیستری روی همین مخزن', () => {
   it('هیچ سرور دیگری روی این ماشین نیست — و این خطا نیست', () => {
     const workspace = fs.mkdtempSync(path.join(require('os').tmpdir(), 'registry-int-'));
     try {
-      const detections = new LspServerRegistry().detectAll(workspace);
+      /* Hermetic: whatever the host has on PATH (pyright, gopls…) must not change the answer. */
+      const detections = new LspServerRegistry({ env: { PATH: '/nowhere' } }).detectAll(workspace);
       const available = detections.filter(entry => entry.resolved && entry.suitable);
 
       expect(available.map(entry => entry.id)).toEqual(['typescript']);

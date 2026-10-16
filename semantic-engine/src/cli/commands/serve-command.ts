@@ -528,10 +528,13 @@ export function spawnService(
   | accepts but never answers, a watcher stuck on a lock) would leave `start`
   | waiting forever with no message. Fail with what the child said.
   */
-  const startupMs = Number(process.env['SEMANTIC_ENGINE_START_TIMEOUT_MS'] ?? 180_000);
+  const requestedMs = Number(process.env['SEMANTIC_ENGINE_START_TIMEOUT_MS']);
+  const startupMs = Number.isFinite(requestedMs) && requestedMs >= 1000 ? requestedMs : 180_000;
   const startupTimer = setTimeout(() => {
     if (settled) return;
     settled = true;
+    /* A child that never became ready must not outlive the failed start. */
+    if (child.exitCode === null && child.signalCode === null) child.kill('SIGTERM');
     rejectReady(new Error(
       `semantic-engine service did not become ready within ${Math.round(startupMs / 1000)}s ` +
       `(${args[0] ?? 'service'}); last output:\n${output.split('\n').slice(-8).join('\n')}`
