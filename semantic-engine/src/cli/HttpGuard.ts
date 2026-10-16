@@ -236,9 +236,16 @@ function deny(
   response.writeHead(status, headers);
   response.end(message, () => {
     /*
-    | بدنه‌ای که نخواندیم هنوز در راه است. پس از فلاش شدن پاسخ،
-    | سوکت بسته می‌شود تا بقیه‌اش دور ریخته شود.
+    | بدنه‌ای که نخواندیم هنوز در راه است. destroy فوری سوکتی که داده‌ی
+    | خوانده‌نشده دارد RST می‌فرستد و کلاینت ممکن است خودِ ۴۱۳ را هرگز
+    | نبیند (ECONNRESET زیر بار). پس ابتدا half-close، و destroy فقط
+    | به‌عنوان سقف زمانی تا کلاینت پاسخ را بخواند.
     */
-    if (closeConnection) response.socket?.destroy();
+    if (closeConnection) {
+      const socket = response.socket;
+      if (!socket) return;
+      socket.end();
+      setTimeout(() => socket.destroy(), 2000).unref();
+    }
   });
 }
