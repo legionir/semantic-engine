@@ -19,19 +19,17 @@
  *     they are.
  */
 
-import * as fs from 'fs';
 import * as http from 'http';
-import * as net from 'net';
-import { netConnectOptions } from './workerTarget';
 import * as path from 'path';
-import type { Duplex } from 'stream';
 import { DurationSummary } from './metrics';
 import { GatewayAuth } from './GatewayAuth';
 import { proxyRequest } from './GatewayProxy';
 import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { CapacityError, LockHeldError, WorkerSupervisor, WorkerSummary } from './WorkerSupervisor';
 import type { WorkerHealthSnapshot } from './WorkerProcess';
-import { createWorkerConfig, validateWorkerConfig } from './WorkerConfigSchema';
+import { handleGatewayUpgrade } from './GatewayUpgrade';
+import { serveGatewayUi } from './GatewayUi';
+import { WorkerConfigStore } from './WorkerConfigStore';
 import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
 import { generateToken } from '../cli/HttpGuard';
@@ -76,6 +74,7 @@ export class GatewayServer {
   private requestsTotal = 0;
   private proxyErrorsTotal = 0;
   private readonly durations = new DurationSummary();
+  private readonly configs: WorkerConfigStore;
   private readonly startedAt: number;
 
   constructor(private readonly options: GatewayServerOptions) {
@@ -88,6 +87,7 @@ export class GatewayServer {
         dataRoot: options.dataRoot,
         onEvent: event => this.broadcast({ type: 'worker', ...event }),
       });
+    this.configs = new WorkerConfigStore(this.registry);
     this.startedAt = Date.now();
   }
 
@@ -139,7 +139,12 @@ export class GatewayServer {
 
       this.server.once('error', reject);
       this.server.on('upgrade', (req, socket, head) =>
-        this.handleUpgrade(req, socket, head as Buffer)
+        handleGatewayUpgrade(
+          { auth: this.auth, registry: this.registry, supervisor: this.supervisor },
+          req,
+          socket,
+          head as Buffer
+        )
       );
       const port = this.options.port ?? DEFAULT_GATEWAY_PORT;
       const host = this.options.host ?? '127.0.0.1';
@@ -250,7 +255,7 @@ export class GatewayServer {
     | می‌شوند (دقیقاً مثل سرور پلتفرم)؛ همهٔ داده‌ها از همان APIهای
     | توکن‌دار می‌آیند.
     */
-    if (method === 'GET' && this.serveUi(pathname, res)) return;
+    if (method === 'GET' && serveGatewayUi(this.uiDir, pathname, res)) return;
 
     const auth = this.auth.verify(req, url.searchParams.get('token') ?? undefined);
     if (!auth.authenticated || !auth.record) {
@@ -330,172 +335,11 @@ export class GatewayServer {
     this.send(res, 404, { error: `route not found: ${method} ${pathname}` });
   }
 
-  /**
-   * proxy یک upgrade به worker همان پروژه (فاز ۱۱).
-   *
-   * `projectId` **پیش از** upgrade حل می‌شود: تا وقتی مسیر، توکن و دسترسی
-   * بررسی نشده‌اند هیچ سوکتی به worker وصل نمی‌شود، و پس از upgrade هم
-   * context عوض نمی‌شود — سوکت به همان socketِ پروژه گره خورده است.
-   */
-  private handleUpgrade(
-    req: http.IncomingMessage,
-    socket: Duplex,
-    head: Buffer
-  ): void {
-    const fail = (status: number, reason: string): void => {
-      if (!socket.destroyed) {
-        socket.write(`HTTP/1.1 ${status} ${reason}\r\nConnection: close\r\n\r\n`);
-        socket.destroy();
-      }
-    };
-
-    const url = new URL(req.url ?? '/', 'http://gateway.local');
-    const match = /^\/ws\/projects\/([^/]+)$/.exec(url.pathname);
-    if (!match) {
-      fail(404, 'Not Found');
-      return;
-    }
-    const projectId = match[1]!;
-
-    const auth = this.auth.verify(req, url.searchParams.get('token') ?? undefined);
-    if (!auth.authenticated || !auth.record) {
-      fail(401, 'Unauthorized');
-      return;
-    }
-    if (!this.registry.get(projectId)) {
-      fail(404, 'Not Found');
-      return;
-    }
-    if (!this.auth.canAccessProject(auth.record, projectId)) {
-      fail(403, 'Forbidden');
-      return;
-    }
-
-    const worker = this.supervisor.get(projectId);
-    if (!worker || worker.pid === null || worker.exitCode !== null) {
-      fail(502, 'Bad Gateway');
-      return;
-    }
-
-    const workerToken = this.supervisor.workerToken(projectId) ?? '';
-
-    /*
-    | F-0007 — upgrade هم transport را محترم می‌شمارد: `loopback` با
-    | host/port و وگرنه با نشانیِ سوکت (که خودش روی ویندوز به لولهٔ
-    | نام‌دار نگاشت می‌شود).
-    */
-    const upstream = net.connect(netConnectOptions(worker.target), () => {
-      const lines = [`${req.method ?? 'GET'} /ws HTTP/1.1`, 'Host: gateway'];
-
-      for (const [name, value] of Object.entries(req.headers)) {
-        const lower = name.toLowerCase();
-        /* Origin و Authorization کلاینت forward نمی‌شوند؛ هدرهای hop-by-hop هم نه. */
-        if (lower === 'origin' || lower === 'authorization' || lower === 'host') continue;
-        if (lower === 'connection' || lower === 'keep-alive') continue;
-        /*
-        | `Upgrade` و `Connection` را خودمان و به‌شکل صحیح می‌فرستیم. حذف
-        | `Connection: Upgrade` — که برای یک proxy معمولی درست است — باعث
-        | می‌شود Node در worker اصلاً رویداد `upgrade` را نبیند و درخواست به
-        | جدول روت‌ها بیفتد: اندازه‌گیری‌شده، worker مستقیم `101` می‌داد و
-        | از پشت Gateway `404`.
-        */
-        if (lower === 'upgrade') continue;
-        if (value === undefined) continue;
-        lines.push(`${name}: ${Array.isArray(value) ? value.join(', ') : value}`);
-      }
-
-      lines.push('Upgrade: websocket');
-      lines.push('Connection: Upgrade');
-      lines.push(`Authorization: Bearer ${workerToken}`);
-      lines.push(`X-Forwarded-For: ${req.socket.remoteAddress ?? '127.0.0.1'}`);
-      lines.push('X-Forwarded-Proto: http');
-      lines.push(`X-Forwarded-Host: ${typeof req.headers['host'] === 'string' ? req.headers['host'] : 'gateway'}`);
-      lines.push(`X-Semantic-Project-Id: ${projectId}`);
-      lines.push('', '');
-
-      upstream.write(lines.join('\r\n'));
-      if (head.length > 0) upstream.write(head);
-
-      /* از این لحظه به بعد فقط بایت جابه‌جا می‌شود. */
-      socket.pipe(upstream);
-      upstream.pipe(socket);
-    });
-
-    upstream.on('error', () => fail(502, 'Bad Gateway'));
-    socket.on('error', () => upstream.destroy());
-    /* بسته شدن هر طرف، طرف دیگر را هم می‌بندد: connection یتیم نمی‌ماند. */
-    socket.on('close', () => upstream.destroy());
-    upstream.on('close', () => {
-      if (!socket.destroyed) socket.destroy();
-    });
-  }
 
   private get uiDir(): string {
     return this.options.staticDir ?? path.resolve(__dirname, '..', '..', 'public');
   }
 
-  /**
-   * سرو کردن کنسول Gateway و deep link پروژه‌ها.
-   *
-   * `/projects/:id` یک redirect به `/visualizer?project=:id` است: context در
-   * خودِ URL می‌ماند، پس refresh هم همان پروژه را باز می‌کند.
-   */
-  private serveUi(pathname: string, res: http.ServerResponse): boolean {
-    const deepLink = /^\/projects\/([^/]+)$/.exec(pathname);
-    if (deepLink) {
-      res.writeHead(302, {
-        Location: `/visualizer?project=${encodeURIComponent(deepLink[1]!)}`,
-      });
-      res.end();
-      return true;
-    }
-
-    const aliases: Record<string, string> = {
-      '/': 'gateway.html',
-      '/gateway': 'gateway.html',
-      '/gateway.html': 'gateway.html',
-      '/gateway.js': 'gateway.js',
-      '/gateway.css': 'gateway.css',
-      '/visualizer': 'visualizer.html',
-      '/visualizer.html': 'visualizer.html',
-      '/visualizer.js': 'visualizer.js',
-      '/visualizer.css': 'visualizer.css',
-      '/app.css': 'app.css',
-    };
-
-    const asset = aliases[pathname];
-    if (!asset) return false;
-
-    const root = this.uiDir;
-    const target = path.resolve(root, asset);
-    /* هیچ مسیری بیرون از پوشهٔ assetها خوانده نمی‌شود. */
-    if (!target.startsWith(path.resolve(root) + path.sep)) {
-      this.send(res, 403, { error: 'forbidden' });
-      return true;
-    }
-
-    let body: Buffer;
-    try {
-      body = fs.readFileSync(target);
-    } catch {
-      this.send(res, 404, { error: `asset not found: ${asset}` });
-      return true;
-    }
-
-    const type = asset.endsWith('.html')
-      ? 'text/html; charset=utf-8'
-      : asset.endsWith('.js')
-        ? 'application/javascript; charset=utf-8'
-        : 'text/css; charset=utf-8';
-
-    res.writeHead(200, {
-      'Content-Type': type,
-      'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
-    });
-    res.end(body);
-    return true;
-  }
 
   private openSse(req: http.IncomingMessage, res: http.ServerResponse): void {
     res.writeHead(200, {
@@ -661,7 +505,7 @@ export class GatewayServer {
     | registration keys (a legacy POST) stores nothing and the project keeps
     | its default config — backwards compatible.
     */
-    const incoming = this.validateIncomingWorkerConfig(registered, body);
+    const incoming = this.configs.validateIncomingWorkerConfig(registered, body);
     if (incoming.changed) {
       if ('error' in incoming) {
         /* rollback: an invalid-config create leaves nothing behind */
@@ -672,7 +516,7 @@ export class GatewayServer {
         });
         return;
       }
-      this.storeWorkerConfig(incoming.config);
+      this.configs.storeWorkerConfig(incoming.config);
     }
 
     const autoStart = body['autoStart'] === true;
@@ -694,155 +538,17 @@ export class GatewayServer {
 
   /** ساخت config معتبر یک پروژه؛ عمومی است چون `gateway` CLI هم لازم دارد. */
   configForProject(projectId: string, rootPath: string, name: string): ProjectWorkerConfig {
-    return this.configFor(projectId, rootPath, name);
+    return this.configs.configFor(projectId, rootPath, name);
   }
-
-  /*
-  | SE-F-057 — the dashboard form edits the project's WHOLE worker config, not
-  | only path/name/autoStart. The config therefore has to be persisted per
-  | project (beside the registry manifest, never inside the source root) and
-  | fed back into every start path — hydration, POST, PATCH, lifecycle start —
-  | otherwise an edit "saves" in the UI and evaporates on the next start.
-  */
 
   /** مسیر فایل config پایدار یک پروژه (خارج از source root). */
   workerConfigPath(projectId: string): string {
-    if (!isPathSafeProjectId(projectId)) {
-      throw new Error(`project id is not usable as a directory name: ${projectId}`);
-    }
-    return path.join(this.registry.projectDataDir(projectId), 'worker-config.json');
+    return this.configs.workerConfigPath(projectId);
   }
 
   /** config پایدار یک پروژه؛ `undefined` یعنی هیچ config سفارشی ثبت نشده. */
   loadStoredWorkerConfig(projectId: string): ProjectWorkerConfig | undefined {
-    if (!isPathSafeProjectId(projectId)) return undefined;
-    let raw: string;
-    try {
-      raw = fs.readFileSync(this.workerConfigPath(projectId), 'utf8');
-    } catch {
-      return undefined;
-    }
-    try {
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      const validation = validateWorkerConfig(parsed as never, { checkFileSystem: false });
-      /* A stored config that no longer validates is treated as absent — and
-         the answer stays HONEST: the default config is used, never a half-
-         applied custom one. (The file itself is left for inspection.) */
-      return validation.ok ? validation.config : undefined;
-    } catch {
-      return undefined;
-    }
-  }
-
-  private storeWorkerConfig(config: ProjectWorkerConfig): void {
-    const target = this.workerConfigPath(config.projectId);
-    fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
-    /* temp + rename: a crash can never leave a half-written config that a
-       later hydration would parse as "no config" or, worse, as a truncated
-       object. */
-    const tmp = path.join(
-      path.dirname(target),
-      `.worker-config.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
-    );
-    fs.writeFileSync(tmp, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
-    fs.renameSync(tmp, target);
-  }
-
-  /**
-   * SE-F-057 — validate a worker-config change from an incoming payload
-   * WITHOUT writing anything. Callers persist only after every other field
-   * also validated, so a rejected edit can never corrupt the stored config.
-   *
-   * Merge semantics, deliberately documented for API consumers:
-   *   - a payload with NO config keys (the legacy registration shape: only
-   *     path/name/id/autoStart) requests no config change;
-   *   - every config key the payload DOES carry is applied — plain objects
-   *     merge per leaf, `null` clears a field back to its default;
-   *   - identity (projectId/name/rootPath) and `autoStart` always come from
-   *     the registry record, never from the config body.
-   */
-  private validateIncomingWorkerConfig(
-    record: { id: string; name: string; rootPath: string; autoStart: boolean },
-    body: Record<string, unknown>
-  ):
-    | { readonly changed: false }
-    | { readonly changed: true; readonly config: ProjectWorkerConfig }
-    | { readonly changed: true; readonly error: string } {
-    const CONFIG_KEYS = [
-      'dataDir',
-      'outOverride',
-      'watch',
-      'indexing',
-      'watchOptions',
-      'service',
-      'security',
-      'embedding',
-    ] as const;
-
-    /* secrets must never reach the stored config, not even as a stray key */
-    if ('token' in body || 'apiKey' in body) {
-      return {
-        changed: true,
-        error:
-          'a secret must not be part of the worker config; pass security.tokenEnvVar or embedding.apiKeyEnvVar instead',
-      };
-    }
-
-    const provided = CONFIG_KEYS.filter(key => body[key] !== undefined);
-    if (provided.length === 0) return { changed: false };
-
-    const stored = this.loadStoredWorkerConfig(record.id);
-    const base = createWorkerConfig({
-      projectId: record.id,
-      name: record.name,
-      rootPath: record.rootPath,
-      autoStart: record.autoStart,
-      ...(stored ? (stored as never) : {}),
-    } as never) as unknown as Record<string, unknown>;
-
-    const merged: Record<string, unknown> = {
-      ...base,
-      projectId: record.id,
-      name: record.name,
-      rootPath: record.rootPath,
-      autoStart: record.autoStart,
-    };
-
-    for (const key of provided) {
-      const incoming = body[key];
-      if (incoming === null) {
-        delete merged[key];
-        continue;
-      }
-      const current = merged[key];
-      if (
-        incoming !== null &&
-        typeof incoming === 'object' &&
-        !Array.isArray(incoming) &&
-        current !== null &&
-        typeof current === 'object' &&
-        !Array.isArray(current)
-      ) {
-        const leaf: Record<string, unknown> = { ...(current as Record<string, unknown>) };
-        for (const [k, v] of Object.entries(incoming as Record<string, unknown>)) {
-          if (v === null) delete leaf[k];
-          else leaf[k] = v;
-        }
-        merged[key] = leaf;
-      } else {
-        merged[key] = incoming;
-      }
-    }
-
-    /* validate BEFORE storing: an invalid edit must leave the existing,
-       working configuration intact. checkFileSystem:false because the
-       registry already owns a canonical, existing root; a socket path
-       inside that root is still rejected by the schema rules. */
-    const validation = validateWorkerConfig(merged as never, { checkFileSystem: false });
-    if (!validation.ok) {
-      return { changed: true, error: validation.errors.join('; ') };
-    }
-    return { changed: true, config: validation.config };
+    return this.configs.loadStoredWorkerConfig(projectId);
   }
 
   /** پاسخ پروژه + config مؤثر فعلی؛ برای hydration فرم دَش‌بُرد (SE-F-057). */
@@ -850,40 +556,15 @@ export class GatewayServer {
     const record = this.registry.get(id);
     const config =
       this.loadStoredWorkerConfig(id) ??
-      (record ? this.configFor(id, record.rootPath, record.name) : undefined);
+      (record ? this.configs.configFor(id, record.rootPath, record.name) : undefined);
     return {
       ...this.projectEntry(id),
       ...(config !== undefined ? { config } : {}),
     };
   }
 
-  private configFor(projectId: string, rootPath: string, name: string): ProjectWorkerConfig {
-    const stored = this.loadStoredWorkerConfig(projectId);
-    if (stored) {
-      /* identity always comes from the registry — a stored config can never
-         redirect a project's worker to a different root or id. */
-      const rebuilt = createWorkerConfig({ ...stored, projectId, name, rootPath });
-      const validation = validateWorkerConfig(rebuilt as never, { checkFileSystem: true });
-      if (validation.ok) return validation.config;
-      /* the stored config became invalid against this root — fall through to
-         the default so the worker still starts honestly. */
-    }
-    const config = createWorkerConfig({
-      projectId,
-      name,
-      rootPath,
-      watch: true,
-      watchOptions: { skipInitialIndex: false },
-    } as never);
-    const validation = validateWorkerConfig(config as never, { checkFileSystem: true });
-    if (!validation.ok) {
-      throw new Error(validation.errors.join('; '));
-    }
-    return validation.config;
-  }
-
   private async startWorkerFor(projectId: string, rootPath: string, name: string) {
-    return this.supervisor.start(this.configFor(projectId, rootPath, name));
+    return this.supervisor.start(this.configs.configFor(projectId, rootPath, name));
   }
 
   private errorStatus(error: unknown): number {
@@ -985,7 +666,7 @@ export class GatewayServer {
           rootPath: registered.rootPath,
           autoStart: patch.autoStart ?? registered.autoStart,
         };
-        const incoming = this.validateIncomingWorkerConfig(prospective, body);
+        const incoming = this.configs.validateIncomingWorkerConfig(prospective, body);
         if (incoming.changed && 'error' in incoming) {
           this.send(res, 400, {
             error: incoming.error,
@@ -996,7 +677,7 @@ export class GatewayServer {
 
         const updatedRecord = this.registry.update(projectId, patch);
         if (incoming.changed) {
-          this.storeWorkerConfig(incoming.config);
+          this.configs.storeWorkerConfig(incoming.config);
         }
 
         // Decision D-2: disabling a project must not leave its worker running.
