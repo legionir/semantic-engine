@@ -143,8 +143,8 @@ export class HttpGuard {
       | نه `413` — یعنی همان اطلاعاتی که باید منتقل شود، نمی‌شود.
       | اول پاسخ، بعد بستن.
       */
-      if (error instanceof BodyTooLarge) return deny(response, 413, 'payload too large', true);
-      return deny(response, 400, 'bad request', true);
+      if (error instanceof BodyTooLarge) return deny(response, 413, 'payload too large', true, request);
+      return deny(response, 400, 'bad request', true, request);
     }
 
     /*
@@ -226,7 +226,8 @@ function deny(
   response: ServerResponse,
   status: number,
   message: string,
-  closeConnection = false
+  closeConnection = false,
+  request?: IncomingMessage
 ): void {
   if (response.headersSent) return;
 
@@ -244,8 +245,14 @@ function deny(
     if (closeConnection) {
       const socket = response.socket;
       if (!socket) return;
-      socket.end();
-      setTimeout(() => socket.destroy(), 2000).unref();
+      /* Drain (discard) what the client is still sending so the kernel has no
+         unread data to answer with RST; the timer bounds how long that may take. */
+      request?.resume();
+      const timer = setTimeout(() => socket.destroy(), 2000);
+      timer.unref();
+      socket.once('close', () => clearTimeout(timer));
+      request?.once('end', () => socket.end());
+      if (!request) socket.end();
     }
   });
 }
