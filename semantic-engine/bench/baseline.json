@@ -2,35 +2,35 @@
   "version": 1,
   "corpus": "src",
   "files": 594,
-  "symbols": 17065,
+  "symbols": 17075,
   "node": "v22.22.0",
   "cpus": 4,
   "runs": 3,
   "metrics": {
     "indexColdMs": {
-      "median": 21692.9,
-      "min": 19839.3,
-      "max": 22393
+      "median": 9809.4,
+      "min": 9465.2,
+      "max": 10344.8
     },
     "indexWarmMs": {
-      "median": 22477.4,
-      "min": 22449.2,
-      "max": 23455.2
+      "median": 10514.9,
+      "min": 10046.4,
+      "max": 10545.2
     },
     "indexPeakRssMb": {
-      "median": 649
+      "median": 645
     },
     "indexFileMb": {
-      "median": 47.11
+      "median": 47.13
     },
     "readerLoadMs": {
-      "median": 63.6
+      "median": 53.1
     },
     "discoverP50Ms": {
-      "median": 38.6
+      "median": 36.3
     },
     "discoverP95Ms": {
-      "median": 133.5
+      "median": 130.4
     }
   }
 }

@@ -10,6 +10,10 @@ import { SymbolEntry } from '../core/types/project-index.types';
 export class SymbolIndex {
   private readonly byId = new Map<string, SymbolEntry>();
   private readonly byFile = new Map<string, SymbolEntry[]>();
+  /* Lookup tables built on first use; first match in iteration order wins, as before. */
+  private byNameCache?: Map<string, SymbolEntry>;
+  private byFileNameCache?: Map<string, Map<string, SymbolEntry>>;
+  private byParentCache?: Map<string, SymbolEntry[]>;
 
   constructor(symbols: readonly SymbolEntry[]) {
     for (const sym of symbols) {
@@ -60,26 +64,45 @@ export class SymbolIndex {
    * در صورت وجود چندین match، اولی برگردانده می‌شود.
    */
   findByName(name: string): SymbolEntry | undefined {
-    for (const sym of this.byId.values()) {
-      if (sym.name === name) return sym;
+    if (!this.byNameCache) {
+      const table = new Map<string, SymbolEntry>();
+      for (const sym of this.byId.values()) {
+        if (!table.has(sym.name)) table.set(sym.name, sym);
+      }
+      this.byNameCache = table;
     }
-    return undefined;
+    return this.byNameCache.get(name);
   }
 
   /**
    * پیدا کردن symbol بر اساس نام در یک فایل مشخص.
    */
   findByNameAndFile(fileId: string, name: string): SymbolEntry | undefined {
-    const symbols = this.byFile.get(fileId) ?? [];
-    return symbols.find(s => s.name === name);
+    if (!this.byFileNameCache) this.byFileNameCache = new Map();
+    let table = this.byFileNameCache.get(fileId);
+    if (!table) {
+      table = new Map();
+      for (const sym of this.byFile.get(fileId) ?? []) {
+        if (!table.has(sym.name)) table.set(sym.name, sym);
+      }
+      this.byFileNameCache.set(fileId, table);
+    }
+    return table.get(name);
   }
 
   /**
    * پیدا کردن فرزندان یک symbol (مثلاً methods یک class).
    */
   findChildren(parentId: string): SymbolEntry[] {
-    const symbols = this.byFile.get(this.getById(parentId)?.fileId ?? '') ?? [];
-    return symbols.filter(s => s.parentId === parentId);
+    const fileId = this.getById(parentId)?.fileId ?? '';
+    if (!this.byParentCache) this.byParentCache = new Map();
+    const key = `${fileId}\u0000${parentId}`;
+    let children = this.byParentCache.get(key);
+    if (!children) {
+      children = (this.byFile.get(fileId) ?? []).filter(s => s.parentId === parentId);
+      this.byParentCache.set(key, children);
+    }
+    return [...children];
   }
 
   /**

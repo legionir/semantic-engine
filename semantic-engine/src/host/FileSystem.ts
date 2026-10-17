@@ -100,7 +100,9 @@ function* emit(
           // JSON.stringify یک عضو حذف‌شدنی آرایه را null می‌کند.
           yield 'null';
         } else {
-          yield* emit(item, indentUnit, childIndent, ancestors, `${location}[${index}]`);
+          const flat = stringifyArrayItem(item, indentUnit, childIndent);
+          if (flat !== null) yield flat;
+          else yield* emit(item, indentUnit, childIndent, ancestors, `${location}[${index}]`);
         }
       }
       yield pretty ? '\n' + currentIndent + ']' : ']';
@@ -133,6 +135,25 @@ function* emit(
   }
 
   ancestors.delete(container);
+}
+
+/**
+ * Fast path for an array element: one native `JSON.stringify` call instead of a
+ * generator yield per token. The result is identical (same `toJSON` and
+ * omission rules), re-indented to the element's depth. Elements are bounded, so
+ * the "never build the whole document as one string" property is kept. Returns
+ * null for anything `JSON.stringify` rejects (cycles, BigInt, ...) so the slow
+ * path can report the precise location.
+ */
+function stringifyArrayItem(item: unknown, indentUnit: string, childIndent: string): string | null {
+  if (item === null || typeof item !== 'object') return null;
+  try {
+    if (indentUnit.length === 0) return JSON.stringify(item);
+    /* `\n` only occurs as structure in pretty output (string contents escape it). */
+    return JSON.stringify(item, null, indentUnit).replace(/\n/g, '\n' + childIndent);
+  } catch {
+    return null;
+  }
 }
 
 function applyToJson(value: unknown): unknown {
