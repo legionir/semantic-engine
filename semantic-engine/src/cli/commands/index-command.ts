@@ -17,6 +17,7 @@ import { resolveVectorPlan } from '../embeddingFromArgs';
 import { ProjectIndex } from '../../core/types/project-index.types';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
+import { loadGlobalConfig, scannerOverridesFrom } from '../../core/config/GlobalConfig';
 import { normalizeWorkspaceRoot, PROJECT_OUTPUT_DIR } from '../../core/config/ProjectPaths';
 import { migrateLegacyArtifacts } from '../../core/config/migrateLegacyArtifacts';
 import { projectPathsFromArgs } from '../projectPathsFromArgs';
@@ -57,6 +58,7 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
 
   const wantsBlueprint = boolOption(args.options, 'blueprint', true);
   const wantsGit = boolOption(args.options, 'git', true);
+  const scanOverrides = scannerOverridesFrom(loadGlobalConfig(projectPaths.dataRoot).config);
   /*
   | SE-VEC-02 — تا فاز ۴۴ اینجا `vectorIndexer: null` هاردکد بود و
   | هیچ پرچمی هم نداشت، پس `vectorChunks` هرگز تولید نمی‌شد و
@@ -124,6 +126,7 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
       | سیگنال‌های رتبه‌بندی را ندارد. `--no-git` برای مخزنی که git
       | نیست، یا برای خروجی قطعی.
       */
+      ...(Object.keys(scanOverrides).length > 0 ? { scannerConfig: scanOverrides } : {}),
       gitCollector: wantsGit ? new GitInfoCollector(root) : null,
       vectorIndexer: wantsVectors
         ? new VectorIndexer({ embeddingGenerator })

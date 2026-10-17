@@ -2,6 +2,8 @@
  * HttpServer — Platform Core V1 Main Modular HTTP Server.
  */
 
+import { matchPattern, readBody } from './httpRequestUtils';
+import { StaticAssetServer } from './StaticAssetServer';
 import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -54,6 +56,7 @@ import { LocalModelStore } from '../services/providers/LocalModelStore';
 import { loadGlobalConfig, modelsDirFor } from '../core/config/GlobalConfig';
 
 export class HttpServer {
+  private readonly assets: StaticAssetServer;
   private server?: http.Server;
   private readonly routes: RouteDefinition[] = [];
   /** `<dataRoot>/runtime` — state پروسه، بیرون از source root. */
@@ -89,6 +92,7 @@ export class HttpServer {
 
   constructor(private readonly config: PlatformConfig) {
     this.security = new SecurityPipeline(config);
+    this.assets = new StaticAssetServer(config.staticDir);
     this.sse = new SseManager();
     this.ws = new WebSocketManager();
     this.apiKeyStore = new ApiKeyStore(config.token);
@@ -138,9 +142,12 @@ export class HttpServer {
     */
     const userConfig = config.dataRoot ? loadGlobalConfig(config.dataRoot).config : undefined;
     this.localModels = new LocalModelStore({
-      modelsDir: config.dataRoot
-        ? modelsDirFor(config.dataRoot, userConfig)
-        : resolveModelsDir(),
+      /* env > config, the same order the CLI uses (resolveModelsDir). */
+      modelsDir: (process.env['SEMANTIC_ENGINE_MODELS_DIR'] ?? '').trim() !== ''
+        ? process.env['SEMANTIC_ENGINE_MODELS_DIR']!.trim()
+        : config.dataRoot
+          ? modelsDirFor(config.dataRoot, userConfig)
+          : resolveModelsDir(),
       /* A mirror for networks that cannot reach huggingface.co. */
       ...((process.env['SEMANTIC_ENGINE_MODEL_HUB_URL'] || userConfig?.models.hubUrl)
         ? { baseUrl: (process.env['SEMANTIC_ENGINE_MODEL_HUB_URL'] || userConfig!.models.hubUrl).replace(/\/+$/, '') }
@@ -450,7 +457,8 @@ export class HttpServer {
     | target is split by hand instead, so the pathname stays exactly as sent
     | (as before) and only the query goes through URLSearchParams.
     */
-    const rawTarget = (req.url || '/').split('#')[0]!;
+    /* Absolute-form targets (`GET http://host/x`, sent by proxies) reduce to their path. */
+    const rawTarget = (req.url || '/').split('#')[0]!.replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^/?]*/, '') || '/';
     const queryStart = rawTarget.indexOf('?');
     const pathname = (queryStart === -1 ? rawTarget : rawTarget.slice(0, queryStart)) || '/';
     const query: Record<string, string> = {};
@@ -463,7 +471,7 @@ export class HttpServer {
     if (!match) {
       // Attempt static file serving if GET and staticDir exists
       if (req.method === 'GET') {
-        const served = await this.serveStatic(pathname, res);
+        const served = await this.assets.serve(pathname, res);
         if (served) return;
       }
 
@@ -620,58 +628,11 @@ export class HttpServer {
   }
 
   private matchPattern(pattern: string, pathname: string): Record<string, string> | null {
-    const patternParts = pattern.split('/').filter(Boolean);
-    const pathParts = pathname.split('/').filter(Boolean);
-
-    if (patternParts.length !== pathParts.length) {
-      return null;
-    }
-
-    const params: Record<string, string> = {};
-    for (let i = 0; i < patternParts.length; i++) {
-      const pPart = patternParts[i]!;
-      const aPart = pathParts[i]!;
-
-      if (pPart.startsWith(':')) {
-        params[pPart.slice(1)] = decodeURIComponent(aPart);
-      } else if (pPart !== aPart) {
-        return null;
-      }
-    }
-
-    return params;
+    return matchPattern(pattern, pathname);
   }
 
   private readBody(req: http.IncomingMessage, maxBytes: number): Promise<unknown> {
-    return new Promise((resolve, reject) => {
-      let size = 0;
-      const chunks: Buffer[] = [];
-
-      req.on('data', (chunk: Buffer) => {
-        size += chunk.length;
-        if (size > maxBytes) {
-          reject(new Error(`Payload too large. Limit is ${maxBytes} bytes.`));
-          req.destroy();
-          return;
-        }
-        chunks.push(chunk);
-      });
-
-      req.on('end', () => {
-        if (chunks.length === 0) {
-          resolve(undefined);
-          return;
-        }
-        const raw = Buffer.concat(chunks).toString('utf8');
-        try {
-          resolve(JSON.parse(raw));
-        } catch {
-          reject(new Error('Invalid JSON payload'));
-        }
-      });
-
-      req.on('error', reject);
-    });
+    return readBody(req, maxBytes);
   }
 
   /*
@@ -682,80 +643,4 @@ export class HttpServer {
   |
   | مسیر پوشه یک بار پیدا و کش می‌شود، و خواندن فایل ناهمگام است.
   */
-  private staticDirCache: string | null | undefined;
-
-  private async resolveStaticDir(): Promise<string | null> {
-    if (this.staticDirCache !== undefined) return this.staticDirCache;
-
-    const candidates = [
-      this.config.staticDir,
-      path.join(__dirname, '..', '..', 'public'),
-      path.join(__dirname, '..', 'public'),
-      path.join(__dirname, 'public'),
-      path.join(__dirname, '..', '..', '..', 'web', 'public'),
-    ].filter((p): p is string => Boolean(p));
-
-    for (const candidate of candidates) {
-      try {
-        await fs.promises.access(candidate);
-        this.staticDirCache = candidate;
-        return candidate;
-      } catch {
-        /* try the next one */
-      }
-    }
-
-    this.staticDirCache = null;
-    return null;
-  }
-
-  private async serveStatic(pathname: string, res: http.ServerResponse): Promise<boolean> {
-    const staticDir = await this.resolveStaticDir();
-    if (!staticDir) return false;
-
-    let targetFile = pathname;
-    // SE-UI-07: صفحهٔ ورود حالا «باز کردن/پیکربندی پروژه» است تا کاربر
-    // بتواند بدون ایندکس قبلی هم پروژه را باز و ایندکس کند. Visualizer
-    // با /visualizer یا /visualizer.html در دسترس است.
-    if (targetFile === '/' || targetFile === '/index.html' || targetFile === '/open') {
-      targetFile = '/open.html';
-    } else if (targetFile === '/visualizer') {
-      targetFile = '/visualizer.html';
-    }
-
-    const resolved = path.resolve(staticDir, targetFile.replace(/^\//, ''));
-    if (!resolved.startsWith(path.resolve(staticDir))) {
-      return false;
-    }
-
-    try {
-      const stat = await fs.promises.stat(resolved);
-      if (!stat.isFile()) return false;
-
-      const ext = path.extname(resolved).toLowerCase();
-      const mime = (MIME_TYPES as Record<string, string>)[ext] || 'application/octet-stream';
-      const content = await fs.promises.readFile(resolved);
-
-      res.writeHead(200, {
-        'Content-Type': mime,
-        'Content-Length': content.length,
-        'Cache-Control': 'no-cache',
-      });
-      res.end(content);
-      return true;
-    } catch {
-      return false;
-    }
-  }
 }
-
-const MIME_TYPES: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.ico': 'image/x-icon',
-};
-

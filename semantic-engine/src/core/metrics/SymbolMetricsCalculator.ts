@@ -56,6 +56,14 @@ export interface SymbolMetricsOptions {
   readonly maxCachedFiles?: number;
 }
 
+interface FunctionCandidate {
+  readonly node: ts.Node;
+  readonly declarationLine: number;
+  readonly nameLine: number;
+  readonly nodeName: string | null;
+  readonly endLine: number;
+}
+
 /** آنچه به ازای هر فایل کش می‌شود. */
 interface FileCacheEntry {
   content: string | null;
@@ -304,10 +312,51 @@ export class SymbolMetricsCalculator {
    * و در آخر خطِ شروع (که دکوراتور را هم شامل می‌شود).
    */
   private findFunctionNode(sourceFile: ts.SourceFile, sym: SymbolEntry): ts.Node | null {
+    let best: { node: ts.Node; score: number; distance: number } | null = null;
+
+    for (const candidate of this.functionCandidates(sourceFile)) {
+      const { node, declarationLine, nameLine, nodeName, endLine } = candidate;
+      const nameMatches = nodeName !== null && nodeName === sym.name;
+      const withinRange = sym.line >= declarationLine && sym.line <= endLine;
+
+      let score = 0;
+      if (nameMatches && nameLine === sym.line) score = 5;
+      else if (nameMatches && withinRange) score = 4;
+      else if (nameLine === sym.line) score = 3;
+      else if (declarationLine === sym.line) score = 2;
+      /*
+      | آخرین چاره: نام می‌خورد ولی هیچ خطی نمی‌خورد. شماره خطِ
+      | ذخیره‌شده می‌تواند یکی جابه‌جا باشد (کامنت، دکوراتور، خط
+      | ادامه). بین چند هم‌نام — مثلاً overloadها — نزدیک‌ترین
+      | برنده است.
+      */
+      else if (nameMatches) score = 1;
+
+      const distance = Math.abs(nameLine - sym.line);
+      const better =
+        !best || score > best.score || (score === best.score && distance < best.distance);
+      if (score > 0 && better) {
+        best = { node, score, distance };
+      }
+    }
+
+    return best ? (best as { node: ts.Node }).node : null;
+  }
+
+  /*
+  | هر symbol پیش‌تر کل AST را می‌پیمود تا تابعش را پیدا کند: O(symbolها × گره‌ها)
+  | در هر فایل (۱۳٪ زمان ایندکس روی بنچمارک). حالا گره‌های تابع‌مانند و خط‌هایشان
+  | یک بار برای هر SourceFile، به همان ترتیب پیمایش قبلی، ساخته می‌شود.
+  */
+  private readonly functionCandidateCache = new WeakMap<ts.SourceFile, FunctionCandidate[]>();
+
+  private functionCandidates(sourceFile: ts.SourceFile): FunctionCandidate[] {
+    const cached = this.functionCandidateCache.get(sourceFile);
+    if (cached) return cached;
+
     const lineOf = (position: number): number =>
       sourceFile.getLineAndCharacterOfPosition(position).line + 1;
-
-    let best: { node: ts.Node; score: number; distance: number } | null = null;
+    const found: FunctionCandidate[] = [];
 
     const visit = (node: ts.Node): void => {
       if (this.isFunctionLike(node)) {
@@ -317,41 +366,21 @@ export class SymbolMetricsCalculator {
         | باگ دکوراتور بود.
         */
         const declarationLine = lineOf(node.getStart());
-        const named = node as ts.NamedDeclaration;
-        const nameNode = named.name;
-        const nameLine = nameNode ? lineOf(nameNode.getStart()) : declarationLine;
-        const nodeName = nameNode && ts.isIdentifier(nameNode) ? nameNode.text : null;
-        const endLine = lineOf(node.getEnd());
-
-        const nameMatches = nodeName !== null && nodeName === sym.name;
-        const withinRange = sym.line >= declarationLine && sym.line <= endLine;
-
-        let score = 0;
-        if (nameMatches && nameLine === sym.line) score = 5;
-        else if (nameMatches && withinRange) score = 4;
-        else if (nameLine === sym.line) score = 3;
-        else if (declarationLine === sym.line) score = 2;
-        /*
-        | آخرین چاره: نام می‌خورد ولی هیچ خطی نمی‌خورد. شماره خطِ
-        | ذخیره‌شده می‌تواند یکی جابه‌جا باشد (کامنت، دکوراتور، خط
-        | ادامه). بین چند هم‌نام — مثلاً overloadها — نزدیک‌ترین
-        | برنده است.
-        */
-        else if (nameMatches) score = 1;
-
-        const distance = Math.abs(nameLine - sym.line);
-        const better =
-          !best || score > best.score || (score === best.score && distance < best.distance);
-        if (score > 0 && better) {
-          best = { node, score, distance };
-        }
+        const nameNode = (node as ts.NamedDeclaration).name;
+        found.push({
+          node,
+          declarationLine,
+          nameLine: nameNode ? lineOf(nameNode.getStart()) : declarationLine,
+          nodeName: nameNode && ts.isIdentifier(nameNode) ? nameNode.text : null,
+          endLine: lineOf(node.getEnd()),
+        });
       }
-
       ts.forEachChild(node, visit);
     };
 
     visit(sourceFile);
-    return best ? (best as { node: ts.Node }).node : null;
+    this.functionCandidateCache.set(sourceFile, found);
+    return found;
   }
 
   private isFunctionLike(node: ts.Node): boolean {

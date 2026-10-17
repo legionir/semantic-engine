@@ -22,7 +22,7 @@
  */
 
 import * as path from 'path';
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { ScannerConfig } from './ScannerConfig';
 import { parseGitignore, mergeGitignorePatterns } from './gitignoreParser';
 
@@ -39,6 +39,23 @@ export interface IgnoreMatcherOptions {
 /** همیشه اسلش رو به جلو، تا الگوها روی ویندوز هم کار کنند. */
 export function normalizeSeparators(filePath: string): string {
   return filePath.replace(/\\/g, '/');
+}
+
+/*
+| `minimatch(path, pattern, opts)` parses the pattern on every call. The scanner
+| tests every file against every pattern, so patterns are compiled once and reused
+| (same options, same result as the one-shot function).
+*/
+const GLOB_OPTIONS = { dot: true, nocase: true } as const;
+const compiledGlobs = new Map<string, Minimatch>();
+
+function globMatch(target: string, pattern: string): boolean {
+  let matcher = compiledGlobs.get(pattern);
+  if (!matcher) {
+    matcher = new Minimatch(pattern, GLOB_OPTIONS);
+    compiledGlobs.set(pattern, matcher);
+  }
+  return matcher.match(target);
 }
 
 /**
@@ -62,9 +79,9 @@ export function matchesPath(relativePath: string, pattern: string): boolean {
   const candidates = anchored ? [raw] : [raw, `**/${raw}`];
 
   for (const candidate of candidates) {
-    if (minimatch(target, candidate, { dot: true, nocase: true })) return true;
+    if (globMatch(target, candidate)) return true;
     // یک الگوی پوشه‌ای، همهٔ چیزهای زیرش را هم می‌گیرد
-    if (minimatch(target, `${candidate}/**`, { dot: true, nocase: true })) return true;
+    if (globMatch(target, `${candidate}/**`)) return true;
   }
 
   return false;
@@ -143,7 +160,7 @@ export class IgnoreMatcher {
     for (const negation of this.negationPatterns) {
       if (
         matchesPath(relativePath, negation) ||
-        minimatch(fileName, negation, { nocase: true, dot: true })
+        globMatch(fileName, negation)
       ) {
         return false;
       }
@@ -194,7 +211,7 @@ export class IgnoreMatcher {
 
       // الگوی بدون مسیر همچنان با نام پایه مقایسه می‌شود
       if (!isDirectory && fileName && !pattern.includes('/')) {
-        if (minimatch(fileName, pattern, { nocase: true, dot: true })) return true;
+        if (globMatch(fileName, pattern)) return true;
       }
     }
 

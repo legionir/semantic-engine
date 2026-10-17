@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20.x is the engines floor; 22.x has the built-in node:sqlite.
+        node-version: [20, 22]
+    defaults:
+      run:
+        working-directory: semantic-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: semantic-engine/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      # dist/ must exist: ~10 suites (gateway e2e, CLI, LSP client) run against it
+      # and are silently skipped otherwise.
+      - run: npm run build
+      - name: Type check (tests)
+        run: npx tsc -p tsconfig.test.json --noEmit
+      - run: npm run lint
+      - run: npm run test:gate
+      - name: Jest (must not skip dist-gated suites)
+        run: |
+          npx jest --ci 2>&1 | tee jest.log
+          if grep -q "dist/ is not built" jest.log; then
+            echo "dist-gated suites were skipped"; exit 1
+          fi
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: semantic-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: semantic-engine/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      # Production dependencies (including optional ones) must carry no high or
+      # critical advisory. Dev-tooling advisories (jest chain) are reported only.
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --audit-level=critical || true
+
+  bench:
+    name: Performance snapshot (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: semantic-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: semantic-engine/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      # bench/baseline.json was recorded on a developer container, so wall-clock numbers
+      # are not comparable with a hosted runner yet. The snapshot is uploaded for
+      # recording a runner baseline; switch this to `npm run bench:check` once done.
+      - run: node scripts/bench.js | tee bench-result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-result
+          path: semantic-engine/bench-result.json

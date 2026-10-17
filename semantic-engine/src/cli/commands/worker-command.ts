@@ -24,7 +24,7 @@ import { CommandContext, CommandResult } from './types';
 import { runIndex } from './index-command';
 import { artifactLocationFromArgs, projectPathsFromArgs } from '../projectPathsFromArgs';
 import { DEFAULT_HOST, generateToken } from '../HttpGuard';
-import { spawnService, stopChild, StartedChild } from './serve-command';
+import { spawnService, stopChild, StartedChild } from './serviceSupervisor';
 import type { HttpServer } from '../../server/HttpServer';
 import { SemanticEngineMcpServer } from '../../ai/mcp/SemanticEngineMcpServer';
 import { loadBlueprintBeside } from '../../ai/discovery/loadBlueprint';

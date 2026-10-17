@@ -8,6 +8,7 @@ import {
   loadGlobalConfig,
   modelsDirFor,
   saveGlobalConfig,
+  scannerOverridesFrom,
 } from './GlobalConfig';
 
 describe('GlobalConfig (<dataRoot>/config.json)', () => {
@@ -72,5 +73,38 @@ describe('GlobalConfig (<dataRoot>/config.json)', () => {
     expect(modelsDirFor(dataRoot)).toBe(path.join(dataRoot, 'models'));
     const { config } = saveGlobalConfig(dataRoot, { models: { dir: 'elsewhere' } });
     expect(modelsDirFor(dataRoot, config)).toBe(path.join(dataRoot, 'elsewhere'));
+  });
+});
+
+describe('saveGlobalConfig preserves what it does not own', () => {
+  it('keeps unknown top-level and section keys across a save', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'se-gc-keep-'));
+    try {
+      fs.writeFileSync(
+        globalConfigPath(root),
+        JSON.stringify({ $schema: 'x', server: { uiPort: 4100, future: true } })
+      );
+      saveGlobalConfig(root, { server: { uiPort: 4200 } });
+      const disk = JSON.parse(fs.readFileSync(globalConfigPath(root), 'utf8'));
+      expect(disk.$schema).toBe('x');
+      expect(disk.server.future).toBe(true);
+      expect(disk.server.uiPort).toBe(4200);
+      expect(fs.existsSync(`${globalConfigPath(root)}.lock`)).toBe(false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('scannerOverridesFrom', () => {
+  it('is empty for an untouched config and carries only changed scan settings', () => {
+    expect(scannerOverridesFrom(defaultGlobalConfig())).toEqual({});
+    const base = defaultGlobalConfig();
+    const changed = { ...base, scan: { ...base.scan, maxDepth: 3, maxFileSizeMb: 1, additionalIgnorePatterns: ['*.gen.ts'] } };
+    expect(scannerOverridesFrom(changed)).toEqual({
+      maxDepth: 3,
+      maxFileSizeBytes: 1048576,
+      additionalIgnorePatterns: ['*.gen.ts'],
+    });
   });
 });

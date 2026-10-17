@@ -52,82 +52,29 @@ import { pathToFileURL, fileURLToPath } from 'url';
 import * as rpc from 'vscode-jsonrpc/node';
 import { ILogger, silentLogger } from '../host/Logger';
 import {
+  LspClientOptions,
+  LspClientState,
+  LspError,
+  LspExitInfo,
+  LspNotRunningError,
+  LspStartError,
+  LspTimeoutError,
+  RequestOptions,
+} from './LspClientTypes';
+import { registerClientHandlers } from './lspClientHandlers';
+import { buildInitializeParams } from './lspInitializeParams';
+import { pipeServerStderr } from './lspProcessIo';
+import {
   DocumentSymbolResult,
   InitializeResult,
-  ProgressParams,
   PublishDiagnosticsParams,
   ServerCapabilities,
   ServerInfo,
 } from './protocol';
 
-/** نام و نسخه‌ای که به سرور معرفی می‌کنیم. */
-const CLIENT_NAME = 'semantic-engine';
-
 const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 const DEFAULT_INITIALIZE_TIMEOUT_MS = 30_000;
 const DEFAULT_SHUTDOWN_TIMEOUT_MS = 5_000;
-
-export type LspClientState =
-  | 'idle'
-  | 'starting'
-  | 'running'
-  | 'stopping'
-  | 'stopped'
-  | 'crashed';
-
-export interface LspExitInfo {
-  readonly code: number | null;
-  readonly signal: NodeJS.Signals | null;
-  /** آیا ما خواسته بودیم که خارج شود؟ */
-  readonly expected: boolean;
-}
-
-export interface LspClientOptions {
-  /** شناسهٔ سرور — فقط برای لاگ و پیام خطا. */
-  readonly id: string;
-  readonly command: string;
-  readonly args?: readonly string[];
-  /** ریشهٔ workspace؛ هم `cwd` پروسه است هم `rootUri` دست‌دادن. */
-  readonly rootPath: string;
-  readonly logger?: ILogger;
-  readonly env?: NodeJS.ProcessEnv;
-  readonly requestTimeoutMs?: number;
-  readonly initializeTimeoutMs?: number;
-  readonly shutdownTimeoutMs?: number;
-  readonly initializationOptions?: unknown;
-  /** پاسخ به `workspace/configuration`. پیش‌فرض: یک شیء خالی برای هر آیتم. */
-  readonly configuration?: (section: string | undefined) => unknown;
-  readonly onDiagnostics?: (params: PublishDiagnosticsParams) => void;
-  readonly onProgress?: (params: ProgressParams) => void;
-  readonly onExit?: (info: LspExitInfo) => void;
-  /** برای تست: جایگزین `child_process.spawn`. */
-  readonly spawn?: typeof cp.spawn;
-}
-
-export interface RequestOptions {
-  readonly timeoutMs?: number;
-}
-
-// ── خطاها ─────────────────────────────────────────────────────────────
-
-export class LspError extends Error {
-  constructor(
-    message: string,
-    readonly serverId: string
-  ) {
-    super(message);
-    this.name = new.target.name;
-  }
-}
-
-/** سرور به‌موقع جواب نداد. درخواست لغو شد (`$/cancelRequest`). */
-export class LspTimeoutError extends LspError {}
-
-/** پروسه بالا نیامد — باینری نبود، یا فوراً مرد. */
-export class LspStartError extends LspError {}
-
-/** سرور در حال اجرا نیست (هنوز، یا دیگر). */
-export class LspNotRunningError extends LspError {}
 
 // ── سند باز ───────────────────────────────────────────────────────────
 
@@ -311,21 +258,31 @@ export class LspClient {
       );
     }
 
-    this.pipeStderr(child);
+    pipeServerStderr(child, this.logger);
 
     const connection = rpc.createMessageConnection(
       new rpc.StreamMessageReader(child.stdout!),
       new rpc.StreamMessageWriter(child.stdin!)
     );
     this.connection = connection;
-    this.registerHandlers(connection);
+    registerClientHandlers(connection, {
+      options: this.options,
+      logger: this.logger,
+      diagnosticsListeners: this.diagnosticsListeners,
+      state: () => this.currentState,
+      markCrashed: () => {
+        this.currentState = 'crashed';
+      },
+      dispatchNotification: (method, params) => this.dispatchNotification(method, params),
+      rejectPending: error => this.rejectPending(error),
+    });
     connection.listen();
 
     try {
       const result = await Promise.race([
         this.sendRequest<InitializeResult>(
           'initialize',
-          this.buildInitializeParams(),
+          buildInitializeParams(this.options.rootPath, this.options.initializationOptions),
           this.options.initializeTimeoutMs ?? DEFAULT_INITIALIZE_TIMEOUT_MS
         ),
         spawnFailure,
@@ -529,149 +486,6 @@ export class LspClient {
         this.options.id
       );
     }
-  }
-
-  private buildInitializeParams(): Record<string, unknown> {
-    const rootUri = pathToFileURL(this.options.rootPath).toString();
-    return {
-      processId: process.pid,
-      clientInfo: { name: CLIENT_NAME },
-      locale: 'en',
-      // `rootPath` منسوخ است ولی چند سرور هنوز فقط همان را می‌خوانند.
-      rootPath: this.options.rootPath,
-      rootUri,
-      workspaceFolders: [{ uri: rootUri, name: CLIENT_NAME }],
-      initializationOptions: this.options.initializationOptions,
-      capabilities: {
-        general: { positionEncodings: ['utf-16'] },
-        workspace: {
-          workspaceFolders: true,
-          configuration: true,
-          didChangeConfiguration: { dynamicRegistration: true },
-          didChangeWatchedFiles: { dynamicRegistration: true },
-        },
-        window: { workDoneProgress: true },
-        textDocument: {
-          synchronization: { dynamicRegistration: false, didSave: true },
-          documentSymbol: {
-            dynamicRegistration: false,
-            hierarchicalDocumentSymbolSupport: true,
-            symbolKind: { valueSet: Array.from({ length: 26 }, (_, index) => index + 1) },
-          },
-          hover: { dynamicRegistration: false, contentFormat: ['markdown', 'plaintext'] },
-          publishDiagnostics: { relatedInformation: true },
-          diagnostic: { dynamicRegistration: false, relatedDocumentSupport: false },
-        },
-      },
-    };
-  }
-
-  private registerHandlers(connection: rpc.MessageConnection): void {
-    const configuration = this.options.configuration ?? (() => ({}));
-
-    /*
-    | این سه، اجباری‌اند. probe نشان داد `tsgo` دوتای اول را واقعاً
-    | می‌فرستد و منتظر جواب می‌ماند.
-    */
-    connection.onRequest('workspace/configuration', (params: { items?: { section?: string }[] }) =>
-      (params?.items ?? []).map(item => configuration(item?.section))
-    );
-    connection.onRequest('client/registerCapability', () => null);
-    connection.onRequest('client/unregisterCapability', () => null);
-    connection.onRequest('window/workDoneProgress/create', () => null);
-    connection.onRequest('window/showMessageRequest', () => null);
-    // ویرایش فایل کار ما نیست؛ «نپذیرفتم» صادقانه‌تر از سکوت است.
-    connection.onRequest('workspace/applyEdit', () => ({ applied: false }));
-
-    /*
-    | هر درخواست دیگری هم باید *جوابی* بگیرد. سکوت یعنی سرور تا ابد
-    | منتظر می‌ماند و هیچ‌جا خطایی ثبت نمی‌شود.
-    */
-    connection.onRequest((method: string) => {
-      this.logger.debug('unhandled server request', { method });
-      return new rpc.ResponseError(rpc.ErrorCodes.MethodNotFound, `${CLIENT_NAME} does not implement ${method}`);
-    });
-
-    connection.onNotification('$/progress', (params: ProgressParams) => {
-      this.options.onProgress?.(params);
-      this.dispatchNotification('$/progress', params);
-    });
-    connection.onNotification(
-      'textDocument/publishDiagnostics',
-      (params: PublishDiagnosticsParams) => {
-        this.dispatchNotification('textDocument/publishDiagnostics', params);
-        this.options.onDiagnostics?.(params);
-        for (const listener of this.diagnosticsListeners) {
-          try {
-            listener(params);
-          } catch (error) {
-            this.logger.debug('diagnostics listener threw', { error: String(error) });
-          }
-        }
-      }
-    );
-    connection.onNotification((method: string, ...params: unknown[]) => {
-      this.logger.debug('server notification', { method });
-      this.dispatchNotification(method, params[0]);
-    });
-
-    connection.onError(([error]) => {
-      this.logger.debug('connection error', { error: String(error) });
-    });
-    connection.onClose(() => {
-      this.logger.debug('connection closed');
-      /*
-      | کتابخانه در پرواز‌ها را روی close رد نمی‌کند (فقط روی
-      | dispose). بدون این، مرگ سرور یعنی هر فراخوان تا سررسید
-      | timeout خودش معلق می‌ماند.
-      */
-      if (this.currentState !== 'stopping' && this.currentState !== 'stopped') {
-        /*
-        | اتصال که بسته شد، سرور رفته است — رویداد `exit` پروسه یک تیک
-        | بعد می‌آید. اگر تا آن لحظه حالت را «در حال اجرا» نگه داریم،
-        | فراخوان بعدی درخواستی می‌فرستد که هیچ‌وقت جواب نمی‌گیرد.
-        */
-        if (this.currentState === 'running' || this.currentState === 'starting') {
-          this.currentState = 'crashed';
-        }
-        this.rejectPending(
-          new LspNotRunningError(
-            `server ${this.options.id} closed the connection`,
-            this.options.id
-          )
-        );
-      }
-    });
-  }
-
-  /**
-   * stderr سرور: خط به خط به لاگر، هرگز به stdout ما.
-   *
-   * وقتی خودمان سرور MCP روی stdio هستیم، stdout کانال پروتکل است و
-   * یک خط لاگ سرور کافی است تا قاب `Content-Length` را خراب کند.
-   */
-  private pipeStderr(child: cp.ChildProcess): void {
-    if (!child.stderr) return;
-    let buffer = '';
-    child.stderr.setEncoding('utf8');
-    child.stderr.on('data', (chunk: string) => {
-      buffer += chunk;
-      let newline = buffer.indexOf('\n');
-      while (newline >= 0) {
-        const line = buffer.slice(0, newline).trimEnd();
-        buffer = buffer.slice(newline + 1);
-        if (line.length > 0) this.logger.debug(`server stderr: ${line}`);
-        newline = buffer.indexOf('\n');
-      }
-      if (buffer.length > 64 * 1024) {
-        // سروری که بدون newline حرف می‌زند نباید حافظه را ببلعد.
-        this.logger.debug(`server stderr: ${buffer}`);
-        buffer = '';
-      }
-    });
-    child.stderr.on('error', error => {
-      this.logger.debug('server stderr stream error', { error: String(error) });
-    });
   }
 
   /**
@@ -881,3 +695,5 @@ function describe(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
 }
+
+export * from './LspClientTypes';

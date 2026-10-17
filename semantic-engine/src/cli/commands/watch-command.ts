@@ -20,8 +20,9 @@ import { ProjectIndex } from '../../core/types/project-index.types';
 import { GitInfoCollector } from '../../core/git';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
+import { loadGlobalConfig, scannerOverridesFrom } from '../../core/config/GlobalConfig';
 import { normalizeWorkspaceRoot } from '../../core/config/ProjectPaths';
-import { waitForShutdown } from './serve-command';
+import { waitForShutdown } from './serviceSupervisor';
 
 export const PID_FILE_NAME = 'watch.pid';
 
@@ -124,6 +125,9 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
   });
 
   const wantsGit = boolOption(args.options, 'git', true);
+  const scanOverrides = scannerOverridesFrom(
+    loadGlobalConfig(projectPathsFromArgs(args, root).dataRoot).config
+  );
   const pretty = boolOption(args.options, 'pretty', true);
 
   const indexPath = path.join(outputDir, INDEX_FILE_NAME);
@@ -162,6 +166,7 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
         symbolExtractors: extractors.symbols,
         dependencyExtractors: extractors.dependencies,
         logger: context.logger,
+        ...(Object.keys(scanOverrides).length > 0 ? { scannerConfig: scanOverrides } : {}),
         gitCollector: wantsGit ? new GitInfoCollector(root) : null,
         vectorIndexer,
         ...(existingIndex?.vectorChunks
