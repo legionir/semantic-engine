@@ -32,9 +32,17 @@ describe('PUT /api/v1/settings validation', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects an api-key variable outside the provider allowlist (secret exfiltration)', async () => {
+    const res = await put({
+      chat: { baseUrl: 'https://example.com/v1', apiKeyEnvVar: 'AWS_SECRET_ACCESS_KEY' },
+    });
+    expect(res.status).toBe(400);
+    expect(loadGlobalConfig(dataRoot).config.chat.apiKeyEnvVar).not.toBe('AWS_SECRET_ACCESS_KEY');
+  });
+
   it('accepts a loopback endpoint (local Ollama) and a valid variable name', async () => {
     const res = await put({
-      embedding: { baseUrl: 'http://127.0.0.1:11434', apiKeyEnvVar: 'MY_KEY' },
+      embedding: { baseUrl: 'http://127.0.0.1:11434', apiKeyEnvVar: 'OPENAI_API_KEY' },
     });
     expect(res.status).toBe(200);
     expect(loadGlobalConfig(dataRoot).config.embedding.baseUrl).toBe('http://127.0.0.1:11434');

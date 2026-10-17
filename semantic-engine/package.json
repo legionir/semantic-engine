@@ -54,7 +54,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "chokidar": "^3.6.0",
+    "chokidar": "^4.0.3",
     "minimatch": "^9.0.0",
     "typescript": "~5.9.3",
     "vscode-jsonrpc": "^8.2.1",
@@ -141,5 +141,9 @@
       "types": "./dist/core/types/project-index.types.d.ts",
       "default": "./dist/core/types/project-index.types.js"
     }
+  },
+  "overrides": {
+    "sharp": "^0.35.5",
+    "protobufjs": "^7.6.6"
   }
 }

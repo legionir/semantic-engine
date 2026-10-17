@@ -14,6 +14,7 @@ import {
   modelsDirFor,
   saveGlobalConfig,
 } from '../../core/config/GlobalConfig';
+import { apiKeyEnvVarProblem } from '../../core/security/apiKeyEnvPolicy';
 import { assertResolvedFetchableUrl } from '../../services/providers/EmbeddingProviderService';
 
 /** Endpoints the server will later call; same SSRF rules as the jobs route. */
@@ -26,7 +27,6 @@ const ENV_NAME_FIELDS: ReadonlyArray<readonly [string, string]> = [
   ['embedding', 'apiKeyEnvVar'],
   ['chat', 'apiKeyEnvVar'],
 ];
-const ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 function section(body: unknown, name: string): Record<string, unknown> | null {
   const value = (body as Record<string, unknown> | null | undefined)?.[name];
@@ -45,8 +45,9 @@ async function validatePatch(body: unknown): Promise<string | null> {
   }
   for (const [sec, key] of ENV_NAME_FIELDS) {
     const value = section(body, sec)?.[key];
-    if (typeof value === 'string' && value !== '' && !ENV_NAME.test(value)) {
-      return `${sec}.${key} must be an environment variable name`;
+    if (typeof value === 'string' && value !== '') {
+      const problem = apiKeyEnvVarProblem(value);
+      if (problem) return `${sec}.${key}: ${problem}`;
     }
   }
   return null;

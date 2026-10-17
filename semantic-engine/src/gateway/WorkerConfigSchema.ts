@@ -22,6 +22,7 @@ import {
   WORKER_TRANSPORTS,
   WorkerConfigInput,
 } from './types';
+import { apiKeyEnvVarProblem } from '../core/security/apiKeyEnvPolicy';
 import { assertProjectRoot, isPathSafeProjectId } from '../core/config/ProjectIdentity';
 
 export const DEBOUNCE_MS_MIN = 25;
@@ -268,8 +269,10 @@ export function validateWorkerConfig(
     }
   }
 
-  if (embedding.apiKeyEnvVar !== undefined && !ENV_VAR_NAME.test(embedding.apiKeyEnvVar)) {
-    errors.push('embedding.apiKeyEnvVar must be an environment variable name');
+  const keyVarProblem =
+    embedding.apiKeyEnvVar !== undefined ? apiKeyEnvVarProblem(embedding.apiKeyEnvVar) : null;
+  if (keyVarProblem) {
+    errors.push(`embedding.apiKeyEnvVar ${keyVarProblem}`);
   }
 
   if (errors.length > 0) {

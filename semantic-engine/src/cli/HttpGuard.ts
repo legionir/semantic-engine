@@ -222,6 +222,10 @@ function header(request: IncomingMessage, name: string): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+/** How much of a rejected request body is read and thrown away before giving up. */
+const DRAIN_LIMIT_BYTES = 32 * 1024 * 1024;
+const DRAIN_TIMEOUT_MS = 5000;
+
 function deny(
   response: ServerResponse,
   status: number,
@@ -232,27 +236,41 @@ function deny(
   if (response.headersSent) return;
 
   const headers: Record<string, string> = { 'content-type': 'text/plain' };
-  if (closeConnection) headers['connection'] = 'close';
+  /*
+  | `Connection: close` makes Node destroy the socket as soon as the response is
+  | flushed. A client that is still writing its (rejected) body then gets EPIPE
+  | or ECONNRESET and may never surface the status. When the request is known we
+  | instead keep the connection, read-and-discard the remainder within a byte and
+  | time budget, and only then drop it.
+  */
+  const drain = closeConnection && request !== undefined;
+  if (closeConnection && !drain) headers['connection'] = 'close';
+
+  /* Node detaches `response.socket` on 'finish', so it has to be captured first. */
+  const socket = response.socket ?? request?.socket;
 
   response.writeHead(status, headers);
   response.end(message, () => {
-    /*
-    | بدنه‌ای که نخواندیم هنوز در راه است. destroy فوری سوکتی که داده‌ی
-    | خوانده‌نشده دارد RST می‌فرستد و کلاینت ممکن است خودِ ۴۱۳ را هرگز
-    | نبیند (ECONNRESET زیر بار). پس ابتدا half-close، و destroy فقط
-    | به‌عنوان سقف زمانی تا کلاینت پاسخ را بخواند.
-    */
-    if (closeConnection) {
-      const socket = response.socket;
-      if (!socket) return;
-      /* Drain (discard) what the client is still sending so the kernel has no
-         unread data to answer with RST; the timer bounds how long that may take. */
-      request?.resume();
-      const timer = setTimeout(() => socket.destroy(), 2000);
-      timer.unref();
-      socket.once('close', () => clearTimeout(timer));
-      request?.once('end', () => socket.end());
-      if (!request) socket.end();
+    if (!closeConnection || !socket) return;
+
+    if (!drain || !request) {
+      socket.end();
+      setTimeout(() => socket.destroy(), 2000).unref();
+      return;
     }
+
+    let drained = 0;
+    const abandon = (): void => {
+      socket.destroy();
+    };
+    const timer = setTimeout(abandon, DRAIN_TIMEOUT_MS);
+    timer.unref();
+    request.on('data', (chunk: Buffer) => {
+      drained += chunk.length;
+      if (drained > DRAIN_LIMIT_BYTES) abandon();
+    });
+    request.once('end', () => clearTimeout(timer));
+    socket.once('close', () => clearTimeout(timer));
+    request.resume();
   });
 }
