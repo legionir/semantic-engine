@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "corpus": "src",
+  "files": 594,
+  "symbols": 17065,
+  "node": "v22.22.0",
+  "cpus": 4,
+  "runs": 3,
+  "metrics": {
+    "indexColdMs": {
+      "median": 21692.9,
+      "min": 19839.3,
+      "max": 22393
+    },
+    "indexWarmMs": {
+      "median": 22477.4,
+      "min": 22449.2,
+      "max": 23455.2
+    },
+    "indexPeakRssMb": {
+      "median": 649
+    },
+    "indexFileMb": {
+      "median": 47.11
+    },
+    "readerLoadMs": {
+      "median": 63.6
+    },
+    "discoverP50Ms": {
+      "median": 38.6
+    },
+    "discoverP95Ms": {
+      "median": 133.5
+    }
+  }
+}

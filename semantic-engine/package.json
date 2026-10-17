@@ -47,7 +47,9 @@
     "snapshot": "node scripts/snapshot.js",
     "snapshot:update": "node scripts/snapshot.js --update",
     "check:audit": "node scripts/check-audit-coverage.js",
-    "benchmark": "npm run build && npm run fixture && node scripts/benchmark.js"
+    "benchmark": "npm run build && npm run fixture && node scripts/benchmark.js",
+    "bench": "npm run build && node scripts/bench.js",
+    "bench:check": "node scripts/bench.js --check"
   },
   "dependencies": {
     "@ast-grep/napi": "0.45.3",
