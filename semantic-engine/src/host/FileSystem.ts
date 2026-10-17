@@ -31,6 +31,8 @@ export interface WritableLike {
 
 export interface FileSystemPort {
   readFile(filePath: string): Promise<string>;
+  /** Raw bytes; lets callers hash or measure a file without a decode/encode round trip. */
+  readBuffer?(filePath: string): Promise<Buffer>;
   readJson<T = unknown>(filePath: string): Promise<T>;
   exists(filePath: string): Promise<boolean>;
   mkdirp(dirPath: string): Promise<void>;
@@ -285,6 +287,10 @@ export class NodeFileSystem implements FileSystemPort {
 
   async readFile(filePath: string): Promise<string> {
     return this.fs.readFile(filePath, 'utf8');
+  }
+
+  async readBuffer(filePath: string): Promise<Buffer> {
+    return this.fs.readFile(filePath);
   }
 
   async readJson<T = unknown>(filePath: string): Promise<T> {

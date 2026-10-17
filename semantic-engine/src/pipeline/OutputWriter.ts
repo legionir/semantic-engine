@@ -193,11 +193,12 @@ export class OutputWriter {
   }
 
   private async artifactDigest(filePath: string): Promise<{ path: string; sha256: string; bytes: number }> {
-    const content = await this.fs.readFile(filePath);
+    /* Raw bytes when the port offers them: no 47 MB decode followed by a re-encode just to hash it. */
+    const content = this.fs.readBuffer ? await this.fs.readBuffer(filePath) : await this.fs.readFile(filePath);
     return {
       path: path.basename(filePath),
-      sha256: crypto.createHash('sha256').update(content, 'utf8').digest('hex'),
-      bytes: Buffer.byteLength(content, 'utf8'),
+      sha256: crypto.createHash('sha256').update(content).digest('hex'),
+      bytes: typeof content === 'string' ? Buffer.byteLength(content, 'utf8') : content.length,
     };
   }
 }
