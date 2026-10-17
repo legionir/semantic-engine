@@ -23,17 +23,16 @@ import * as http from 'http';
 import * as path from 'path';
 import { DurationSummary } from './metrics';
 import { GatewayAuth } from './GatewayAuth';
-import { proxyRequest } from './GatewayProxy';
 import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { CapacityError, LockHeldError, WorkerSupervisor, WorkerSummary } from './WorkerSupervisor';
-import type { WorkerHealthSnapshot } from './WorkerProcess';
+import { handleProjectHealth, proxyToProject, ProxyDeps } from './GatewayProxyRoutes';
+import { handleGatewayProjectRoute, handleRegisterProject, ProjectRouteDeps } from './GatewayProjectRoute';
 import { handleGatewayUpgrade } from './GatewayUpgrade';
 import { serveGatewayUi } from './GatewayUi';
 import { WorkerConfigStore } from './WorkerConfigStore';
 import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
 import { generateToken } from '../cli/HttpGuard';
-import { isPathSafeProjectId } from '../core/config/ProjectIdentity';
 
 export const DEFAULT_GATEWAY_PORT = 4000;
 
@@ -282,7 +281,7 @@ export class GatewayServer {
         this.send(res, 403, { error: 'token lacks permission semantic:query' });
         return;
       }
-      await this.proxyToProject(req, res, mcp[1]!, record, { targetPath: '/mcp' });
+      await proxyToProject(this.proxyDeps(), req, res, mcp[1]!, record, { targetPath: '/mcp' });
       return;
     }
 
@@ -299,7 +298,7 @@ export class GatewayServer {
         return;
       }
       if (method === 'POST') {
-        await this.registerProject(req, res);
+        await handleRegisterProject(this.projectRouteDeps(), req, res);
         return;
       }
       this.send(res, 405, { error: `method ${method} not allowed` });
@@ -308,7 +307,7 @@ export class GatewayServer {
 
     const healthRoute = /^\/api\/v1\/gateway\/projects\/([^/]+)\/health$/.exec(pathname);
     if (healthRoute && method === 'GET') {
-      await this.projectHealth(res, healthRoute[1]!, record);
+      await handleProjectHealth(this.proxyDeps(), res, healthRoute[1]!, record);
       return;
     }
 
@@ -316,7 +315,7 @@ export class GatewayServer {
       pathname
     );
     if (gatewayProject) {
-      await this.gatewayProjectRoute(req, res, gatewayProject[1]!, gatewayProject[2], record);
+      await handleGatewayProjectRoute(this.projectRouteDeps(), req, res, gatewayProject[1]!, gatewayProject[2], record);
       return;
     }
 
@@ -328,7 +327,7 @@ export class GatewayServer {
     */
     const proxied = /^\/api\/v1\/projects\/([^/]+)(\/.*)?$/.exec(pathname);
     if (proxied) {
-      await this.proxyToProject(req, res, proxied[1]!, record);
+      await proxyToProject(this.proxyDeps(), req, res, proxied[1]!, record);
       return;
     }
 
@@ -457,85 +456,6 @@ export class GatewayServer {
     };
   }
 
-  private async registerProject(
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-  ): Promise<void> {
-    let body: Record<string, unknown>;
-    try {
-      body = await this.readBody(req);
-    } catch (error) {
-      this.send(res, 400, { error: error instanceof Error ? error.message : String(error) });
-      return;
-    }
-
-    const rootPath = String(body['path'] ?? body['rootPath'] ?? '');
-    if (rootPath.trim() === '') {
-      this.send(res, 400, { error: 'path is required' });
-      return;
-    }
-
-    const name = String(body['name'] ?? path.basename(rootPath));
-    const requestedId = body['id'] !== undefined ? String(body['id']) : undefined;
-
-    /* SE-F-057 — did this root already exist? If not, and the config in the
-    | same payload turns out invalid, the half-created registration is rolled
-    | back: a rejected create must not leave a project behind. */
-    const preexisting = this.registry.getByRoot(rootPath);
-
-    let registered: ReturnType<ProjectRegistry['register']>;
-    try {
-      registered = this.registry.register({
-        rootPath,
-        name,
-        ...(requestedId && isPathSafeProjectId(requestedId) ? { id: requestedId } : {}),
-      });
-    } catch (error) {
-      this.send(res, 400, { error: error instanceof Error ? error.message : String(error) });
-      return;
-    }
-
-    if (typeof body['autoStart'] === 'boolean' && registered.autoStart !== body['autoStart']) {
-      registered = this.registry.update(registered.id, { autoStart: body['autoStart'] });
-    }
-
-    /*
-    | SE-F-057 — if the payload carried real worker-config keys, validate
-    | them BEFORE any write and store only on success. A body with only
-    | registration keys (a legacy POST) stores nothing and the project keeps
-    | its default config — backwards compatible.
-    */
-    const incoming = this.configs.validateIncomingWorkerConfig(registered, body);
-    if (incoming.changed) {
-      if ('error' in incoming) {
-        /* rollback: an invalid-config create leaves nothing behind */
-        if (!preexisting) this.registry.remove(registered.id);
-        this.send(res, 400, {
-          error: incoming.error,
-          ...(preexisting ? { project: this.projectEntry(registered.id) } : {}),
-        });
-        return;
-      }
-      this.configs.storeWorkerConfig(incoming.config);
-    }
-
-    const autoStart = body['autoStart'] === true;
-    if (autoStart) {
-      try {
-        await this.startWorkerFor(registered.id, registered.rootPath, registered.name);
-      } catch (error) {
-        this.send(res, this.errorStatus(error), {
-          error: error instanceof Error ? error.message : String(error),
-          project: this.projectEntry(registered.id),
-        });
-        return;
-      }
-    }
-
-    this.broadcast({ type: 'project-registered', projectId: registered.id });
-    this.send(res, 201, this.projectEntryWithConfig(registered.id));
-  }
-
   /** ساخت config معتبر یک پروژه؛ عمومی است چون `gateway` CLI هم لازم دارد. */
   configForProject(projectId: string, rootPath: string, name: string): ProjectWorkerConfig {
     return this.configs.configFor(projectId, rootPath, name);
@@ -567,284 +487,45 @@ export class GatewayServer {
     return this.supervisor.start(this.configs.configFor(projectId, rootPath, name));
   }
 
+  private proxyDeps(): ProxyDeps {
+    return {
+      registry: this.registry,
+      supervisor: this.supervisor,
+      auth: this.auth,
+      send: (res, status, body) => this.send(res, status, body),
+      projectEntry: id => this.projectEntry(id),
+      requestStarted: () => {
+        this.activeRequests += 1;
+      },
+      requestFinished: () => {
+        this.activeRequests -= 1;
+      },
+      proxyErrored: () => {
+        this.proxyErrorsTotal += 1;
+      },
+    };
+  }
+
+  private projectRouteDeps(): ProjectRouteDeps {
+    return {
+      registry: this.registry,
+      supervisor: this.supervisor,
+      auth: this.auth,
+      configs: this.configs,
+      send: (res, status, body) => this.send(res, status, body),
+      broadcast: event => this.broadcast(event),
+      readBody: req => this.readBody(req),
+      projectEntry: id => this.projectEntry(id),
+      projectEntryWithConfig: id => this.projectEntryWithConfig(id),
+      startWorkerFor: (projectId, rootPath, name) => this.startWorkerFor(projectId, rootPath, name),
+      errorStatus: error => this.errorStatus(error),
+    };
+  }
+
   private errorStatus(error: unknown): number {
     if (error instanceof CapacityError) return 503;
     if (error instanceof LockHeldError) return 409;
     return 500;
   }
 
-  private async gatewayProjectRoute(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    projectId: string,
-    action: string | undefined,
-    record: NonNullable<ReturnType<GatewayAuth['verify']>['record']>
-  ): Promise<void> {
-    const registered = this.registry.get(projectId);
-    if (!registered) {
-      this.send(res, 404, { error: `unknown project: ${projectId}` });
-      return;
-    }
-    if (!this.auth.canAccessProject(record, projectId)) {
-      this.send(res, 403, { error: `token cannot access project ${projectId}` });
-      return;
-    }
-
-    const method = req.method ?? 'GET';
-
-    if (!action) {
-      if (method === 'GET') {
-        /* SE-F-058 — یک تازه‌سازی هدفمند: همان درخواستی که حلقهٔ health
-           هر ۱۰ ثانیه می‌زند؛ این‌جا در لحظهٔ پرسش تکرار می‌شود تا
-           آمارِ پاسخ، آخرین اندازه‌گیری باشد نه قدیمی‌ترین.
-           SE-F-057 — the detail answer also carries the effective worker
-           config so the dashboard form hydrates EVERY field, not just the
-           three the old save path could send. */
-        await this.supervisor.refreshStats(projectId);
-        this.send(res, 200, this.projectEntryWithConfig(projectId));
-        return;
-      }
-      if (method === 'DELETE') {
-        await this.supervisor.stop(projectId);
-        this.registry.remove(projectId);
-        this.broadcast({ type: 'project-removed', projectId });
-        this.send(res, 200, { ok: true, removed: projectId });
-        return;
-      }
-      if (method === 'PATCH') {
-        let body: Record<string, unknown>;
-        try {
-          body = await this.readBody(req);
-        } catch (error) {
-          this.send(res, 400, { error: error instanceof Error ? error.message : String(error) });
-          return;
-        }
-        const patch: { name?: string; enabled?: boolean; autoStart?: boolean } = {};
-        /*
-        | SE-F-057 — identity is registry-owned: a PATCH body that tries to
-        | move the project (`path`/`rootPath`/`id`) is refused with a real
-        | error rather than silently ignored — a 200 that quietly dropped an
-        | attempted root change is exactly the misleading success §2 forbids.
-        */
-        for (const forbidden of ['path', 'rootPath', 'id'] as const) {
-          if (body[forbidden] !== undefined) {
-            this.send(res, 400, {
-              error:
-                `project identity (${forbidden}) is not patchable; it comes from the registry — ` +
-                'remove the key (or relocate via the registry API) and resend',
-            });
-            return;
-          }
-        }
-        if (body['name'] !== undefined) {
-          if (typeof body['name'] !== 'string' || body['name'].trim() === '') {
-            this.send(res, 400, { error: 'name must be a non-empty string' });
-            return;
-          }
-          patch.name = body['name'];
-        }
-        for (const key of ['enabled', 'autoStart'] as const) {
-          if (body[key] !== undefined) {
-            if (typeof body[key] !== 'boolean') {
-              this.send(res, 400, { error: `${key} must be a boolean` });
-              return;
-            }
-            patch[key] = body[key] as boolean;
-          }
-        }
-
-        /*
-        | SE-F-057 — the dashboard edits the WHOLE worker config, so PATCH
-        | accepts the same config keys as POST. Everything is validated
-        | BEFORE anything is written: a rejected edit leaves both the
-        | registry record and the stored config exactly as they were
-        | (all-or-nothing).
-        */
-        const prospective = {
-          id: registered.id,
-          name: patch.name ?? registered.name,
-          rootPath: registered.rootPath,
-          autoStart: patch.autoStart ?? registered.autoStart,
-        };
-        const incoming = this.configs.validateIncomingWorkerConfig(prospective, body);
-        if (incoming.changed && 'error' in incoming) {
-          this.send(res, 400, {
-            error: incoming.error,
-            project: this.projectEntryWithConfig(projectId),
-          });
-          return;
-        }
-
-        const updatedRecord = this.registry.update(projectId, patch);
-        if (incoming.changed) {
-          this.configs.storeWorkerConfig(incoming.config);
-        }
-
-        // Decision D-2: disabling a project must not leave its worker running.
-        if (patch.enabled === false) {
-          await this.supervisor.stop(projectId);
-        } else if (incoming.changed && this.supervisor.isRunning(projectId)) {
-          /*
-          | The edit is not real until the worker runs the new config:
-          | a live worker keeps its old argv, so restart it with the freshly
-          | stored configuration. (Restart failure is reported truthfully —
-          | the config IS stored and applies on the next start.)
-          */
-          try {
-            await this.supervisor.stop(projectId);
-            await this.startWorkerFor(projectId, updatedRecord.rootPath, updatedRecord.name);
-          } catch (error) {
-            this.broadcast({
-              type: 'project-update-restart-failed',
-              projectId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            this.send(res, 500, {
-              error: `configuration stored but the worker could not be restarted: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-              project: this.projectEntryWithConfig(projectId),
-            });
-            return;
-          }
-        }
-
-        this.broadcast({ type: 'project-updated', projectId: updatedRecord.id });
-        this.send(res, 200, this.projectEntryWithConfig(updatedRecord.id));
-        return;
-      }
-      this.send(res, 405, { error: `method ${method} not allowed` });
-      return;
-    }
-
-    try {
-      switch (action) {
-        case 'start': {
-          await this.startWorkerFor(projectId, registered.rootPath, registered.name);
-          this.send(res, 200, this.projectEntry(projectId));
-          return;
-        }
-        case 'stop': {
-          const stopped = await this.supervisor.stop(projectId);
-          this.send(res, 200, { ok: stopped, ...this.projectEntry(projectId) });
-          return;
-        }
-        case 'restart': {
-          await this.supervisor.restart(projectId);
-          this.send(res, 200, this.projectEntry(projectId));
-          return;
-        }
-        case 'reindex': {
-          const result = await this.supervisor.reindex(projectId);
-          this.send(res, result.status, result.json);
-          return;
-        }
-        default:
-          this.send(res, 404, { error: `unknown action: ${action}` });
-      }
-    } catch (error) {
-      this.send(res, this.errorStatus(error), {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  /**
-   * health detail یک پروژه (فاز ۱۳): وضعیت خود worker از `/internal/health`
-   * به‌علاوهٔ آنچه فقط Gateway می‌داند — تعداد restart، آخرین خطا و اینکه
-   * degraded شده یا نه. خرابی یک پروژه اینجا هم فقط همان پروژه را قرمز
-   * می‌کند، نه بقیه را.
-   */
-  private async projectHealth(
-    res: http.ServerResponse,
-    projectId: string,
-    record: NonNullable<ReturnType<GatewayAuth['verify']>['record']>
-  ): Promise<void> {
-    if (!this.registry.get(projectId)) {
-      this.send(res, 404, { error: `unknown project: ${projectId}` });
-      return;
-    }
-    if (!this.auth.canAccessProject(record, projectId)) {
-      this.send(res, 403, { error: `token cannot access project ${projectId}` });
-      return;
-    }
-
-    const diagnostics = this.supervisor.diagnostics(projectId);
-    const worker = this.supervisor.get(projectId);
-
-    let workerHealth: Record<string, unknown> | null = null;
-    if (worker && worker.exitCode === null) {
-      try {
-        const reply = await worker.request('GET', '/internal/health');
-        workerHealth = reply.json;
-      } catch {
-        workerHealth = null;
-      }
-    }
-
-    /*
-    | SE-F-058: the snapshot fetched just below IS the freshest possible
-    | source for the stats block — record it before building the entry so
-    | this route makes exactly one health request and its `stats` mirror
-    | the `health` payload instead of fabricated zeros.
-    */
-    this.supervisor.recordStats(
-      projectId,
-      (workerHealth ?? undefined) as WorkerHealthSnapshot | undefined
-    );
-    const summary = this.projectEntry(projectId);
-
-    this.send(res, 200, {
-      projectId,
-      ...summary,
-      health: workerHealth,
-      ...diagnostics,
-    });
-  }
-
-  private async proxyToProject(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    projectId: string,
-    record: NonNullable<ReturnType<GatewayAuth['verify']>['record']>,
-    options: { targetPath?: string } = {}
-  ): Promise<void> {
-    if (!this.registry.get(projectId)) {
-      this.send(res, 404, { error: `unknown project: ${projectId}` });
-      return;
-    }
-    if (!this.auth.canAccessProject(record, projectId)) {
-      this.send(res, 403, { error: `token cannot access project ${projectId}` });
-      return;
-    }
-
-    const worker = this.supervisor.get(projectId);
-    if (!worker || worker.pid === null || worker.exitCode !== null) {
-      this.send(res, 502, { error: `worker ${projectId} is not running` });
-      return;
-    }
-
-    /*
-    | توکن داخلی worker از خودِ supervisor پرسیده می‌شود؛ هرگز از کلاینت
-    | گرفته نمی‌شود و هرگز در لاگ نمی‌آید.
-    */
-    const target = {
-      worker: worker.target,
-      token: this.supervisor.workerToken(projectId) ?? '',
-    };
-
-    this.activeRequests += 1;
-    try {
-      await proxyRequest(target, req, res, {
-        projectId,
-        ...(options.targetPath !== undefined ? { targetPath: options.targetPath } : {}),
-        onUpstream: () => undefined,
-        onError: () => {
-          this.proxyErrorsTotal += 1;
-        },
-      });
-    } finally {
-      this.activeRequests -= 1;
-    }
-  }
 }
