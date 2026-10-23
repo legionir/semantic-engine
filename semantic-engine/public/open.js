@@ -184,7 +184,10 @@ async function loadLocalModels() {
     }
     // یک مدل انتخاب‌شدهٔ ناآماده نباید بماند.
     const chosen = state.localModels.find(m => m.id === state.localModel);
-    if (!chosen || chosen.status !== "ready") state.localModel = "hashing-256";
+    // A saved choice that is still downloading must survive (Save-as-defaults would overwrite it).
+    if (state.localModels.length && (!chosen || (chosen.status !== "ready" && chosen.status !== "downloading"))) {
+      state.localModel = "hashing-256";
+    }
     renderLocalModels();
     const busy = state.localModels.some(m => m.status === "downloading");
     clearTimeout(state.modelsTimer);
@@ -192,6 +195,9 @@ async function loadLocalModels() {
   } catch (e) {
     $("localModelList").innerHTML = "";
     log("bad", "Could not load local models: " + e.message);
+    // A transient error must not stop download progress for good.
+    clearTimeout(state.modelsTimer);
+    if (state.localModels.some(m => m.status === "downloading")) state.modelsTimer = setTimeout(loadLocalModels, 3000);
   }
 }
 

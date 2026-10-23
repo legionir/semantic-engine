@@ -26,7 +26,13 @@ import { parseArgs } from '../../cli/args';
 import { createLoggerFromEnv } from '../../host/Logger';
 import { runIndex } from '../../cli/commands/index-command';
 
-const CONSUMER_ROOT = path.join(__dirname, '..', '..', '..', '..', 'structured-ai');
+/*
+| The consumer package lives in a different repository. `STRUCTURED_AI_ROOT` points at
+| its `structured-ai` folder (CI checks the repository out beside this one); without it
+| the old monorepo layout is tried, and the suite skips when nothing is found.
+*/
+const CONSUMER_ROOT =
+  process.env['STRUCTURED_AI_ROOT'] || path.join(__dirname, '..', '..', '..', '..', 'structured-ai');
 const codecPath = path.join(CONSUMER_ROOT, 'agent', 'mcp', 'protocol', 'JsonRpcCodec.js');
 const clientPath = path.join(CONSUMER_ROOT, 'agent', 'mcp', 'SemanticClient.js');
 const codecAvailable = fs.existsSync(codecPath);

@@ -14,6 +14,8 @@ import * as path from 'path';
 import { CallEdge, SymbolEntry, FileEntry } from '../core/types/project-index.types';
 import { SymbolIndex } from './SymbolIndex';
 import { ImportIndex, ImportBinding } from './ImportIndex';
+import { extractPropertyChain, expressionToString, isAwaited, isConditional } from './callGraphAst';
+import { ExportIndex, normalizePath } from './ExportIndex';
 import { makeEdgeId, provenanceFor, EdgeBasis } from './EdgeProvenance';
 
 export interface CallGraphBuilderOptions {
@@ -22,12 +24,6 @@ export interface CallGraphBuilderOptions {
   readonly symbols: readonly SymbolEntry[];
 }
 
-interface PropertyChain {
-  readonly root: string;
-  readonly properties: readonly string[];
-  readonly rootExpression: ts.Expression;
-  readonly fullName: string;
-}
 
 interface CalleeResolution {
   readonly symbolId?: string;
@@ -341,9 +337,9 @@ export class CallGraphBuilder {
   }
 
   private resolvePropertyAccessCallee(file: FileEntry, expr: ts.PropertyAccessExpression): CalleeResolution {
-    const chain = this.extractPropertyChain(expr);
+    const chain = extractPropertyChain(expr);
     if (!chain) {
-      return { externalName: this.expressionToString(expr) };
+      return { externalName: expressionToString(expr) };
     }
 
     const methodName = chain.properties[chain.properties.length - 1]!;
@@ -589,44 +585,6 @@ export class CallGraphBuilder {
     return found;
   }
 
-  private extractPropertyChain(expr: ts.PropertyAccessExpression): PropertyChain | null {
-    const properties: string[] = [];
-    let current: ts.Expression = expr;
-
-    while (ts.isPropertyAccessExpression(current)) {
-      properties.unshift(current.name.text);
-      current = current.expression;
-    }
-
-    let root = '';
-    if (ts.isIdentifier(current)) {
-      root = current.text;
-    } else if (current.kind === ts.SyntaxKind.ThisKeyword) {
-      root = 'this';
-    }
-
-    return {
-      root,
-      properties,
-      rootExpression: current,
-      fullName: this.expressionToString(expr),
-    };
-  }
-
-  private expressionToString(expr: ts.Expression): string {
-    if (ts.isIdentifier(expr)) return expr.text;
-    if (ts.isPropertyAccessExpression(expr)) {
-      return `${this.expressionToString(expr.expression)}.${expr.name.text}`;
-    }
-    if (ts.isCallExpression(expr)) {
-      return `${this.expressionToString(expr.expression)}()`;
-    }
-    if (ts.isNewExpression(expr)) {
-      return `new ${this.expressionToString(expr.expression)}()`;
-    }
-    return '';
-  }
-
   private inferEdgeKind(
     node: ts.CallExpression,
     calleeSymbolId: string | undefined,
@@ -634,72 +592,9 @@ export class CallGraphBuilder {
   ): CallEdge['kind'] {
     if (isRecursive) return 'recursive';
     if (calleeSymbolId === undefined) return 'external';
-    if (this.isAwaited(node)) return 'async';
-    if (this.isConditional(node)) return 'conditional';
+    if (isAwaited(node)) return 'async';
+    if (isConditional(node)) return 'conditional';
     return 'direct';
-  }
-
-  private isAwaited(node: ts.CallExpression): boolean {
-    let current: ts.Node = node;
-    while (current.parent) {
-      if (current.parent.kind === ts.SyntaxKind.AwaitExpression) return true;
-      if (!ts.isParenthesizedExpression(current.parent)) break;
-      current = current.parent;
-    }
-    return false;
-  }
-
-  /**
-   * آیا این فراخوانی شرطی است؟
-   *
-   * SE-GRAPH-06 — نسخهٔ قبلی تا ریشهٔ فایل بالا می‌رفت و در مرز تابع
-   * نمی‌ایستاد. یعنی هر فراخوانی داخل تابعی که *خودش* داخل یک `if`
-   * تعریف شده بود، «شرطی» علامت می‌خورد — حتی اگر در بدنهٔ آن تابع
-   * بی‌قید و شرط اجرا شود. شرطی بودن، خاصیتِ مسیر اجرا *درون همان
-   * تابع* است، نه جای تعریف تابع.
-   */
-  private isConditional(node: ts.CallExpression): boolean {
-    let current: ts.Node = node;
-    while (current.parent) {
-      const parent = current.parent;
-
-      // مرز تابع: فراتر از این، جای *تعریف* است نه مسیر اجرا
-      if (
-        ts.isFunctionDeclaration(parent) ||
-        ts.isFunctionExpression(parent) ||
-        ts.isArrowFunction(parent) ||
-        ts.isMethodDeclaration(parent) ||
-        ts.isConstructorDeclaration(parent) ||
-        ts.isGetAccessor(parent) ||
-        ts.isSetAccessor(parent)
-      ) {
-        return false;
-      }
-
-      switch (parent.kind) {
-        case ts.SyntaxKind.IfStatement:
-        case ts.SyntaxKind.WhileStatement:
-        case ts.SyntaxKind.DoStatement:
-        case ts.SyntaxKind.ForStatement:
-        case ts.SyntaxKind.ForInStatement:
-        case ts.SyntaxKind.ForOfStatement:
-        case ts.SyntaxKind.ConditionalExpression:
-        case ts.SyntaxKind.SwitchStatement:
-        case ts.SyntaxKind.CaseClause:
-        case ts.SyntaxKind.CatchClause:
-          return true;
-        case ts.SyntaxKind.BinaryExpression:
-          if (ts.isBinaryExpression(parent)) {
-            const op = parent.operatorToken.kind;
-            if (op === ts.SyntaxKind.AmpersandAmpersandToken || op === ts.SyntaxKind.BarBarToken) {
-              return true;
-            }
-          }
-          break;
-      }
-      current = parent;
-    }
-    return false;
   }
 
   private findCallerSymbolByFileLine(file: FileEntry, node: ts.Node): SymbolEntry | undefined {
@@ -747,56 +642,5 @@ export class CallGraphBuilder {
 
   private readFile(filePath: string): string {
     return require('fs').readFileSync(filePath, 'utf8');
-  }
-}
-
-function normalizePath(filePath: string): string {
-  return filePath.replace(/\\/g, '/');
-}
-
-/**
- * Index سریع برای export های هر فایل → symbol id.
- * برای رزولوشن cross-file call مورد نیاز است.
- */
-class ExportIndex {
-  private readonly byFile = new Map<string, Map<string, string>>();
-  private readonly defaultByFile = new Map<string, string>();
-
-  constructor(files: readonly FileEntry[], private readonly symbolIndex: SymbolIndex) {
-    for (const file of files) {
-      if (!file.exports || file.exports.length === 0) continue;
-
-      const map = new Map<string, string>();
-      for (const exp of file.exports) {
-        if (exp.kind === 're-export' || exp.kind === 'namespace') {
-          // re-export از فایل دیگری است؛ اینجا فقط local exports را نگه می‌داریم
-          continue;
-        }
-
-        // SE-DATA-02 — هر entry یک نام دارد؛ توضیح در ReExportResolver.
-        const name = exp.name.trim();
-        if (name) {
-          const sym = this.symbolIndex.findByNameAndFile(file.id, name);
-          if (sym) {
-            map.set(name, sym.id);
-            if (exp.kind === 'default') {
-              this.defaultByFile.set(file.id, sym.id);
-            }
-          }
-        }
-      }
-
-      if (map.size > 0) {
-        this.byFile.set(file.id, map);
-      }
-    }
-  }
-
-  resolve(fileId: string, name: string): string | undefined {
-    return this.byFile.get(fileId)?.get(name);
-  }
-
-  resolveDefault(fileId: string): string | undefined {
-    return this.defaultByFile.get(fileId);
   }
 }

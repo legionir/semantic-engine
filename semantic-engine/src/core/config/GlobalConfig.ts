@@ -256,10 +256,10 @@ export function loadGlobalConfig(dataRoot: string): LoadedGlobalConfig {
 }
 
 /** Atomic write: a reader never sees half a file. */
-function writeConfigFile(file: string, config: GlobalConfig): void {
+function writeConfigFile(file: string, config: GlobalConfig, document: unknown = config): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const temp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temp, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
+  fs.writeFileSync(temp, `${JSON.stringify(document, null, 2)}\n`, { mode: 0o600 });
   fs.renameSync(temp, file);
 }
 
@@ -282,14 +282,100 @@ export function ensureGlobalConfig(dataRoot: string): LoadedGlobalConfig {
   }
 }
 
+/**
+ * Serialise read-modify-write across processes (UI server, CLI children).
+ * Exclusive-create lock file; a lock older than `STALE_MS` is taken over.
+ */
+const LOCK_STALE_MS = 10_000;
+const LOCK_WAIT_MS = 3_000;
+
+function withFileLock<T>(file: string, run: () => T): T {
+  const lock = `${file}.lock`;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  for (;;) {
+    try {
+      fs.closeSync(fs.openSync(lock, 'wx'));
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      try {
+        if (Date.now() - fs.statSync(lock).mtimeMs > LOCK_STALE_MS) fs.rmSync(lock, { force: true });
+      } catch {
+        /* released between the two calls */
+      }
+      if (Date.now() > deadline) {
+        fs.rmSync(lock, { force: true });
+        continue;
+      }
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+    }
+  }
+  try {
+    return run();
+  } finally {
+    fs.rmSync(lock, { force: true });
+  }
+}
+
+/** Keys this version does not know are kept verbatim so a save never deletes them. */
+function withUnknownKeys(file: string, config: GlobalConfig): Record<string, unknown> {
+  let existing: unknown;
+  try {
+    existing = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return config as unknown as Record<string, unknown>;
+  }
+  if (!isRecord(existing)) return config as unknown as Record<string, unknown>;
+
+  const out: Record<string, unknown> = { ...existing, ...(config as unknown as Record<string, unknown>) };
+  for (const [section, value] of Object.entries(config as unknown as Record<string, unknown>)) {
+    const previous = existing[section];
+    if (isRecord(value) && isRecord(previous)) out[section] = { ...previous, ...value };
+  }
+  return out;
+}
+
 /** Merge a validated patch into the stored file and return the result. */
 export function saveGlobalConfig(
   dataRoot: string,
   patch: unknown
 ): { readonly config: GlobalConfig; readonly warnings: readonly string[] } {
-  const loaded = loadGlobalConfig(dataRoot);
-  const warnings: string[] = [];
-  const config = mergeGlobalConfig(loaded.config, patch, warnings);
-  writeConfigFile(loaded.path, config);
-  return { config, warnings };
+  const file = globalConfigPath(dataRoot);
+  return withFileLock(file, () => {
+    const loaded = loadGlobalConfig(dataRoot);
+    const warnings: string[] = [];
+    const config = mergeGlobalConfig(loaded.config, patch, warnings);
+    writeConfigFile(loaded.path, config, withUnknownKeys(loaded.path, config));
+    return { config, warnings };
+  });
+}
+
+/**
+ * The `scan.*` file/ignore settings in the shape the scanner takes. Empty when
+ * nothing differs from the scanner's own defaults, so an untouched config
+ * never changes what `index` produces.
+ */
+export function scannerOverridesFrom(config: GlobalConfig): {
+  useGitignore?: boolean;
+  skipHiddenDirectories?: boolean;
+  maxDepth?: number;
+  maxFileSizeBytes?: number;
+  additionalIgnorePatterns?: readonly string[];
+} {
+  const defaults = defaultGlobalConfig().scan;
+  const scan = config.scan;
+  return {
+    ...(scan.useGitignore !== defaults.useGitignore ? { useGitignore: scan.useGitignore } : {}),
+    ...(scan.skipHiddenDirectories !== defaults.skipHiddenDirectories
+      ? { skipHiddenDirectories: scan.skipHiddenDirectories }
+      : {}),
+    ...(scan.maxDepth !== defaults.maxDepth ? { maxDepth: scan.maxDepth } : {}),
+    ...(scan.maxFileSizeMb !== defaults.maxFileSizeMb
+      ? { maxFileSizeBytes: Math.round(scan.maxFileSizeMb * 1024 * 1024) }
+      : {}),
+    ...(scan.additionalIgnorePatterns.length > 0
+      ? { additionalIgnorePatterns: scan.additionalIgnorePatterns }
+      : {}),
+  };
 }

@@ -140,7 +140,7 @@ function environmentReapsOrphans(): boolean {
   try {
     const parent = spawn(process.execPath, ['-e', script], { stdio: 'ignore' });
     parent.unref();
-    const deadline = Date.now() + 5_000;
+    const deadline = Date.now() + 15_000;
     let pid = 0;
     while (Date.now() < deadline) {
       try {
@@ -156,7 +156,11 @@ function environmentReapsOrphans(): boolean {
     }
     if (!pid) return false;
     parent.kill('SIGKILL');
-    execFileSync(process.execPath, ['-e', 'null'], { timeout: 2_000 });
+    /* Give the OS time to reap the orphan: under load a single short delay read as "not reaped". */
+    const reapDeadline = Date.now() + 3_000;
+    while (isAlive(pid) && Date.now() < reapDeadline) {
+      execFileSync(process.execPath, ['-e', 'null'], { timeout: 2_000 });
+    }
     const reaped = !isAlive(pid);
     if (!reaped) {
       try {

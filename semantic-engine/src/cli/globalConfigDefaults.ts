@@ -78,7 +78,8 @@ export function applyGlobalConfig(
 
   if (command === 'start') {
     fill('host', config.server.host);
-    fill('uiPort', String(config.server.uiPort));
+    /* The shared `--port` is the UI port for `start`; config must not shadow it. */
+    if (options['port'] === undefined) fill('uiPort', String(config.server.uiPort));
     fill('mcpPort', String(config.server.mcpPort));
     fill('watch', config.start.watch);
     fill('vectors', config.embedding.enabled);
@@ -108,6 +109,9 @@ export function applyGlobalConfig(
       */
       notices.push(`${problem}; using the built-in hashing model for now`);
       applyEmbedding({ ...config, embedding: { ...config.embedding, model: LOCAL_DEFAULT_EMBEDDING_MODEL, useDefaultModel: true } }, fill);
+      /* Children re-read config.json, so the fallback has to travel as a flag. */
+      fill('embeddingProvider', 'local');
+      fill('embeddingModel', LOCAL_DEFAULT_EMBEDDING_MODEL);
     } else {
       applyEmbedding(config, fill);
     }

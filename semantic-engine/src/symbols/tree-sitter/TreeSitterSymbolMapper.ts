@@ -19,6 +19,8 @@ import { makeConfidence, Confidence } from '../../core/types/common.types';
 import { extractDocumentation, declarationSignature } from '../heuristic/SymbolExtractionHelpers';
 import { SymbolIdAllocator, buildFullyQualifiedName } from '../../core/id/SymbolIdentity';
 import { grammarFor, DEFAULT_NAME_NODES } from './languageGrammars';
+import { extractParameters, extractReturnType, buildSignature } from './TreeSitterSignature';
+import { extractGenerics, extractExtends, extractImplements } from './TreeSitterHeritage';
 
 /** شکل‌هایی که یک `export default` بی‌نام می‌تواند بگیرد. */
 const ANONYMOUS_DEFAULT_TYPES = [
@@ -419,26 +421,6 @@ export class TreeSitterSymbolMapper {
   }
 
   /**
-   * گرهٔ تابعیِ نهفته در یک declarator.
-   *
-   * `const f = () => {}` گرهٔ symbol را از `variable_declarator`
-   * می‌گیرد، ولی پارامترها و نوع بازگشتی یک سطح پایین‌تر زیر
-   * `arrow_function` نشسته‌اند. بدون این، هر تابع arrow-style — یعنی
-   * بیشتر کد مدرن TS/JS — بدون پارامتر و بدون امضا ایندکس می‌شد
-   * (SE-SYM-10).
-   */
-  private functionValueOf(node: Node): Node | null {
-    if (node.type !== 'variable_declarator') return null;
-
-    return node.namedChildren.find(child =>
-      child.type === 'arrow_function' ||
-      child.type === 'function_expression' ||
-      child.type === 'function' ||
-      child.type === 'generator_function'
-    ) ?? null;
-  }
-
-  /**
    * آیا این گره سازنده است؟ F-0037.
    *
    * از دو نشانه خوانده می‌شود چون گرامرها یکسان نیستند: نامِ گرهٔ اعلان
@@ -452,235 +434,15 @@ export class TreeSitterSymbolMapper {
   }
 
   private extractParameters(node: Node): Parameter[] {
-    const source = this.functionValueOf(node) ?? node;
-    /*
-    | SE-SYM-20 — نامِ گرهٔ لیستِ پارامتر گرامر‌به‌گرامر فرق دارد
-    | (پایتون `parameters`، C#/Go `parameter_list`، روبی
-    | `method_parameters`، راست `parameters`). پیش‌فرض همان
-    | `formal_parameters` می‌ماند تا مسیر TS/JS تکان نخورد.
-    */
-    const declared = this.grammar?.paramListNodeTypes;
-    const candidates = declared && declared.length > 0 ? declared : ['formal_parameters'];
-    /*
-    | اول فیلدِ `parameters` خودِ گرامر. لازم است چون Go در
-    | `method_declaration` **دو** `parameter_list` دارد: اولی receiver
-    | `(s *UserService)` و دومی پارامترهای واقعی؛ جست‌وجوی ترتیبیِ
-    | فرزندها receiver را به‌عنوانِ پارامترها ثبت می‌کرد.
-    */
-    const byField = node.childForFieldName?.('parameters') ?? null;
-    const paramsNode = (byField && candidates.includes(byField.type) ? byField : null)
-      ?? source.namedChildren.find(c => candidates.includes(c.type));
-    if (!paramsNode) return [];
-
-    /*
-    | زبانی که configِ پارامتر دارد از مسیرِ ساختاریِ نو می‌رود: نام و نوع
-    | در گره‌هایِ جدا هستند (`formal_parameter` جاوا `int x` است، نه
-    | `x: int`)؛ مسیرِ متنیِ TS روی آن‌ها نام را «int x» می‌گرفت.
-    */
-    const useStructural = declared !== undefined && declared.length > 0;
-
-    return paramsNode.namedChildren
-      .map(p => (useStructural ? this.parseStructuralParameter(p) : this.parseParameter(p)))
-      .filter((p): p is Parameter => p !== null);
+    return extractParameters(this.grammar, node);
   }
 
-  /** گره‌هایی که «نام» پارامترند، در گرامرهایِ غیر از TS. */
-  private static readonly PARAM_NAME_NODES = new Set([
-    'identifier', 'variable_name', 'name', 'field_identifier', 'this', 'type_identifier',
-  ]);
-
-  /** گره‌هایی که «نوع» پارامتر/بازگشت‌اند، در گرامرهایِ غیر از TS. */
-  private static readonly PARAM_TYPE_NODES = new Set([
-    'type', 'primitive_type', 'predefined_type', 'array_type', 'generic_type',
-    'scoped_type_identifier', 'reference_type', 'optional_type', 'nullable_type',
-    'union_type', 'tuple_type', 'integral_type', 'floating_point_type',
-    'boolean_type', 'string_type', 'void_type', 'object', 'defined_type',
-    'qualified_identifier', 'implicit_type',
-    // انواعِ اولیه در گرامر جاوا نامِ اختصاصی دارند (`int x` روی `int_type`)
-    'int_type', 'long_type', 'short_type', 'byte_type', 'char_type',
-    'float_type', 'double_type', 'boolean_primitive_type',
-  ]);
-
-  /** فیلدهایی که در بیشتر گرامرها «نامِ پارامتر» را می‌دهند. */
-  private static readonly PARAM_NAME_FIELDS = ['name', 'pattern'] as const;
-  /** فیلدهایی که «نوعِ پارامتر» را می‌دهند. */
-  private static readonly PARAM_TYPE_FIELDS = ['type', 'type_hint'] as const;
-
-  private parseStructuralParameter(param: Node): Parameter | null {
-    const named = param.namedChildren;
-    /*
-    | اول فیلدها. در جاوا `String b` هر دو فرزندش `identifier`اند (نامِ نوع
-    | و نامِ پارامتر یکی است)، پس دسته‌بندیِ بر پایهٔ نوعِ گره آن‌ها را
-    | قاطی می‌کند؛ خودِ گرامر می‌داند کدام `type` و کدام `name` است.
-    */
-    const fieldRead = (fields: readonly string[]): Node | null => {
-      for (const f of fields) {
-        const hit = param.childForFieldName?.(f);
-        if (hit) return hit;
-      }
-      return null;
-    };
-    const typeField = fieldRead(TreeSitterSymbolMapper.PARAM_TYPE_FIELDS);
-    const nameField = fieldRead(TreeSitterSymbolMapper.PARAM_NAME_FIELDS);
-
-    const typeChild = typeField
-      ?? named.find(c => TreeSitterSymbolMapper.PARAM_TYPE_NODES.has(c.type))
-      ?? null;
-    const nameChild = nameField
-      ?? named.find(c => c !== typeChild && TreeSitterSymbolMapper.PARAM_NAME_NODES.has(c.type))
-      ?? null;
-
-    // مقدارِ پیش‌فرض: گرهٔ مقدار در `default_parameter`/`optional_parameter`
-    const valueChild = named.find(c =>
-      c !== typeChild && c !== nameChild &&
-      !TreeSitterSymbolMapper.PARAM_TYPE_NODES.has(c.type) &&
-      TreeSitterSymbolMapper.PARAM_NAME_NODES.has(c.type) === false
-    ) ?? null;
-
-    const text = param.text.trim();
-    if (!text) return null;
-
-    const name = nameChild?.text.trim() ?? (typeChild ? '' : text.replace(/^[*&]+\s*/, '')) ?? '';
-    if (!name) return null;
-
-    return {
-      name,
-      type: typeChild?.text.trim() ?? null,
-      optional: param.type === 'optional_parameter' || param.type === 'default_parameter' ||
-        param.type === 'typed_default_parameter' || text.includes('='),
-      defaultValue: valueChild?.text.trim(),
-      rest:
-        param.type === 'rest_parameter' ||
-        param.type === 'list_splat_pattern' ||
-        param.type === 'dictionary_splat_pattern' ||
-        text.startsWith('...') || text.startsWith('*'),
-    };
-  }
-
-  private parseParameter(param: Node): Parameter | null {
-    const text = param.text.trim();
-    if (!text) return null;
-
-    const typeAnnotation = param.namedChildren.find(c => c.type === 'type_annotation');
-    const type = typeAnnotation ? typeAnnotation.text.replace(/^:\s*/, '') : null;
-
-    const rest =
-      param.type === 'rest_parameter' ||
-      param.type === 'rest_pattern' ||
-      text.startsWith('...');
-
-    const optional =
-      param.type === 'optional_parameter' ||
-      param.type === 'assignment_pattern' ||
-      text.includes('?') ||
-      text.includes('=');
-
-    let name = text;
-    if (type && typeAnnotation) {
-      name = name.replace(typeAnnotation.text, '').trim();
-    }
-    if (name.includes('=')) {
-      name = name.split('=')[0]!.trim();
-    }
-    if (name.endsWith('?')) {
-      name = name.slice(0, -1).trim();
-    }
-    if (name.startsWith('...')) {
-      name = name.slice(3).trim();
-    }
-
-    let defaultValue: string | undefined;
-    if (text.includes('=')) {
-      defaultValue = text.split('=').slice(1).join('=').trim();
-      if (type && typeAnnotation) {
-        defaultValue = defaultValue.replace(typeAnnotation.text, '').trim();
-      }
-    }
-
-    return {
-      name,
-      type,
-      optional,
-      defaultValue,
-      rest,
-    };
-  }
-
-  /**
-   * نوع بازگشتی — و نه نوع متغیر.
-   *
-   * SE-SYM-13: نسخهٔ قبلی اولین `type_annotation` را برمی‌داشت. روی
-   * `const config: Settings = …` آن annotation نوعِ *متغیر* است و
-   * ثبتش به‌عنوان نوع بازگشتی یعنی ایندکس ادعا می‌کند یک ثابت،
-   * تابعی است که `Settings` برمی‌گرداند.
-   */
   private extractReturnType(node: Node, kind: SymbolKind): string | null {
-    if (node.type === 'variable_declarator') {
-      // فقط اگر مقدارش واقعاً یک تابع باشد، آن هم از annotation خودِ تابع
-      const fn = this.functionValueOf(node);
-      if (!fn) return null;
-
-      const own = fn.namedChildren.find(c => c.type === 'type_annotation');
-      return own ? own.text.replace(/^:\s*/, '') : null;
-    }
-
-    /*
-    | SE-SYM-20 — نوعِ بازگشتی در بیشتر گرامرها یک **فیلد** است
-    | (پایتون/راست `return_type`، جاوا `type`، پی‌اچ‌پی `return_type`،
-    | Go `result`)، و در C# یک گرهٔ هم‌سطح (`predefined_type`). زبان
-    | config‌دار که هیچ‌کدامشان نبود عمداً null برمی‌گرداند — بازگشت به
-    | جست‌وجوی `type_annotation` یعنی قاطی‌کردنِ نوعِ زبان‌های دیگر.
-    |
-    | F-0037 — این مسیر فقط برای سمبلِ **تابع‌مانند** خوانده می‌شود.
-    | در C# نامِ کلاس هم یک گرهٔ `identifier` هم‌سطح است، پس بدون این
-    | شرط خودِ `class Weather` هم «نوعِ بازگشتی: Weather» می‌گرفت.
-    */
-    const functionLike = kind === 'function' || kind === 'method';
-    if (!functionLike) return null;
-
-    const field = this.grammar?.returnTypeField;
-    if (field) {
-      const child = node.childForFieldName?.(field);
-      return child ? child.text.trim().replace(/^:\s*/, '') : null;
-    }
-
-    const childTypes = this.grammar?.returnTypeChildTypes;
-    if (childTypes && childTypes.length > 0) {
-      const nameNode = node.childForFieldName?.('name');
-      const hit = node.namedChildren.find(c => childTypes.includes(c.type) && c !== nameNode);
-      return hit ? hit.text.trim() : null;
-    }
-
-    if (this.grammar?.paramListNodeTypes || this.grammar?.returnTypeChildTypes) return null;
-
-    const typeAnnotation = node.namedChildren.find(c => c.type === 'type_annotation');
-    return typeAnnotation ? typeAnnotation.text.replace(/^:\s*/, '') : null;
+    return extractReturnType(this.grammar, node, kind);
   }
 
   private buildSignature(name: string, parameters: Parameter[], returnType: string | null): string {
-    const params = parameters.map(p => {
-      let paramName = p.name;
-      if (p.optional && !p.defaultValue && !paramName.endsWith('?')) {
-        paramName += '?';
-      }
-      let s = paramName;
-      if (p.type) {
-        s += `: ${p.type.replace(/\?$/, '')}`;
-      }
-      if (p.defaultValue) {
-        s += ` = ${p.defaultValue}`;
-      }
-      if (p.rest) {
-        s = `...${p.name}${p.type ? `: ${p.type.replace(/\?$/, '')}` : ''}`;
-      }
-      return s;
-    }).join(', ');
-
-    let signature = `${name}(${params})`;
-    if (returnType) {
-      signature += `: ${returnType}`;
-    }
-    return signature;
+    return buildSignature(name, parameters, returnType);
   }
 
   private extractVisibility(node: Node): SymbolVisibility {
@@ -729,117 +491,15 @@ export class TreeSitterSymbolMapper {
   }
 
   private extractGenerics(node: Node): string[] {
-    const typeParams = node.namedChildren.find(c => c.type === 'type_parameters');
-    if (!typeParams) return [];
-    return typeParams.namedChildren.map(c => c.text);
+    return extractGenerics(node);
   }
 
-  /**
-   * والدهای یک کلاس یا interface.
-   *
-   * SE-SYM-12: فقط `class_heritage` بررسی می‌شد. ارث‌بری interface در
-   * گرامر TS از `extends_type_clause` می‌آید — یک گرهٔ *هم‌سطح*، نه
-   * زیرِ heritage — پس `interface A extends B` هرگز یال نمی‌ساخت و
-   * TypeGraph بخش بزرگی از سلسله‌مراتب تایپ را از دست می‌داد.
-   */
   private extractExtends(node: Node): string[] {
-    /*
-    | SE-SYM-20 — پدرها در هر گرامر جای دیگری‌اند:
-    |   java   فیلد `superclass`   (گرهٔ `superclass` → `type_identifier`)
-    |   ruby   فیلد `superclass`   (`< B`)
-    |   python فرزندِ `argument_list` (`class A(B, C):` — فیلد ندارد)
-    |   csharp فرزندِ `base_list`    (`: B, IC`)
-    |   php    فرزندِ `base_clause`
-    | اگر زبانِ config‌دار چیزی پیدا نکرد، [] برمی‌گردد و به نام‌هایِ TS
-    | برنمی‌گردد — آن fallback یعنی حدس‌زدنِ ساختارِ یک گرامرِ دیگر.
-    */
-    const fromConfig = this.collectFromClauses(node, this.grammar?.extendsFields, this.grammar?.extendsChildTypes);
-    if (fromConfig.length > 0) return fromConfig;
-    if (this.grammar && (this.grammar.extendsFields?.length || this.grammar.extendsChildTypes?.length)) return [];
-
-    const interfaceClause = node.namedChildren.find(c => c.type === 'extends_type_clause');
-    if (interfaceClause) {
-      return interfaceClause.namedChildren
-        .map(c => c.text)
-        .filter(t => t !== 'extends' && t.length > 0);
-    }
-
-    const heritage = node.namedChildren.find(c => c.type === 'class_heritage');
-    if (!heritage) return [];
-    const extendsClause = heritage.namedChildren.find(c => c.type === 'extends_clause');
-    if (!extendsClause) return [];
-    return extendsClause.namedChildren
-      .map(c => c.text)
-      .filter(t => t !== 'extends' && t.length > 0);
+    return extractExtends(this.grammar, node);
   }
 
   private extractImplements(node: Node): string[] {
-    const fromConfig = this.collectFromClauses(node, this.grammar?.implementsFields, this.grammar?.implementsChildTypes);
-    if (fromConfig.length > 0) return fromConfig;
-    if (this.grammar && (this.grammar.implementsFields?.length || this.grammar.implementsChildTypes?.length)) return [];
-
-    const heritage = node.namedChildren.find(c => c.type === 'class_heritage');
-    if (!heritage) return [];
-    const implementsClause = heritage.namedChildren.find(c => c.type === 'implements_clause');
-    if (!implementsClause) return [];
-    return implementsClause.namedChildren
-      .map(c => c.text)
-      .filter(t => t !== 'implements' && t.length > 0);
-  }
-
-  /**
-   * نامِ type‌ها را از فیلدها/گره‌هایِ اعلام‌شده بیرون می‌کشد.
-   *
-   * عمق محدود است و از بدنه بیرون نمی‌ماند، تا یک `class_body` یا
-   * `block` تصادفاً به‌عنوانِ والد ثبت نشود.
-   */
-  private collectFromClauses(
-    node: Node,
-    fields: readonly string[] | undefined,
-    childTypes: readonly string[] | undefined
-  ): string[] {
-    const sink: string[] = [];
-
-    for (const field of fields ?? []) {
-      const clause = node.childForFieldName?.(field);
-      if (clause) this.collectTypeNames(clause, sink);
-    }
-
-    for (const type of childTypes ?? []) {
-      const clause = node.namedChildren.find(c => c.type === type);
-      if (clause) this.collectTypeNames(clause, sink);
-    }
-
-    return [...new Set(sink)];
-  }
-
-  /** گره‌هایی که «بدنه‌اند» و هرگز به‌عنوانِ نامِ والد خوانده نمی‌شوند. */
-  private static readonly BODY_NODE_TYPES = new Set([
-    'class_body', 'interface_body', 'declaration_list', 'enum_body', 'block',
-    'body_statement', 'compound_statement', 'statements', 'function_body', 'field_initializer',
-  ]);
-
-  private collectTypeNames(node: Node, sink: string[], depth = 0): void {
-    if (depth > 3) return;
-
-    for (const child of node.namedChildren) {
-      if (TreeSitterSymbolMapper.BODY_NODE_TYPES.has(child.type)) continue;
-
-      if (TreeSitterSymbolMapper.PARAM_TYPE_NODES.has(child.type) ||
-        child.type === 'type_identifier' || child.type === 'generic_name' ||
-        child.type === 'scoped_identifier' || child.type === 'identifier' ||
-        child.type === 'constant' || child.type === 'attribute' ||
-        child.type === 'member_expression' || child.type === 'name') {
-        const raw = child.type === 'generic_name'
-          ? (child.childForFieldName?.('name')?.text ?? child.text.split('<')[0] ?? '')
-          : child.text;
-        const name = raw.trim().replace(/\s+/g, ' ');
-        if (name && name !== 'extends' && name !== 'implements') sink.push(name);
-        continue;
-      }
-
-      this.collectTypeNames(child, sink, depth + 1);
-    }
+    return extractImplements(this.grammar, node);
   }
 
   private computeConfidence(node: Node): Confidence {

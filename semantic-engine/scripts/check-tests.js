@@ -120,6 +120,10 @@ const BUDGET_FILE = path.join(ROOT, "test-skip-budget.json");
 let budget = 0;
 try {
     budget = JSON.parse(fs.readFileSync(BUDGET_FILE, "utf8")).suites;
+    /* CI can tighten the budget when it provides the optional cross-repo consumer. */
+    if (process.env.SEMANTIC_ENGINE_SKIP_BUDGET !== undefined && process.env.SEMANTIC_ENGINE_SKIP_BUDGET !== "") {
+        budget = Number(process.env.SEMANTIC_ENGINE_SKIP_BUDGET);
+    }
 } catch {
     console.error(
         `\nerror: ${BUDGET_FILE} missing/unreadable — the skip budget must exist,\n` +

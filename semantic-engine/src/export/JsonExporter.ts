@@ -18,7 +18,6 @@ import {
   FileMetrics,
   ImportEntry,
   ExportEntry,
-  CallEdge,
   VectorChunk,
   IncrementalInfo,
   GitInfo,
@@ -36,6 +35,8 @@ import { AiMetadataGenerator } from '../ai/AiMetadataGenerator';
 import { ILlmClient } from '../ai/llm/LlmClient';
 import { LlmAiMetadataGenerator } from '../ai/llm/LlmAiMetadataGenerator';
 import { sortSymbolsDeterministically } from '../core/utils/symbolSort';
+import { populateSymbolCallReferences } from './symbolCallReferences';
+import { dedupeSymbols } from './symbolDedup';
 import { TestMapper } from '../ai/TestMapper';
 
 export interface ExportOptions {
@@ -169,13 +170,13 @@ export class JsonExporter {
     enrichment?: ProjectEnrichment
   ): Promise<ProjectIndex> {
     // حذف تکرار symbol ها در سطح global به‌صورت دترمینیستیک
-    const dedupedSymbols = this.dedupeSymbols(allSymbols);
+    const dedupedSymbols = dedupeSymbols(allSymbols);
 
     // مرتب‌سازی دترمینیستیک symbols برای خروجی پایدار (ترتیب: fileId, line, kind, name)
     const sortedSymbols = sortSymbolsDeterministically(dedupedSymbols);
 
     // پر کردن calls / calledBy symbol ها از روی callGraph
-    const symbolsWithCallRefs = this.populateSymbolCallReferences(
+    const symbolsWithCallRefs = populateSymbolCallReferences(
       sortedSymbols,
       graphs.callGraph
     );
@@ -457,80 +458,6 @@ export class JsonExporter {
   }
 
   /**
-   * حذف duplicate symbols بر اساس id به‌صورت دترمینیستیک.
-   *
-   * - هیچ warning در console چاپ نمی‌شود (تکرارها silently merge می‌شوند).
-   * - برای هر گروه duplicate، یک symbol canonical انتخاب می‌شود:
-   *   first party: LSP > tree-sitter > heuristic
-   *   سپس: confidence بالاتر، دادهٔ کامل‌تر (signature/documentation/parameters)،
-   *   و در نهایت خط کوچک‌تر.
-   * - ترتیب خروجی بر اساس اولین رخداد هر id در ورودی حفظ می‌شود.
-   */
-  private dedupeSymbols(symbols: readonly SymbolEntry[]): SymbolEntry[] {
-    const groups = new Map<string, SymbolEntry[]>();
-    const firstIndex = new Map<string, number>();
-
-    for (let i = 0; i < symbols.length; i++) {
-      const sym = symbols[i]!;
-      if (!groups.has(sym.id)) {
-        firstIndex.set(sym.id, i);
-        groups.set(sym.id, []);
-      }
-      groups.get(sym.id)!.push(sym);
-    }
-
-    const selected: { readonly sym: SymbolEntry; readonly index: number }[] = [];
-
-    for (const [id, group] of groups) {
-      const canonical = group.length === 1 ? group[0]! : this.selectCanonicalSymbol(group);
-      selected.push({ sym: canonical, index: firstIndex.get(id)! });
-    }
-
-    // حفظ ترتیب اولین رخداد
-    selected.sort((a, b) => a.index - b.index);
-    return selected.map(s => s.sym);
-  }
-
-  /**
-   * انتخاب deterministic نماد canonical از یک گروه duplicate.
-   */
-  private selectCanonicalSymbol(symbols: SymbolEntry[]): SymbolEntry {
-    const sourcePriority = (source: string | undefined): number => {
-      switch (source) {
-        case 'lsp':
-          return 3;
-        case 'tree-sitter':
-          return 2;
-        case 'heuristic':
-          return 1;
-        default:
-          return 0;
-      }
-    };
-
-    const score = (sym: SymbolEntry): number => {
-      let s = sourcePriority(sym.source) * 10000;
-      s += (sym.confidence as number | undefined) ?? 0;
-      s += sym.signature && sym.signature.length > sym.name.length ? 20 : 0;
-      s += sym.documentation ? 10 : 0;
-      s += sym.parameters && sym.parameters.length > 0 ? 5 : 0;
-      // ترجیح خط کوچک‌تر (تفاوت ناچیز تا score اعداد صحیح باقی بماند)
-      s -= (sym.line ?? Number.MAX_SAFE_INTEGER) * 0.0001;
-      return s;
-    };
-
-    const sorted = [...symbols].sort((a, b) => {
-      const scoreA = score(a);
-      const scoreB = score(b);
-      if (scoreB !== scoreA) return scoreB - scoreA;
-      if ((a.line ?? 0) !== (b.line ?? 0)) return (a.line ?? 0) - (b.line ?? 0);
-      return a.name.localeCompare(b.name);
-    });
-
-    return sorted[0]!;
-  }
-
-  /**
    * اتصال symbol id ها به FileEntry های مربوطه.
    * خروجی symbolIds و outline بدون تکرار است (ترتیب ظاهرشدن حفظ می‌شود).
    *
@@ -578,38 +505,6 @@ export class JsonExporter {
   }
 
   /**
-   * پر کردن symbol.calls و symbol.calledBy از روی callGraph.
-   * فقط edge هایی که هر دو سر آن‌ها symbol id موجود باشند در نظر گرفته می‌شوند.
-   */
-  private populateSymbolCallReferences(
-    symbols: readonly SymbolEntry[],
-    callGraph: readonly CallEdge[]
-  ): SymbolEntry[] {
-    const symbolMap = new Map(symbols.map(s => [s.id, s]));
-    const calls = new Map<string, Set<string>>();
-    const calledBy = new Map<string, Set<string>>();
-
-    for (const edge of callGraph) {
-      const caller = symbolMap.get(edge.caller);
-      const callee = symbolMap.get(edge.callee);
-      if (!caller || !callee) continue;
-
-      this.addToSetMap(calls, caller.id, callee.id);
-      this.addToSetMap(calledBy, callee.id, caller.id);
-    }
-
-    return symbols.map(sym => {
-      const c = Array.from(calls.get(sym.id) ?? []).sort();
-      const cb = Array.from(calledBy.get(sym.id) ?? []).sort();
-      return {
-        ...sym,
-        calls: c,
-        calledBy: cb,
-      };
-    });
-  }
-
-  /**
    * لینک کردن symbolId برای export entry های عادی (named/default) بر اساس symbols همان فایل.
    */
   private linkExportSymbolIds(
@@ -639,16 +534,6 @@ export class JsonExporter {
       return { ...file, exports: linkedExports };
     });
   }
-
-  private addToSetMap(map: Map<string, Set<string>>, key: string, value: string): void {
-    const set = map.get(key);
-    if (set) {
-      set.add(value);
-    } else {
-      map.set(key, new Set([value]));
-    }
-  }
-
 
   /**
    * محاسبه‌ی file metrics واقعی از روی symbols.

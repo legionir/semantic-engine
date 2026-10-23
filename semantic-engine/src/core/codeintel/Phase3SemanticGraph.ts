@@ -4,6 +4,19 @@ import * as path from 'path';
 import { ProjectIndexReader } from '../../ai/ProjectIndexReader';
 import { FileEntry, SymbolEntry } from '../types/project-index.types';
 import { compareCanonical, LineIndex, makeSymbolKey, sanitizeKeyPart } from '../contracts/codeintel';
+import {
+  ImportSpecifierBinding,
+  ImportStatement,
+  Scan,
+  matchBrace,
+  matchParen,
+  parseNamedList,
+  memberAfter,
+  occurrences,
+  parseExportFroms,
+  parseImports,
+  withPosition,
+} from './semanticGraphText';
 import { Phase1IndexPlatform } from './Phase1Platform';
 
 export type ResolutionConfidence = 'exact' | 'heuristic' | 'ambiguous' | 'unresolved';
@@ -91,16 +104,6 @@ interface LocalBinding {
   readonly scopeEnd: number;
 }
 
-interface ImportSpecifierBinding { readonly imported: string; readonly local: string; }
-interface ImportStatement {
-  readonly kind: 'named' | 'default' | 'namespace' | 'side-effect';
-  readonly specifiers: readonly ImportSpecifierBinding[];
-  readonly defaultLocal?: string;
-  readonly namespaceLocal?: string;
-  readonly specifier: string;
-  readonly start: number;
-  readonly end: number;
-}
 interface ExportRoute {
   readonly kind: 'local' | 'reexport' | 'star-namespace' | 'default-local';
   readonly symbolIds?: readonly string[];
@@ -109,12 +112,6 @@ interface ExportRoute {
 }
 interface FileExports { readonly explicit: ReadonlyMap<string, ExportRoute>; readonly stars: readonly string[] }
 
-interface Scan {
-  readonly mask: Uint8Array;          // 0 code, 1 line comment, 2 block comment, 3 string/template
-  readonly valid: boolean;            // quotes/comments closed and braces balanced
-  readonly braces: readonly { readonly open: number; readonly close: number }[];
-  readonly lineIndex: LineIndex;
-}
 
 const MAX_REEXPORT_DEPTH = 6;
 
@@ -156,7 +153,7 @@ export class Phase3SemanticGraphPilot {
       const text = await this.read(file);
       const scan = this.scanText(file, text);
       const symbols = [...this.reader.getSymbolsForFile(file.id)];
-      const imports = this.parseImports(text);
+      const imports = parseImports(text);
       const importSpans = imports.map(i => ({ start: i.start, end: i.end }));
       const declaratorLines = new Map<string, Set<number>>();
       for (const s of symbols) {
@@ -208,7 +205,7 @@ export class Phase3SemanticGraphPilot {
       }
 
       // Export-from file deps (F5): re-export statements create real edges.
-      for (const route of this.parseExportFroms(text)) {
+      for (const route of parseExportFroms(text)) {
         const target = route.specifier.startsWith('.') ? this.resolveModule(file, route.specifier) : undefined;
         deps.push({ fromFileId: file.id, ...(target ? { toFileId: target.id } : {}), specifier: route.specifier, resolved: !!target });
         if (!target) {
@@ -228,20 +225,20 @@ export class Phase3SemanticGraphPilot {
       // locals are handled exclusively by the namespace scan below.
       const candidateNames = [...new Set<string>([...importBindings.keys(), ...fileSymbolsByName.keys()])].sort(compareCanonical);
       for (const name of candidateNames) {
-        for (const occurrence of this.occurrences(text, name)) {
+        for (const occurrence of occurrences(text, name)) {
           auditCounts[this.classify(classifyCtx, name, occurrence).class]++;
         }
       }
 
       // Namespace member uses: `M.prop` (F5 namespace routing, F7 unresolved-use).
       for (const [local, ns] of [...namespaceImports.entries()].sort((a, b) => compareCanonical(a[0], b[0]))) {
-        for (const occurrence of this.occurrences(text, local)) {
-          const at = this.withPosition(scan, occurrence);
+        for (const occurrence of occurrences(text, local)) {
+          const at = withPosition(scan, occurrence);
           const region = scan.mask[at.start];
           if (region === 1 || region === 2) { auditCounts.comment++; continue; }
           if (region === 3) { auditCounts.string++; continue; }
           if (inSpans(at.start, importSpans)) { auditCounts['import-declaration']++; continue; }
-          const member = this.memberAfter(text, at.end);
+          const member = memberAfter(text, at.end);
           if (member === undefined) { auditCounts['namespace-object-use']++; continue; }
           const enclosing = this.enclosingSymbolId(file, at.line);
           if (!ns.module) {
@@ -362,30 +359,8 @@ export class Phase3SemanticGraphPilot {
     return scan;
   }
 
-  private occurrences(text: string, name: string): { start: number; end: number }[] {
-    if (!name) return [];
-    const re = new RegExp(`\\b${escape(name)}\\b`, 'gu');
-    const out: { start: number; end: number }[] = [];
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text))) out.push({ start: m.index, end: m.index + name.length });
-    return out;
-  }
 
-  private withPosition(scan: Scan, occurrence: { start: number; end: number }): { start: number; end: number; line: number; column: number } {
-    const p = scan.lineIndex.positionAt(occurrence.start);
-    return { ...occurrence, line: p.line + 1, column: p.character };
-  }
 
-  /** The identifier immediately after `offset.` (namespace member), if any. */
-  private memberAfter(text: string, offset: number): string | undefined {
-    let i = offset;
-    while (i < text.length && /\s/u.test(text[i])) i++;
-    if (text[i] !== '.') return undefined;
-    i++;
-    while (i < text.length && /\s/u.test(text[i])) i++;
-    const m = /^[A-Za-z_$][\w$]*/u.exec(text.slice(i));
-    return m ? m[0] : undefined;
-  }
 
   // ── Local bindings (F1): parameters and shadowing declarators ───────────────
 
@@ -415,7 +390,7 @@ export class Phase3SemanticGraphPilot {
     const arrowScope = (arrowEnd: number): number => {
       const after = nextNonWs(text, arrowEnd);
       if (after >= 0 && text[after] === '{') {
-        const close = this.matchBrace(scan, after);
+        const close = matchBrace(scan, after);
         if (close !== undefined) return close + 1;
       }
       return endOfStatement(text, arrowEnd);
@@ -428,7 +403,7 @@ export class Phase3SemanticGraphPilot {
       if (nameAt < 0 || scan.lineIndex.positionAt(nameAt).line + 1 !== symbol.line) continue;
       const open = text.indexOf('(', nameAt + symbol.name.length);
       if (open < 0) continue;
-      const close = this.matchParen(text, open);
+      const close = matchParen(text, open);
       if (close === undefined) continue;
       addParams(open, close, scan.lineIndex.lineStart(symbol.line - 1), Math.min(fileEnd, scan.lineIndex.contentEnd(symbol.endLine - 1) + 1));
     }
@@ -438,10 +413,10 @@ export class Phase3SemanticGraphPilot {
     while ((m = fnRe.exec(text))) {
       if (scan.mask[m.index] !== 0 || inSpans(m.index, importSpans)) continue;
       const open = m.index + m[0].length - 1;
-      const close = this.matchParen(text, open);
+      const close = matchParen(text, open);
       if (close === undefined) continue;
       const after = nextNonWs(text, close + 1);
-      const scopeEnd = after >= 0 && text[after] === '{' && this.matchBrace(scan, after) !== undefined ? (this.matchBrace(scan, after) as number) + 1 : endOfStatement(text, close + 1);
+      const scopeEnd = after >= 0 && text[after] === '{' && matchBrace(scan, after) !== undefined ? (matchBrace(scan, after) as number) + 1 : endOfStatement(text, close + 1);
       addParams(open, close, open, scopeEnd);
     }
     // 3. Arrow functions: parenthesized param lists and single-identifier params.
@@ -472,61 +447,10 @@ export class Phase3SemanticGraphPilot {
     return out;
   }
 
-  private matchParen(text: string, open: number): number | undefined {
-    let depth = 0;
-    for (let i = open; i < text.length; i++) {
-      const char = text[i];
-      if (char === '(') depth++;
-      else if (char === ')') { depth--; if (depth === 0) return i; }
-    }
-    return undefined;
-  }
-  private matchBrace(scan: Scan, open: number): number | undefined {
-    const pair = scan.braces.find(b => b.open === open);
-    return pair ? pair.close : undefined;
-  }
 
   // ── Imports / exports (F2, F5) ──────────────────────────────────────────────
 
-  private parseImports(text: string): ImportStatement[] {
-    const out: ImportStatement[] = [];
-    let m: RegExpExecArray | null;
-    const sideEffectRe = /\bimport\s*['"]([^'"]+)['"]/gu;
-    while ((m = sideEffectRe.exec(text))) {
-      const head = text.slice(m.index, m.index + m[0].length);
-      if (!/\bfrom\b/.test(head)) out.push({ kind: 'side-effect', specifiers: [], specifier: m[1], start: m.index, end: m.index + m[0].length });
-    }
-    const namedRe = /\bimport\s+(?:type\s+)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/gu;
-    while ((m = namedRe.exec(text))) {
-      const named = m[1];
-      const specifier = m[2];
-      out.push({ kind: 'named', specifiers: parseNamedList(named), specifier, start: m.index, end: m.index + m[0].length });
-    }
-    const defaultRe = /\bimport\s+(?:type\s+)?([A-Za-z_$][\w$]*)\s*(?:,\s*\{([^}]*)\})?\s*from\s*['"]([^'"]+)['"]/gu;
-    while ((m = defaultRe.exec(text))) {
-      const defaultLocal = m[1];
-      const named = m[2] ? parseNamedList(m[2]) : [];
-      const specifier = m[3];
-      out.push({ kind: 'default', specifiers: named, defaultLocal, specifier, start: m.index, end: m.index + m[0].length });
-    }
-    const namespaceRe = /\bimport\s+(?:type\s+)?\*\s+as\s+([A-Za-z_$][\w$]*)\s*from\s*['"]([^'"]+)['"]/gu;
-    while ((m = namespaceRe.exec(text))) {
-      const namespaceLocal = m[1];
-      const specifier = m[2];
-      out.push({ kind: 'namespace', specifiers: [], namespaceLocal, specifier, start: m.index, end: m.index + m[0].length });
-    }
-    return out;
-  }
 
-  private parseExportFroms(text: string): { names: string[]; specifier: string; start: number; end: number }[] {
-    const out: { names: string[]; specifier: string; start: number; end: number }[] = [];
-    const re = /\bexport\s+(?:type\s+)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/gu;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text))) out.push({ names: parseNamedList(m[1]).map(s => s.local), specifier: m[2], start: m.index, end: m.index + m[0].length });
-    const starRe = /\bexport\s+\*(?:\s+as\s+[A-Za-z_$][\w$]*)?\s*from\s*['"]([^'"]+)['"]/gu;
-    while ((m = starRe.exec(text))) out.push({ names: ['*'], specifier: m[1], start: m.index, end: m.index + m[0].length });
-    return out;
-  }
 
   private async exportsOf(file: FileEntry): Promise<FileExports> {
     const cached = this.exportCache.get(file.id);
@@ -649,7 +573,7 @@ export class Phase3SemanticGraphPilot {
     hardBindings: HardBinding[];
   }, name: string, occurrence: { start: number; end: number }): { class: OccurrenceClass } {
     const { file, text, scan, importSpans, declaratorLines, localBindings, importBindings, fileSymbolsByName, refs, hardBindings } = ctx;
-    const at = this.withPosition(scan, occurrence);
+    const at = withPosition(scan, occurrence);
     const region = scan.mask[at.start];
     if (region === 1 || region === 2) return { class: 'comment' };
     if (region === 3) return { class: 'string' };
@@ -736,17 +660,6 @@ export class Phase3SemanticGraphPilot {
   }
 }
 
-function parseNamedList(raw: string): ImportSpecifierBinding[] {
-  return raw.split(',')
-    .map(part => part.trim())
-    .filter(part => part.length > 0)
-    .map(part => {
-      const pieces = part.split(/\s+as\s+/u);
-      const imported = pieces[0].replace(/^type\s+/u, '').trim();
-      return { imported, local: pieces[1]?.trim() ?? imported };
-    })
-    .filter(spec => /^[A-Za-z_$][\w$]*$/u.test(spec.imported) && /^[A-Za-z_$][\w$]*$/u.test(spec.local));
-}
 
 /** Collision-free pilot symbol key (F6): same name+kind in one file gets a source-order ordinal. */
 export function symbolKeyFor(reader: ProjectIndexReader, symbol: SymbolEntry): string {
@@ -807,6 +720,5 @@ function endOfStatement(text: string, from: number): number {
   const candidates = [semi >= 0 ? semi + 1 : undefined, nl >= 0 ? nl + 1 : undefined, text.length].filter((v): v is number => v !== undefined);
   return Math.min(...candidates);
 }
-function escape(value: string): string { return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'); }
 function stableId(value: string): string { return crypto.createHash('sha256').update(value, 'utf8').digest('hex').slice(0, 16); }
 function referenceOrder(a: SymbolReference, b: SymbolReference): number { return compareCanonical(`${a.sourcePath}:${a.start}:${a.id}`, `${b.sourcePath}:${b.start}:${b.id}`); }
