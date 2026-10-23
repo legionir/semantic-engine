@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "corpus": "src",
+  "files": 594,
+  "queries": 30,
+  "search": {
+    "mrr": 0.499,
+    "recall@1": 0.3,
+    "recall@3": 0.667,
+    "recall@5": 0.767,
+    "recall@10": 0.833
+  },
+  "discover": {
+    "mrr": 0.267,
+    "recall@1": 0.067,
+    "recall@3": 0.4,
+    "recall@5": 0.633,
+    "recall@10": 0.733
+  }
+}
