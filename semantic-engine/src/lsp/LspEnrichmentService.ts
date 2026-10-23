@@ -37,76 +37,15 @@ import { EdgeIdentity, makeEdgeId, provenanceFor } from '../graphs/EdgeProvenanc
 import { ILogger, silentLogger } from '../host/Logger';
 import { LspClient } from './LspClient';
 
-export interface EnrichmentBudget {
-  /** حداکثر چند symbol اصلاً در نظر گرفته شوند. */
-  readonly maxSymbols: number;
-  /** سقف زمان دیواری کل مرحله. */
-  readonly maxWallClockMs: number;
-  readonly maxReferenceQueries: number;
-  readonly maxCallHierarchyQueries: number;
-  /** پیش‌فرض صفر — SE-SYM-07. */
-  readonly maxHoverQueries: number;
-  /** چند درخواست هم‌زمان. */
-  readonly concurrency: number;
-}
-
-/**
- * اسکن کامل: سرور سرد است و هزاران فایل در راه.
- * اعداد از بخش ۵.۵ سند طراحی.
- */
-export const BATCH_BUDGET: EnrichmentBudget = {
-  maxSymbols: 2000,
-  maxWallClockMs: 60_000,
-  maxReferenceQueries: 500,
-  maxCallHierarchyQueries: 500,
-  maxHoverQueries: 0,
-  concurrency: 4,
-};
-
-/**
- * حالت watch — LSP-10.
- *
- * اینجا سرور از قبل گرم است و فقط چند فایل تغییر کرده‌اند. همان
- * نکته‌ای که سند طراحی می‌گوید: «در حالت watch، LSP تقریباً رایگان
- * است». پس بودجه سخاوتمندتر است ولی **بی‌نهایت نیست** — یک ذخیره
- * نباید ثانیه‌ها طول بکشد.
- */
-export const WATCH_BUDGET: EnrichmentBudget = {
-  maxSymbols: 500,
-  maxWallClockMs: 10_000,
-  maxReferenceQueries: 200,
-  maxCallHierarchyQueries: 200,
-  maxHoverQueries: 0,
-  concurrency: 4,
-};
-
-export interface EnrichmentInput {
-  readonly symbols: readonly SymbolEntry[];
-  readonly files: readonly FileEntry[];
-  readonly workspaceRoot: string;
-  /** محتوای در حافظه، اگر هست — در watch از دیسک جلوتر است. */
-  readonly contentOf?: (fileId: string) => string | undefined;
-  /** در حالت watch، این فایل‌ها اول می‌آیند. */
-  readonly changedFileIds?: ReadonlySet<string>;
-  readonly languageId?: string;
-}
-
-export interface EnrichmentStats {
-  readonly consideredSymbols: number;
-  readonly referenceQueries: number;
-  readonly callHierarchyQueries: number;
-  readonly hoverQueries: number;
-  readonly enrichedSymbols: number;
-  readonly resolvedEdges: number;
-  readonly durationMs: number;
-  readonly budgetExhausted: boolean;
-}
-
-export interface EnrichmentResult {
-  readonly symbols: readonly SymbolEntry[];
-  readonly callEdges: readonly CallEdge[];
-  readonly stats: EnrichmentStats;
-}
+export * from './lspEnrichmentTypes';
+export { prioritize, findEnclosing, columnOfName, isModuleItem } from './lspEnrichmentHelpers';
+import {
+  BATCH_BUDGET, EnrichmentBudget, EnrichmentInput, EnrichmentResult, EnrichmentStats,
+} from './lspEnrichmentTypes';
+import {
+  CallHierarchyItem, IncomingCall, columnOfName, findEnclosing, isModuleItem, prioritize,
+  readFileOrNull, safeFsPath,
+} from './lspEnrichmentHelpers';
 
 export interface LspEnrichmentServiceOptions {
   readonly acquire: (languageId: string) => Promise<LspClient | null>;
@@ -539,113 +478,3 @@ export class LspEnrichmentService {
 
 // ── اولویت‌دهی ─────────────────────────────────────────────────────────
 
-/**
- * ترتیب نامزدها، از سند طراحی بخش ۵.۵:
- *
- * ۱. symbolهای exported در فایل‌های entryPoint
- * ۲. symbolهای فایل‌های تغییرکرده (حالت watch)
- * ۳. exported دیگر
- * ۴. class / interface / function سطح بالا
- * ۵. بقیه — فقط اگر بودجه ماند
- *
- * ترتیب داخل هر رده، ترتیب خودِ ایندکس است تا خروجی قطعی بماند.
- */
-export function prioritize(input: EnrichmentInput, maxSymbols: number): SymbolEntry[] {
-  /*
-  | «entryPoint» یک پرچم مستقل نیست؛ `AiMetadata` فقط `aiScore` دارد.
-  | نزدیک‌ترین چیزِ موجود، اهمیتِ محاسبه‌شدهٔ فایل است — و اگر
-  | امتیازی نباشد (اجرای بدون متادیتا)، این رده خالی می‌ماند و
-  | اولویت به ردهٔ بعدی می‌افتد.
-  */
-  const importantFiles = new Set(
-    input.files
-      .filter(file => (file.aiMetadata?.aiScore?.importance ?? 0) >= 70)
-      .map(file => file.id)
-  );
-  const changed = input.changedFileIds ?? new Set<string>();
-
-  const rank = (symbol: SymbolEntry): number => {
-    if (symbol.exported && importantFiles.has(symbol.fileId)) return 0;
-    if (changed.has(symbol.fileId)) return 1;
-    if (symbol.exported) return 2;
-    if (
-      symbol.parentId === null &&
-      ['class', 'interface', 'function', 'type-alias', 'enum'].includes(symbol.kind)
-    ) {
-      return 3;
-    }
-    return 4;
-  };
-
-  return input.symbols
-    .map((symbol, index) => ({ symbol, index, rank: rank(symbol) }))
-    .sort((a, b) => a.rank - b.rank || a.index - b.index)
-    .slice(0, maxSymbols)
-    .map(entry => entry.symbol);
-}
-
-/** درونی‌ترین symbolای که این خط داخلش می‌افتد. */
-export function findEnclosing(
-  symbols: readonly SymbolEntry[],
-  line: number
-): SymbolEntry | undefined {
-  let best: SymbolEntry | undefined;
-  for (const symbol of symbols) {
-    if (symbol.line > line || symbol.endLine < line) continue;
-    if (!best || symbol.line > best.line) best = symbol;
-  }
-  return best;
-}
-
-/** ستون نام در خط اعلان، یا صفر اگر متن در دست نباشد. */
-export function columnOfName(lines: readonly string[] | undefined, symbol: SymbolEntry): number {
-  const line = lines?.[symbol.line - 1];
-  if (!line) return 0;
-  const at = line.indexOf(symbol.name);
-  return at >= 0 ? at : 0;
-}
-
-/**
- * آیا این آیتم، خودِ فایل است؟
- *
- * دو نشانه، چون هیچ‌کدام به‌تنهایی قابل اتکا نیست: `kind: 2`
- * (Module) در پروتکل، و نامی که مسیر مطلق همان فایل است — کاری که
- * `tsgo` می‌کند و فاز ۳۵ ثبتش کرد.
- */
-export function isModuleItem(
-  item: { readonly kind: number; readonly name: string },
-  filePath: string
-): boolean {
-  if (item.kind !== 2) return false;
-  return path.isAbsolute(item.name) || item.name === path.basename(filePath);
-}
-
-function readFileOrNull(absolute: string): string | null {
-  try {
-    return require('fs').readFileSync(absolute, 'utf8') as string;
-  } catch {
-    return null;
-  }
-}
-
-function safeFsPath(uri: string | undefined): string | null {
-  if (!uri || !uri.startsWith('file:')) return null;
-  try {
-    return require('url').fileURLToPath(uri) as string;
-  } catch {
-    return null;
-  }
-}
-
-interface CallHierarchyItem {
-  readonly name: string;
-  readonly kind: number;
-  readonly uri: string;
-  readonly range: { start: { line: number; character: number } };
-  readonly selectionRange?: { start: { line: number; character: number } };
-}
-
-interface IncomingCall {
-  readonly from: CallHierarchyItem;
-  readonly fromRanges?: readonly { start: { line: number; character: number } }[];
-}

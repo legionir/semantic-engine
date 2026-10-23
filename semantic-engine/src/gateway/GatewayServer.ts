@@ -33,6 +33,8 @@ import { WorkerConfigStore } from './WorkerConfigStore';
 import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
 import { generateToken } from '../cli/HttpGuard';
+import { readBody } from './gatewayHttp';
+import { healthPayload, metricsPayload, projectEntry } from './gatewayPayloads';
 
 export const DEFAULT_GATEWAY_PORT = 4000;
 
@@ -183,35 +185,6 @@ export class GatewayServer {
     res.end(JSON.stringify(body));
   }
 
-  private readBody(req: http.IncomingMessage): Promise<Record<string, unknown>> {
-    return new Promise((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      let size = 0;
-      req.on('data', chunk => {
-        size += (chunk as Buffer).length;
-        if (size > 5 * 1024 * 1024) {
-          reject(new Error('request body too large'));
-          req.destroy();
-          return;
-        }
-        chunks.push(chunk as Buffer);
-      });
-      req.on('end', () => {
-        const text = Buffer.concat(chunks).toString('utf8');
-        if (text.trim() === '') {
-          resolve({});
-          return;
-        }
-        try {
-          resolve(JSON.parse(text) as Record<string, unknown>);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      req.on('error', reject);
-    });
-  }
-
   /** نگاشت روش/مسیر به permission، با همان واژگان platform. */
   private requiredPermission(method: string, pathname: string): PermissionScope {
     if (/^\/api\/v1\/gateway\/projects(\/|$)/.test(pathname)) {
@@ -234,16 +207,16 @@ export class GatewayServer {
 
     /* سلامت خودِ Gateway هیچ دادهٔ پروژه‌ای ندارد، پس باز است. */
     if (pathname === '/health' || pathname === '/api/v1/gateway/health') {
-      this.send(res, 200, this.healthPayload());
+      this.send(res, 200, healthPayload(this.supervisor, this.registry, this.activeRequests, this.startedAt));
       return;
     }
     if (pathname === '/ready' || pathname === '/api/v1/gateway/ready') {
-      const payload = this.healthPayload();
+      const payload = healthPayload(this.supervisor, this.registry, this.activeRequests, this.startedAt);
       this.send(res, payload.ok ? 200 : 503, payload);
       return;
     }
     if (pathname === '/metrics' || pathname === '/api/v1/gateway/metrics') {
-      this.send(res, 200, this.metricsPayload());
+      this.send(res, 200, metricsPayload(this.supervisor, this.registry, { requestsTotal: this.requestsTotal, durations: this.durations, activeRequests: this.activeRequests, proxyErrorsTotal: this.proxyErrorsTotal }));
       return;
     }
 
@@ -334,11 +307,9 @@ export class GatewayServer {
     this.send(res, 404, { error: `route not found: ${method} ${pathname}` });
   }
 
-
   private get uiDir(): string {
     return this.options.staticDir ?? path.resolve(__dirname, '..', '..', 'public');
   }
-
 
   private openSse(req: http.IncomingMessage, res: http.ServerResponse): void {
     res.writeHead(200, {
@@ -353,80 +324,12 @@ export class GatewayServer {
     req.on('close', () => this.sseClients.delete(client));
   }
 
-  private healthPayload(): Record<string, unknown> {
-    const workers = this.supervisor.list();
-    const ready = workers.filter(worker => worker.state === 'ready').length;
-    const degraded = workers.filter(worker => worker.degraded).length;
 
-    return {
-      ok: degraded === 0,
-      gateway: 'semantic-gateway',
-      projects: this.registry.list().length,
-      workers: workers.length,
-      workersReady: ready,
-      workersDegraded: degraded,
-      activeRequests: this.activeRequests,
-      uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000),
-    };
-  }
-
-  private metricsPayload(): Record<string, unknown> {
-    const workers = this.supervisor.list();
-    return {
-      gateway_projects_total: this.registry.list().length,
-      gateway_workers_ready: workers.filter(w => w.state === 'ready').length,
-      gateway_workers_unhealthy: workers.filter(w => w.degraded || w.state === 'crashed').length,
-      gateway_requests_total: this.requestsTotal,
-      gateway_request_duration_ms: this.durations.snapshot(),
-      gateway_active_requests: this.activeRequests,
-      gateway_proxy_errors_total: this.proxyErrorsTotal,
-      gateway_worker_restarts_total: workers.reduce((sum, w) => sum + w.restartCount, 0),
-      gateway_index_jobs_active: this.supervisor.activeIndexJobsCount,
-    };
-  }
 
   private summarize(recordId: string): WorkerSummary | undefined {
     return this.supervisor.list().find(worker => worker.projectId === recordId);
   }
 
-  private projectEntry(id: string): Record<string, unknown> {
-    const registered = this.registry.get(id);
-    const worker = this.summarize(id);
-    const running = worker?.state === 'ready';
-
-    /*
-    | SE-F-058: the old code emitted hard-coded zeros here — a `ready`
-    | project claiming 0 files / 0 symbols is information that makes an
-    | AI (or a human) decide the index is empty when it is not. Now the
-    | payload carries the worker's real health snapshot when one has been
-    | collected, and declares `available: false` when it has not, so
-    | "we have no measurement" can never read as "the measurement is 0".
-    */
-    const snapshot = worker?.lastHealthSnapshot;
-    const observedAt = this.supervisor.lastStatsObservedAt(id);
-
-    return {
-      id,
-      name: registered?.name ?? id,
-      rootPath: registered?.rootPath ?? '',
-      status: running ? 'ready' : worker ? 'indexing' : 'missing',
-      workerState: worker?.state ?? 'stopped',
-      restartCount: worker?.restartCount ?? 0,
-      degraded: worker?.degraded ?? false,
-      stats: {
-        available: snapshot !== undefined,
-        filesCount: snapshot?.files ?? null,
-        symbolsCount: snapshot?.symbols ?? null,
-        dependenciesCount: snapshot?.dependencies ?? null,
-        ...(snapshot && observedAt !== undefined
-          ? { observedAt: new Date(observedAt).toISOString() }
-          : {
-              note:
-                'no worker health snapshot collected yet — counts are NOT measurements of an empty index',
-            }),
-      },
-    };
-  }
 
   /**
    * SE-F-058: a list built synchronously would claim stale (or zero) stats,
@@ -452,7 +355,7 @@ export class GatewayServer {
 
     return {
       total: projects.length,
-      projects: projects.map(entry => this.projectEntry(entry.id)),
+      projects: projects.map(entry => projectEntry(this.supervisor, this.registry, id => this.summarize(id), entry.id)),
     };
   }
 
@@ -478,7 +381,7 @@ export class GatewayServer {
       this.loadStoredWorkerConfig(id) ??
       (record ? this.configs.configFor(id, record.rootPath, record.name) : undefined);
     return {
-      ...this.projectEntry(id),
+      ...projectEntry(this.supervisor, this.registry, id => this.summarize(id), id),
       ...(config !== undefined ? { config } : {}),
     };
   }
@@ -493,7 +396,7 @@ export class GatewayServer {
       supervisor: this.supervisor,
       auth: this.auth,
       send: (res, status, body) => this.send(res, status, body),
-      projectEntry: id => this.projectEntry(id),
+      projectEntry: id => projectEntry(this.supervisor, this.registry, id => this.summarize(id), id),
       requestStarted: () => {
         this.activeRequests += 1;
       },
@@ -514,8 +417,8 @@ export class GatewayServer {
       configs: this.configs,
       send: (res, status, body) => this.send(res, status, body),
       broadcast: event => this.broadcast(event),
-      readBody: req => this.readBody(req),
-      projectEntry: id => this.projectEntry(id),
+      readBody: req => readBody(req),
+      projectEntry: id => projectEntry(this.supervisor, this.registry, id => this.summarize(id), id),
       projectEntryWithConfig: id => this.projectEntryWithConfig(id),
       startWorkerFor: (projectId, rootPath, name) => this.startWorkerFor(projectId, rootPath, name),
       errorStatus: error => this.errorStatus(error),

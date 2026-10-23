@@ -8,6 +8,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { IndexPipeline } from '../../pipeline/IndexPipeline';
+import { ExtractionCache } from '../../pipeline/ExtractionCache';
 import { createExtractors } from '../../pipeline/ExtractorFactory';
 import { OutputWriter, INDEX_FILE_NAME } from '../../pipeline/OutputWriter';
 import { GitInfoCollector } from '../../core/git';
@@ -114,6 +115,16 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
     );
   }
 
+  /*
+  | کش استخراج هر فایل. `--full` کش را نادیده می‌گیرد (و دوباره می‌سازد)؛
+  | `--no-cache` اصلاً نه می‌خواند نه می‌نویسد.
+  */
+  const extractionCache = extractors.fingerprint && boolOption(args.options, 'cache', true)
+    ? new ExtractionCache(projectPaths.extractionCachePath, extractors.fingerprint, {
+        reuse: !boolOption(args.options, 'full', false),
+      })
+    : null;
+
   try {
     const { projectIndex, stats } = await new IndexPipeline({
       workspaceRoot: root,
@@ -121,6 +132,7 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
       symbolExtractors: extractors.symbols,
       dependencyExtractors: extractors.dependencies,
       logger: context.logger,
+      extractionCache,
       /*
       | git به‌طور پیش‌فرض روشن است چون یک ایندکس بدون تاریخچه، نصف
       | سیگنال‌های رتبه‌بندی را ندارد. `--no-git` برای مخزنی که git
@@ -157,6 +169,7 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
         files: stats.files,
         symbols: stats.symbols,
         durationMs: stats.durationMs,
+        ...(stats.extractionCache ? { extractionCache: stats.extractionCache } : {}),
         indexPath: written.indexPath,
         blueprintPath: written.blueprintPath,
         artifactRoot: outputDir,

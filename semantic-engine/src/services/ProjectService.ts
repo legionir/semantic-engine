@@ -17,6 +17,7 @@ import {
   resolveProjectIndexPath,
   resolveProjectPaths,
 } from '../core/config/ProjectPaths';
+import { buildProjectGraph, mergeAliases } from './projectGraph';
 import { ArtifactLocation, DEFAULT_ARTIFACT_LOCATION } from '../core/config/DataRootResolver';
 import { migrateLegacyArtifacts } from '../core/config/migrateLegacyArtifacts';
 import type { ProjectRecord, ProjectRegistry } from '../core/config/ProjectRegistry';
@@ -89,7 +90,7 @@ export class ProjectService {
     const previous = this.projects.get(rootPath);
     const record = this.registerInRegistry(rootPath, name, requestedId);
     const id = record?.id ?? previous?.id ?? this.deriveId(rootPath, name, requestedId);
-    const aliases = this.mergeAliases(previous, record, id, requestedId);
+    const aliases = mergeAliases(previous, record, id, requestedId);
 
     /*
     | مقصد نوشتن و مسیر خواندن جدا از هم تصمیم گرفته می‌شوند:
@@ -387,50 +388,7 @@ export class ProjectService {
    * تولید گراف تحلیلی پروژه برای Impact Analysis و معماری.
    */
   getProjectGraph(id: string): AnalysisGraph {
-    const graph = new AnalysisGraph();
-    const project = this.byId.get(id);
-    if (!project || !project.index) return graph;
-
-    // Add symbols as nodes
-    if (project.index.symbols) {
-      for (const s of project.index.symbols) {
-        const f = project.reader?.getFileById(s.fileId);
-        graph.addNode({
-          id: s.id,
-          type: s.kind || 'symbol',
-          label: s.name,
-          metadata: { path: f?.path, line: s.line },
-        });
-      }
-    }
-
-    // Add dependency graph edges
-    if (project.index.graphs?.dependencyGraph) {
-      for (const [idx, dep] of project.index.graphs.dependencyGraph.entries()) {
-        graph.addEdge({
-          id: `dep_${idx}`,
-          source: dep.from,
-          target: dep.to,
-          relation: 'depends_on',
-          metadata: { confidence: dep.provenance?.confidence },
-        });
-      }
-    }
-
-    // Add call graph edges
-    if (project.index.graphs?.callGraph) {
-      for (const [idx, cg] of project.index.graphs.callGraph.entries()) {
-        graph.addEdge({
-          id: `call_${idx}`,
-          source: cg.caller,
-          target: cg.callee,
-          relation: 'calls',
-          metadata: { confidence: cg.provenance?.confidence },
-        });
-      }
-    }
-
-    return graph;
+    return buildProjectGraph(this.byId.get(id));
   }
 
   /**
@@ -501,24 +459,6 @@ export class ProjectService {
     return projectIdFor(name, canonicalizeRoot(rootPath));
   }
 
-  private mergeAliases(
-    previous: ManagedProject | undefined,
-    record: ProjectRecord | undefined,
-    id: string,
-    requestedId: string
-  ): string[] {
-    const aliases = new Set<string>([id]);
-    if (previous) {
-      aliases.add(previous.id);
-      for (const alias of previous.aliases) aliases.add(alias);
-    }
-    if (record) {
-      aliases.add(record.id);
-      for (const alias of record.aliases) aliases.add(alias);
-    }
-    if (requestedId !== '' && isSafeProjectId(requestedId)) aliases.add(requestedId);
-    return [...aliases];
-  }
 }
 
 export interface ProjectServiceOptions {

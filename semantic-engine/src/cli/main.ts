@@ -82,6 +82,8 @@ index options:
   --diagnostics-budget <ms>  time budget for that pass     (default: 60000)
   --no-git              skip git metrics
   --no-tree-sitter      heuristic extractors only
+  --full                ignore the per-file extraction cache and rebuild it
+  --no-cache            do not read or write the extraction cache
 
 watch options:
   --root <dir>          project to watch           (default: cwd)

@@ -31,169 +31,18 @@
  * دادهٔ واقعی است.
  */
 
-import { AiTool, AiToolInput, AiToolOutput } from './types';
+import { AiTool, AiToolOutput } from './types';
 import { ProjectIndexReader } from '../ProjectIndexReader';
 import { GraphQueryEngine, GraphEdge } from '../../graphs/GraphQueryEngine';
 import { FindTestsTool } from './FindTestsTool';
-import { ProjectIndex, SymbolEntry } from '../../core/types/project-index.types';
+import { SymbolEntry } from '../../core/types/project-index.types';
 import { DECLARATION_KINDS } from '../../symbols/heuristic/SymbolExtractionHelpers';
 import { HIGH_CONFIDENCE_THRESHOLD } from '../../graphs/EdgeProvenance';
+import type { ExplainSymbolInput, RelatedSymbol, SymbolExplanation } from './explainSymbolTypes';
+import { diagnosticsCaveat, displaySymbolName, summarize } from './explainSymbolText';
 
-export interface ExplainSymbolInput extends AiToolInput {
-  /** شناسهٔ symbol. */
-  readonly id?: string;
-  /** یا نامش — اگر یکتا نبود، همهٔ نامزدها گزارش می‌شوند. */
-  readonly name?: string;
-  /** برای رفع ابهام نام. */
-  readonly path?: string;
-  /** چند فراخوان و فراخوانده در خروجی. پیش‌فرض ۲۰. */
-  readonly limit?: number;
-  /** پیش‌فرض ۰ — اینجا **همه‌چیز** نشان داده می‌شود، با برچسب. */
-  readonly minConfidence?: number;
-}
-
-/** یک طرف رابطه، با منشأش. */
-interface RelatedSymbol {
-  readonly id: string;
-  readonly name: string;
-  readonly path?: string;
-  readonly line?: number;
-  readonly basis: string;
-  readonly confidence: number;
-}
-
-export interface SymbolExplanation {
-  readonly id: string;
-  readonly symbol: string;
-  readonly kind: string;
-  readonly file?: string;
-  readonly line: number;
-  readonly endLine: number;
-  readonly signature: string;
-  readonly visibility: string;
-  readonly exported: boolean;
-  readonly deprecated: boolean;
-  readonly documentation: string | null;
-  readonly complexity: number | null;
-  readonly referenceCount: number | null;
-  readonly parameters: readonly unknown[];
-  readonly returnType: string | null;
-  readonly calls: readonly RelatedSymbol[];
-  readonly calledBy: readonly RelatedSymbol[];
-  /*
-  | SE-AI-HONESTY (P-06) — `calls`/`calledBy`/`members` هر سه به `limit`
-  | می‌خورند. بدون اعلامِ برش، AI لیستِ سقف‌خورده را «همهٔ فراخوانی‌ها»
-  | می‌خواند و مثلاً برای refactor دامنهٔ اثر را کوچک‌ازحد می‌گیرد. این
-  | سه فیلد، شمارشِ کامل (پیش از برش) و خودِ پرچم برش را می‌آورند.
-  */
-  /** شمارش کامل یال‌های منحصربه‌فرد call، پیش از برش `limit`. */
-  readonly callsCount: number;
-  /** شمارش کامل یال‌های منحصربه‌فرد caller، پیش از برش `limit`. */
-  readonly calledByCount: number;
-  /** آیا برشِ `limit` چیزی از بین برد؟ + سقفِ اعمال‌شده. */
-  readonly truncated: {
-    readonly calls: boolean;
-    readonly calledBy: boolean;
-    readonly members: boolean;
-    readonly any: boolean;
-    readonly limit: number;
-  };
-  /**
-   * اعضای یک سمبل اعلانی (کلاس/اینترفیس/…), با همان امضا و پیچیدگی هر عضو.
-   *
-   * تا پیش از این `explain_symbol` روی یک کلاس عملاً خالی برمی‌گشت:
-   * یال‌های فراخوانی به سازنده/متدها وصل‌اند نه به خودِ کلاس، پس
-   * `calls`/`calledBy` خالی می‌شد و `complexity` هم `null` — یعنی
-   * «کلاسی با چهل متد» و «کلاسی که هیچ‌کس نمی‌شناسد» یک پاسخ داشتند.
-   */
-  readonly members?: readonly {
-    readonly id: string;
-    readonly name: string;
-    readonly kind: string;
-    readonly line: number;
-    readonly visibility: string;
-    readonly signature: string;
-    readonly complexity: number | null;
-    readonly exported: boolean;
-  }[];
-  /** شمارش کامل اعضا — حتی وقتی `members` به سقف `limit` خورده است. */
-  readonly memberCount?: number;
-  /** جمع پیچیدگی اعضا؛ `null` اگر هیچ عضوی عدد داشته باشد. */
-  readonly aggregateComplexity?: number | null;
-  /** چند گره مستقل به خودِ این سمبل یا اعضای آن اشاره می‌کنند. */
-  readonly referencedBy?: { readonly sources: number; readonly files: number };
-  /** وقتی calls/calledBy از اعضا جمع شده‌اند، همین‌جا گفته می‌شود. */
-  readonly aggregation?: { readonly owners: number; readonly fromMembers: number };
-  /**
-   * تست‌ها، با **دلیل** پیدا شدنشان.
-   *
-   * `find_tests` دلیلش را از قبل حساب می‌کرد و در فیلد `source`
-   * می‌گذاشت؛ نسخهٔ اول این ابزار فقط مسیرها را برمی‌داشت. روی
-   * ایندکس واقعی، `runDoctor` دو فایل تستِ کاملاً بی‌ربط می‌گرفت و
-   * هیچ راهی نبود که مدل بفهمد آن‌ها یک حدسِ نامِ فایل‌اند
-   * (SE-AI-15).
-   */
-  readonly tests: readonly { readonly path: string; readonly reason: string }[];
-  readonly git?: { readonly commitCount: number; readonly hotspotScore: number };
-  readonly aiScore?: { readonly importance: number; readonly hotness: number; readonly readPriority: number };
-  readonly diagnostics: readonly { readonly severity: string; readonly line: number; readonly message: string }[];
-  /** منشأ هر بخش — همان چیزی که خروجیِ وصله‌شدهٔ دستی ندارد. */
-  readonly confidence: {
-    readonly symbol: number;
-    readonly source: string;
-    readonly calls: string;
-    readonly calledBy: string;
-    readonly weakCalls: number;
-    readonly weakCalledBy: number;
-  };
-}
-
-/**
- * چرا این فایل diagnostics ندارد؟ سه جواب ممکن دارد و انتخابِ درست
- * از خودِ ایندکس خوانده می‌شود:
- *
- *   1. `diagnosticsRun` نیست            → مرحلهٔ زبان‌سرور هرگز اجرا نشده
- *   2. فایل بعد از آن مرحله عوض شده   → یافته‌های کهنه پاک شده‌اند
- *   3. هیچ‌کدام                        → واقعاً چیزی پیدا نشد (بدون یادآوری)
- */
-/**
- * نام کامل سمبل برای نمایش.
- *
- * `SymbolIdentity` برای یکتا کردن نام‌های تکراری در یک فایل پسوند `#1`, `#2`
- * می‌گذارد — چیزی که برای *شناسه* لازم است ولی در پاسخ ابزار فقط نویز است،
- * مخصوصاً وقتی نام سمبل خودش یک الگوی تخریبی باشد (`{ scene }#2`). سطرِ
- * همراهِ همان آیتم، جای بی‌معنیِ `#N` را برای تمایز می‌گیرد.
- */
-export function displaySymbolName(symbol: Pick<SymbolEntry, 'name' | 'fullyQualifiedName'>): string {
-  const fq = symbol.fullyQualifiedName;
-  if (!fq) return symbol.name;
-  const stripped = fq.replace(/#\d+$/, '');
-  return stripped.includes('::') ? stripped.split('::').slice(1).join('::') || symbol.name : stripped;
-}
-
-export function diagnosticsCaveat(
-  index: Pick<ProjectIndex, 'diagnosticsRun'>,
-  fileModifiedAt?: string | null
-): string | null {
-  const run = index.diagnosticsRun;
-  if (!run) {
-    return (
-      'no language-server diagnostics in this index (it was built without --lsp-diagnostics); ' +
-      'an empty list here means "not checked", not "clean"'
-    );
-  }
-  if (fileModifiedAt && run.completedAt) {
-    const modified = Date.parse(fileModifiedAt);
-    const completed = Date.parse(run.completedAt);
-    if (Number.isFinite(modified) && Number.isFinite(completed) && modified > completed) {
-      return (
-        `this file changed after the last diagnostics pass (${run.completedAt}), so any findings it ` +
-        'had were cleared as stale — re-run `index --lsp-diagnostics` before reading the empty list as "clean"'
-      );
-    }
-  }
-  return null;
-}
+export type { ExplainSymbolInput, SymbolExplanation } from './explainSymbolTypes';
+export { diagnosticsCaveat, displaySymbolName } from './explainSymbolText';
 
 export class ExplainSymbolTool implements AiTool<ExplainSymbolInput> {
   readonly name = 'explain_symbol';
@@ -527,18 +376,4 @@ export class ExplainSymbolTool implements AiTool<ExplainSymbolInput> {
       confidence: edge.confidence,
     };
   }
-}
-
-/**
- * یک کلمه دربارهٔ اینکه این بخش چقدر قابل اتکاست.
- *
- * `resolved` وقتی همه‌چیز از کامپایلر آمده، `mixed` وقتی بعضی
- * حدس‌اند، `name-match` وقتی همه حدس‌اند، و `none` وقتی چیزی نیست.
- */
-function summarize(entries: readonly RelatedSymbol[]): string {
-  if (entries.length === 0) return 'none';
-  const weak = entries.filter(entry => entry.confidence < HIGH_CONFIDENCE_THRESHOLD).length;
-  if (weak === 0) return 'resolved';
-  if (weak === entries.length) return 'name-match';
-  return 'mixed';
 }

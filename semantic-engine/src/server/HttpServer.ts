@@ -2,13 +2,14 @@
  * HttpServer — Platform Core V1 Main Modular HTTP Server.
  */
 
-import { matchPattern, readBody } from './httpRequestUtils';
+import { authContext as buildAuthContext, findForeignRoot, isManagedBlockedRoute } from './httpRequestChecks';
+import { matchPattern, parseRequestTarget, readBody, writeRouteResponse } from './httpRequestUtils';
 import { StaticAssetServer } from './StaticAssetServer';
 import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import { RouteDefinition, HttpRequestContext, PlatformConfig } from './types';
-import { AuthContext, PermissionScope, ROLE_DEFAULT_PERMISSIONS } from '../security/rbac/types';
+import { PermissionScope } from '../security/rbac/types';
 import { PermissionChecker } from '../security/rbac/PermissionChecker';
 import { SecurityPipeline } from './SecurityPipeline';
 import { socketEndpoint, isNamedPipe } from './socketEndpoint';
@@ -310,58 +311,6 @@ export class HttpServer {
     }
   }
 
-  private authContext(auth: { authenticated: boolean; token?: string }): AuthContext {
-    if (!auth.authenticated) {
-      return {
-        authenticated: false,
-        permissions: [],
-        resourceScope: '*',
-      };
-    }
-
-    if (auth.token) {
-      const record = this.apiKeyStore.verifyToken(auth.token);
-      if (record) {
-        return {
-          authenticated: true,
-          keyId: record.id,
-          name: record.name,
-          role: record.role,
-          permissions: record.permissions,
-          resourceScope: record.resourceScope,
-          // F-0010 — فهرست صریح پروژه‌ها باید از gateway به پلتفرم هم برسد،
-          // وگرنه پلتفرم فقط resourceScope تک‌پروژه را می‌بیند.
-          ...(record.allowedProjects ? { allowedProjects: record.allowedProjects } : {}),
-        };
-      }
-    }
-
-    /* A locally constructed server without a token is an explicit local
-       profile. The CLI always supplies a bootstrap token.
-
-       F-0004 — ACCEPTED RISK (documented, not silently bypassed): when no
-       `token` is configured the server grants a local Admin profile with
-       `resourceScope:'*'`. This is deliberate and safe *because* of how the
-       surface is bounded: the loopback guard (`SecurityPipeline` + `allowRemote
-       = false` default) means only a process already on this machine can reach
-       it, and the CLI/Gateway path always passes a real token so it never takes
-       this branch. A `gatewayManaged` worker is explicitly denied the tokenless
-       profile (see `requiresAuthentication` — every route needs the token).
-       Owner has accepted this as a local-dev convenience; do NOT relax the
-       loopback/managed bounds that make it safe.
-    */
-    if (this.config.gatewayManaged) {
-      // Belt-and-braces: a managed worker must never fall back to Admin.
-      return { authenticated: false, permissions: [], resourceScope: '*' };
-    }
-    return {
-      authenticated: true,
-      role: 'Admin',
-      permissions: ROLE_DEFAULT_PERMISSIONS.Admin,
-      resourceScope: '*',
-    };
-  }
-
   private defaultPermission(method: string): PermissionScope {
     return method === 'GET' ? 'project:read' : 'project:write';
   }
@@ -370,58 +319,6 @@ export class HttpServer {
   private requiresAuthentication(route: RouteDefinition): boolean {
     if (this.config.gatewayManaged) return true;
     return route.requireAuth !== false;
-  }
-
-  /** روت‌های مدیریتی/مسیرپذیر که یک worker تک‌پروژه نباید داشته باشد. */
-  private isManagedBlockedRoute(method: string, pathname: string): boolean {
-    if (!this.config.gatewayManaged) return false;
-
-    const blocked: readonly { method: string; pattern: RegExp }[] = [
-      { method: 'POST', pattern: /^\/api\/v1\/projects$/ },
-      { method: 'PATCH', pattern: /^\/api\/v1\/projects\/[^/]+$/ },
-      { method: 'DELETE', pattern: /^\/api\/v1\/projects\/[^/]+$/ },
-      { method: 'POST', pattern: /^\/api\/v1\/projects\/import-bundle$/ },
-      { method: 'POST', pattern: /^\/api\/v1\/projects\/[^/]+\/source\/upload$/ },
-    ];
-
-    return blocked.some(entry => entry.method === method && entry.pattern.test(pathname));
-  }
-
-  /** کلیدهایی که مسیر می‌برند و در حالت managed بررسی می‌شوند. */
-  private findForeignRoot(body: unknown): { key: string; value: string } | null {
-    if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
-
-    const workspaceRoot = this.config.projectsRoot;
-    if (!workspaceRoot) return null;
-
-    const keys = ['path', 'rootPath', 'root', 'workspaceRoot', 'projectPath'] as const;
-    const record = body as Record<string, unknown>;
-    let allowedRoot: string;
-    try {
-      allowedRoot = fs.realpathSync(workspaceRoot);
-    } catch {
-      return null;
-    }
-
-    for (const key of keys) {
-      const value = record[key];
-      if (typeof value !== 'string' || value.trim() === '') continue;
-
-      let resolved: string;
-      try {
-        resolved = fs.realpathSync(path.resolve(value));
-      } catch {
-        /* مسیر ناموجود: نمی‌تواند به پروژهٔ دیگری برسد، ولی در حالت managed
-           اساساً پذیرفتنی نیست. */
-        return { key, value };
-      }
-
-      if (resolved !== allowedRoot && !resolved.startsWith(allowedRoot + path.sep)) {
-        return { key, value };
-      }
-    }
-
-    return null;
   }
 
   private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -451,21 +348,7 @@ export class HttpServer {
       return;
     }
 
-    /*
-    | `url.parse` is deprecated (DEP0169). `new URL(req.url, base)` is not a
-    | drop-in: it normalises `..` and treats `//host/x` as a host. The request
-    | target is split by hand instead, so the pathname stays exactly as sent
-    | (as before) and only the query goes through URLSearchParams.
-    */
-    /* Absolute-form targets (`GET http://host/x`, sent by proxies) reduce to their path. */
-    const rawTarget = (req.url || '/').split('#')[0]!.replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^/?]*/, '') || '/';
-    const queryStart = rawTarget.indexOf('?');
-    const pathname = (queryStart === -1 ? rawTarget : rawTarget.slice(0, queryStart)) || '/';
-    const query: Record<string, string> = {};
-    if (queryStart !== -1) {
-      const search = new URLSearchParams(rawTarget.slice(queryStart + 1));
-      for (const key of new Set(search.keys())) query[key] = search.get(key) ?? '';
-    }
+    const { pathname, query } = parseRequestTarget(req.url);
 
     const match = this.matchRoute(req.method || 'GET', pathname);
     if (!match) {
@@ -489,7 +372,7 @@ export class HttpServer {
     | Gateway است نه او. روت‌هایی که می‌توانند پروژه اضافه/حذف کنند یا
     | مسیری دلخواه بپذیرند، با ۴۰۳ بسته می‌شوند.
     */
-    if (this.isManagedBlockedRoute(req.method || 'GET', pathname)) {
+    if (isManagedBlockedRoute(this.config, req.method || 'GET', pathname)) {
       res.writeHead(403, { 'Content-Type': 'application/json' });
       res.end(
         JSON.stringify({
@@ -512,7 +395,7 @@ export class HttpServer {
     const auth = apiKeyAuth
       ? { authenticated: true, token: candidateAuth.token }
       : candidateAuth;
-    const authContext = this.authContext(auth);
+    const authContext = buildAuthContext(this.apiKeyStore, this.config, auth);
     if (this.requiresAuthentication(route) && !auth.authenticated) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Unauthorized: valid token is required' }));
@@ -522,7 +405,7 @@ export class HttpServer {
     let body: unknown = undefined;
     if (['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
       try {
-        body = await this.readBody(req, this.config.maxBodyBytes || 5 * 1024 * 1024);
+        body = await readBody(req, this.config.maxBodyBytes || 5 * 1024 * 1024);
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: (err as Error).message }));
@@ -544,7 +427,7 @@ export class HttpServer {
       | تلاش برای رسیدن به پروژهٔ دیگر.
       */
       if (this.config.gatewayManaged) {
-        const foreign = this.findForeignRoot(body);
+        const foreign = findForeignRoot(this.config, body);
         if (foreign) {
           res.writeHead(403, { 'Content-Type': 'application/json' });
           res.end(
@@ -594,24 +477,7 @@ export class HttpServer {
     const responseData = await route.handler(context);
 
     if (responseData && !res.headersSent) {
-      const status = responseData.status || 200;
-      if (responseData.headers) {
-        for (const [hName, hVal] of Object.entries(responseData.headers)) {
-          res.setHeader(hName, hVal);
-        }
-      }
-
-      if (responseData.json !== undefined) {
-        const masked = this.security.maskSecrets(responseData.json);
-        res.writeHead(status, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(masked));
-      } else if (responseData.text !== undefined) {
-        res.writeHead(status, { 'Content-Type': 'text/plain' });
-        res.end(responseData.text);
-      } else {
-        res.writeHead(status);
-        res.end();
-      }
+      writeRouteResponse(res, responseData, value => this.security.maskSecrets(value));
     }
   }
 
@@ -619,7 +485,7 @@ export class HttpServer {
     for (const route of this.routes) {
       if (route.method !== method) continue;
 
-      const params = this.matchPattern(route.pattern, pathname);
+      const params = matchPattern(route.pattern, pathname);
       if (params !== null) {
         return { route, params };
       }
@@ -627,20 +493,7 @@ export class HttpServer {
     return null;
   }
 
-  private matchPattern(pattern: string, pathname: string): Record<string, string> | null {
-    return matchPattern(pattern, pathname);
-  }
-
   private readBody(req: http.IncomingMessage, maxBytes: number): Promise<unknown> {
     return readBody(req, maxBytes);
   }
-
-  /*
-  | SE-PERF-01 — این تابع برای هر دارایی ایستا (html، css، js، فونت)
-  | پنج `existsSync` می‌زد تا پوشه را پیدا کند، بعد `statSync` و بعد
-  | کل فایل را همگام می‌خواند. هر کدام از این‌ها event loop را نگه
-  | می‌داشت، و بارگذاری یک صفحه ده‌ها بار صدایش می‌زند.
-  |
-  | مسیر پوشه یک بار پیدا و کش می‌شود، و خواندن فایل ناهمگام است.
-  */
 }

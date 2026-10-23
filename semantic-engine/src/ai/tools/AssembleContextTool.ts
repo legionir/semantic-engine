@@ -30,6 +30,8 @@
 
 import * as path from 'path';
 
+import { validateAssembleInput } from './assembleContextInput';
+import { Entity, SectionName, buildSections } from './assembleContextSections';
 import { AiTool, AiToolInput, AiToolOutput, AiToolResultItem } from './types';
 import { ProjectIndexReader } from '../ProjectIndexReader';
 import type { IEmbeddingGenerator } from '../../vector/EmbeddingGenerator';
@@ -38,7 +40,7 @@ import type { BlueprintIndex } from '../discovery/BlueprintIndex';
 import { GitClient } from '../../core/git/GitClient';
 import { GraphQueryEngine } from '../../graphs/GraphQueryEngine';
 import { ContextRanker, RankCandidate, RankedCandidate } from '../ranking/ContextRanker';
-import { BudgetSection, TokenBudget, estimateTokens } from '../ranking/TokenBudget';
+import { TokenBudget, estimateTokens } from '../ranking/TokenBudget';
 import type { FileEntry, SymbolEntry } from '../../core/types/project-index.types';
 
 /*
@@ -56,6 +58,12 @@ export interface AssembleContextInput extends AiToolInput {
   readonly includeTests?: boolean;
   readonly includeRecentChanges?: boolean;
   readonly dependencyDepth?: number;
+  /**
+   * Include ranking explanations (per-item signal names and the ids kept in each budget
+   * section). Off by default: they are for debugging a ranking, and cost about a fifth of the
+   * response in tokens that a model gets nothing from.
+   */
+  readonly explain?: boolean;
 }
 
 export interface AssembleContextOptions {
@@ -75,72 +83,6 @@ export interface AssembleContextOptions {
   readonly blueprint?: BlueprintIndex;
 }
 
-/** بخشی از context، همراه با سهم تضمین‌شده‌اش. */
-type SectionName =
-  | 'targetFiles'
-  | 'targetSymbols'
-  | 'relatedFiles'
-  | 'relatedSymbols'
-  | 'tests'
-  | 'recentChanges';
-
-interface Entity {
-  readonly id: string;
-  readonly section: SectionName;
-  readonly name: string;
-  readonly kind: string;
-  readonly path?: string;
-  readonly line?: number;
-  readonly text: string;
-  readonly hops: number | null;
-}
-
-const SECTION_HEADERS: Readonly<Record<SectionName, string>> = {
-  targetFiles: '=== Target Files ===',
-  targetSymbols: '=== Target Symbols ===',
-  relatedFiles: '=== Related Files ===',
-  relatedSymbols: '=== Related Symbols ===',
-  tests: '=== Related Tests ===',
-  recentChanges: '=== Recent Changes ===',
-};
-
-/*
-| سهم‌های تضمین‌شده.
-|
-| «هدف» تضمین دارد چون بدون آن، کل خروجی می‌تواند دربارهٔ همسایه‌ها
-| باشد و خودِ چیزی که قرار است تغییر کند بیفتد. «تست» تضمین دارد چون
-| معیار پذیرش فاز ۴۲ همین است و چون آخرین بخش است — یعنی دقیقاً همان
-| جایی که برشِ از انتها می‌خورد.
-|
-| بخش‌های بدون تضمین در پاس دومِ بودجه، آزادانه رقابت می‌کنند.
-*/
-const SECTION_GUARANTEE: Readonly<Partial<Record<SectionName, number>>> = {
-  targetFiles: 0.2,
-  targetSymbols: 0.1,
-  tests: 0.15,
-  /*
-  | SE-AI-18 — «تغییرات اخیر» تضمین می‌گیرد چون **صریحاً درخواست
-  | شده** است (`includeRecentChanges` پیش‌فرضش false است). بدون
-  | تضمین، سطرهای commit امتیازِ صفر می‌گیرند — رتبه‌بند دربارهٔ یک
-  | سطر commit هیچ سیگنالی ندارد و صادقانه چیزی نمی‌گوید — و در
-  | استخر سراسری همیشه آخر می‌ایستند.
-  |
-  | اندازه‌گیری‌ای که این را لازم کرد: با بودجهٔ ۲۰۰ توکن یک سطر
-  | commit می‌آمد و با بودجهٔ ۴۰۰ توکن هیچ سطری. یعنی بودجهٔ بیشتر،
-  | خروجی کمتر.
-  */
-  recentChanges: 0.1,
-};
-
-const SECTION_ORDER: readonly SectionName[] = [
-  'targetFiles',
-  'targetSymbols',
-  'relatedFiles',
-  'relatedSymbols',
-  'tests',
-  'recentChanges',
-];
-
 export class AssembleContextTool implements AiTool<AssembleContextInput> {
   readonly name = 'assemble_context';
   readonly description =
@@ -155,6 +97,7 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
       includeTests: { type: 'boolean', default: true },
       includeRecentChanges: { type: 'boolean', default: false },
       dependencyDepth: { type: 'integer', default: 1 },
+      explain: { type: 'boolean', default: false, description: 'Include ranking signals and kept ids (debugging; costs ~20% more tokens)' },
     },
     required: ['task'],
   };
@@ -182,13 +125,9 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
 
   async execute(input: AssembleContextInput): Promise<AiToolOutput> {
     try {
-      if (typeof input.task !== 'string' || input.task.trim().length === 0) return { success: false, error: 'task is required and must be a non-empty string', items: [] };
-      if (input.targetFiles !== undefined && (!Array.isArray(input.targetFiles) || input.targetFiles.some(file => typeof file !== 'string'))) return { success: false, error: 'targetFiles must be an array of strings', items: [] };
-      if (input.targetSymbols !== undefined && (!Array.isArray(input.targetSymbols) || input.targetSymbols.some(symbol => typeof symbol !== 'string'))) return { success: false, error: 'targetSymbols must be an array of strings', items: [] };
-      if (input.maxTokens !== undefined && (!Number.isInteger(input.maxTokens) || input.maxTokens < 1)) return { success: false, error: 'maxTokens must be a positive integer', items: [] };
-      if (input.dependencyDepth !== undefined && (!Number.isInteger(input.dependencyDepth) || input.dependencyDepth < 1)) return { success: false, error: 'dependencyDepth must be a positive integer', items: [] };
-      if (input.includeTests !== undefined && typeof input.includeTests !== 'boolean') return { success: false, error: 'includeTests must be a boolean', items: [] };
-      if (input.includeRecentChanges !== undefined && typeof input.includeRecentChanges !== 'boolean') return { success: false, error: 'includeRecentChanges must be a boolean', items: [] };
+      const invalid = validateAssembleInput(input);
+      if (invalid) return { success: false, error: invalid, items: [] };
+      const explain = input.explain === true;
 
       const maxTokens = input.maxTokens ?? 4000;
       const includeTests = input.includeTests ?? true;
@@ -239,7 +178,8 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
         */
         const discovery = await this.discoverer().discover({
           task: input.task,
-          limit: 30,
+          /* A larger budget can hold more candidates; a fixed 30 left most of an 8k budget unused. */
+          limit: Math.min(80, Math.max(30, Math.floor(maxTokens / 100))),
           expansionDepth: dependencyDepth + 1,
           ...(includeTests ? { includeTests: true } : {}),
         });
@@ -304,7 +244,7 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
 
       const ranked = this.rankEntities(entities, keywordById, searchSeeded);
 
-      const sections = this.buildSections(entities, ranked);
+      const sections = buildSections(entities, ranked);
       const assembled = this.budget.assemble(sections, {
         maxTokens,
         preamble: `Task: ${input.task}`,
@@ -330,7 +270,7 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
             metadata: {
               section: entity.section,
               graphHops: entity.hops,
-              signals: r.contributions.map(c => c.signal),
+              ...(explain ? { signals: r.contributions.map(c => c.signal) } : {}),
             },
           };
         });
@@ -353,7 +293,9 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
           budget: {
             usedTokens: assembled.usedTokens,
             maxTokens: assembled.maxTokens,
-            sections: assembled.sections,
+            sections: explain
+              ? assembled.sections
+              : assembled.sections.map(({ keptIds: _keptIds, ...section }) => section),
           },
           ...(recentChangesNote ? { recentChanges: recentChangesNote } : {}),
         },
@@ -419,27 +361,6 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
     });
 
     return this.ranker.rank<Entity>(candidates, { churnRankOutOf });
-  }
-
-  private buildSections(
-    entities: readonly Entity[],
-    ranked: readonly RankedCandidate<Entity>[]
-  ): BudgetSection[] {
-    const scoreById = new Map(ranked.map(r => [r.id, r.score]));
-
-    return SECTION_ORDER.map(name => {
-      const items = entities
-        .filter(e => e.section === name)
-        .map(e => ({ id: e.id, text: e.text, score: scoreById.get(e.id) ?? 0 }));
-
-      const guarantee = SECTION_GUARANTEE[name];
-      return {
-        name,
-        header: SECTION_HEADERS[name],
-        items,
-        ...(guarantee !== undefined ? { guarantee } : {}),
-      };
-    }).filter(section => section.items.length > 0);
   }
 
   private fileEntity(file: FileEntry, section: SectionName, hops: number | null): Entity {

@@ -9,6 +9,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { IndexPipeline } from '../../pipeline/IndexPipeline';
+import { ExtractionCache } from '../../pipeline/ExtractionCache';
 import { createExtractors } from '../../pipeline/ExtractorFactory';
 import { OutputWriter, INDEX_FILE_NAME } from '../../pipeline/OutputWriter';
 import { WatchPipeline } from '../../pipeline/WatchPipeline';
@@ -101,7 +102,8 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
   }
 
   /* همان resolver دستور `index`؛ watch و write هرگز واگرا نمی‌شوند. */
-  const outputDir = projectPathsFromArgs(args, root).artifactRoot;
+  const watchPaths = projectPathsFromArgs(args, root);
+  const outputDir = watchPaths.artifactRoot;
   const pidPath = path.join(outputDir, PID_FILE_NAME);
 
   const claim = claimPidFile(pidPath);
@@ -160,7 +162,13 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
       projectIndex = existingIndex;
       indexedFiles = projectIndex.files.length;
     } else {
+      const extractionCache = extractors.fingerprint && boolOption(args.options, 'cache', true)
+        ? new ExtractionCache(watchPaths.extractionCachePath, extractors.fingerprint, {
+            reuse: !boolOption(args.options, 'full', false),
+          })
+        : null;
       const indexed = await new IndexPipeline({
+        extractionCache,
         workspaceRoot: root,
         outputPath: indexPath,
         symbolExtractors: extractors.symbols,

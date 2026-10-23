@@ -11,29 +11,19 @@ import {
   FileEntry,
   SymbolEntry,
 } from '../core/types/project-index.types';
-import {
-  Blueprint,
-  BlueprintMeta,
-  ModuleEntry,
-  FolderNode,
-  BlueprintDependencyGraph,
-  GraphNode,
-  GraphEdge,
-  BlueprintSymbolIndexEntry,
-  TechnicalConstraint,
-  ArchitectureOverview,
-  ArchitectureLayer,
-  ApiEntry,
-  DataFlowEdge,
-} from '../core/types/blueprint.types';
+import { Blueprint, BlueprintMeta, ModuleEntry, BlueprintDependencyGraph, GraphNode, GraphEdge, BlueprintSymbolIndexEntry, ApiEntry } from '../core/types/blueprint.types';
 import { sha256 } from '../core/utils/hash';
+import { ROOT_MODULE_PATH } from './blueprintCategories';
 import {
-  ARCHITECTURE_LAYERS,
-  MIN_CATEGORY_SHARE_DIVISOR,
-  MODULE_CATEGORIES,
-  ROOT_MODULE_PATH,
-  matchesSegment,
-} from './blueprintCategories';
+  buildFolderStructure,
+  deriveModulePath,
+  inferResponsibility,
+  modulePathToId,
+} from './blueprintStructure';
+import {
+  buildArchitectureOverview,
+  buildTechnicalConstraints,
+} from './blueprintArchitecture';
 import { ApiMapExtractor } from './ApiMapExtractor';
 import { EntityMapExtractor, WorkflowExtractor } from './EntityMapExtractor';
 
@@ -77,7 +67,7 @@ export class BlueprintGenerator {
   generate(projectIndex: ProjectIndex): Blueprint {
     const modules = this.buildModuleMap(projectIndex.files);
     const apiMap = this.buildApiMap(projectIndex);
-    const folderStructure = this.buildFolderStructure(projectIndex.files);
+    const folderStructure = buildFolderStructure(projectIndex.files);
     const dependencyGraph = this.buildDependencyGraph(projectIndex, modules);
     const moduleDependencies = this.deriveModuleDependencies(modules, dependencyGraph);
 
@@ -89,7 +79,7 @@ export class BlueprintGenerator {
     return {
       schemaVersion: '2.0.0',
       meta: this.buildMeta(projectIndex),
-      architectureOverview: this.buildArchitectureOverview(modulesWithDeps),
+      architectureOverview: buildArchitectureOverview(modulesWithDeps),
       moduleMap: modulesWithDeps,
       folderStructure,
       dependencyGraph,
@@ -100,7 +90,7 @@ export class BlueprintGenerator {
       apiMap,
       workflowExecutionMap: new WorkflowExtractor().extract({ projectIndex, apiMap }),
       symbolIndex: this.buildSymbolIndex(projectIndex.symbols, projectIndex.files),
-      technicalConstraints: this.buildTechnicalConstraints(projectIndex),
+      technicalConstraints: buildTechnicalConstraints(projectIndex),
     };
   }
 
@@ -203,7 +193,7 @@ export class BlueprintGenerator {
 
     for (const file of files) {
       if (file.binary) continue;
-      const modulePath = this.deriveModulePath(file.path);
+      const modulePath = deriveModulePath(file.path);
 
       const list = moduleFiles.get(modulePath);
       if (list) {
@@ -215,7 +205,7 @@ export class BlueprintGenerator {
 
     const modules: ModuleEntry[] = [];
     for (const [modulePath, fileList] of moduleFiles) {
-      const id = this.modulePathToId(modulePath);
+      const id = modulePathToId(modulePath);
       const name = modulePath === ROOT_MODULE_PATH
         ? 'root'
         : path.basename(modulePath) || modulePath;
@@ -223,7 +213,7 @@ export class BlueprintGenerator {
         id,
         name,
         path: modulePath,
-        responsibility: this.inferResponsibility(name, fileList),
+        responsibility: inferResponsibility(name, fileList),
         fileIds: fileList.map(f => f.id).sort(),
       };
       modules.push(entry);
@@ -232,199 +222,6 @@ export class BlueprintGenerator {
     }
 
     return modules.sort((a, b) => a.path.localeCompare(b.path));
-  }
-
-  /**
-   * ماژولِ یک فایل = دایرکتوری والدش.
-   *
-   * SE-BP-04 — قبلاً برای `dir === '.'` مقدار `null` برمی‌گشت، پس هر
-   * فایلِ ریشه (`package.json`, `README.md`, `tsconfig.json`) در هیچ
-   * ماژولی نبود و از `moduleMap` غایب می‌ماند. حالا همه در یک ماژولِ
-   * صریحِ ریشه جمع می‌شوند.
-   */
-  private deriveModulePath(filePath: string): string {
-    const dir = path.dirname(filePath).replace(/\\/g, '/');
-    return dir === '.' || dir === '' ? ROOT_MODULE_PATH : dir;
-  }
-
-  /**
-   * شناسهٔ ماژول — SE-BP-01.
-   *
-   * نسخهٔ قبلی این بود:
-   *
-   * ```ts
-   * modulePath.replace(/\//g, '-').replace(/_/g, '-').toLowerCase()
-   * ```
-   *
-   * سه نگاشتِ اتلافی روی هم: جداکنندهٔ مسیر و زیرخط هر دو به `-`
-   * تبدیل می‌شدند و همه‌چیز کوچک می‌شد. پس `src/foo_bar` و
-   * `src/foo/bar` هر دو `mod-src-foo-bar` می‌شدند، و `src/FooBar` با
-   * `src/foobar` یکی. دو `ModuleEntry` با شناسهٔ یکسان در `moduleMap`
-   * ظاهر می‌شدند و نگاشتِ فایل به ماژول غلط می‌شد.
-   *
-   * حالا شناسه هم **خوانا** می‌ماند و هم **یکتا**: شکلِ خواناشده
-   * ساخته می‌شود و اگر با مسیرِ اصلی بازگشت‌پذیر نباشد، یک پسوندِ
-   * کوتاهِ هش از مسیرِ دقیق به آن اضافه می‌شود.
-   */
-  private modulePathToId(modulePath: string): string {
-    if (modulePath === ROOT_MODULE_PATH) return 'mod-root';
-
-    const normalized = modulePath.replace(/\\/g, '/');
-    const readable = normalized
-      .toLowerCase()
-      // هر نویسه خارج از `[a-z0-9]` (جداکننده، `_`، `.`، `@`، فاصله، ...)
-      // با schema (`^mod-[a-z0-9-]+$`) سازگار نیست؛ مثلاً `.github` یا `@types`.
-      .replace(/[^a-z0-9]+/g, '-')
-      // `src/__tests__` نباید `src---tests--` شود.
-      .replace(/^-|-$/g, '');
-
-    // بازگشت‌پذیر؟ اگر شکلِ خوانا اطلاعاتی را دور نریخته باشد، همان کافی است.
-    const lossless = /^[a-z0-9]+(\/[a-z0-9]+)*$/.test(normalized);
-
-    if (lossless) return `mod-${readable}`;
-
-    const hash = sha256(normalized).substring(0, 6);
-    return readable ? `mod-${readable}-${hash}` : `mod-${hash}`;
-  }
-
-  /**
-   * مسئولیت ماژول را با **رأی‌گیری روی فایل‌ها** تعیین می‌کند.
-   *
-   * SE-BP-05 — نسخهٔ قبلی این بود:
-   *
-   * ```ts
-   * const names = files.map(f => f.path).join(' ');
-   * const lower = names.toLowerCase();
-   * if (lower.includes('service')) return 'Business logic and orchestration';
-   * ...
-   * if (lower.includes('test')) return 'Test specifications';
-   * ```
-   *
-   * یعنی زیررشته را در *الحاقِ* همهٔ مسیرها می‌جست، پس یک فایل کافی
-   * بود تا برچسبِ کلِ ماژول عوض شود، و ترتیبِ if ها تعیین می‌کرد کدام
-   * فایل برنده است. اندازه‌گیری روی ایندکس واقعی این پکیج (۳۲ ماژول):
-   * ۲۵ ماژول برچسب «Test specifications» گرفتند و ۲۰ تای آنها
-   * اکثریتشان کدِ منبع بود.
-   *
-   * حالا هر فایل *مستقل* دسته‌بندی می‌شود و پرتکرارترین دسته برنده
-   * است. دو قاعدهٔ صریح:
-   *
-   * - **فایل‌های تست در رأی‌گیریِ موضوع شرکت نمی‌کنند.** `X.test.ts`
-   *   دربارهٔ موضوعِ ماژول چیزی نمی‌گوید جز اینکه `X` آزموده شده.
-   *   «Test specifications» فقط وقتی برنده است که هیچ فایلِ غیرتست
-   *   نمانده باشد.
-   * - **تساوی به نفعِ دستهٔ خاص‌تر شکسته می‌شود** (ترتیب `CATEGORIES`)،
-   *   تا نتیجه به ترتیبِ ورودی حساس نباشد.
-   */
-  private inferResponsibility(moduleName: string, files: FileEntry[]): string {
-    const votes = new Map<string, number>();
-    let nonTestFiles = 0;
-
-    for (const file of files) {
-      if (this.isTestFile(file)) continue;
-      nonTestFiles++;
-
-      const category = this.categorizeFile(file.path);
-      if (category) votes.set(category, (votes.get(category) ?? 0) + 1);
-    }
-
-    if (nonTestFiles === 0 && files.length > 0) return 'Test specifications';
-
-    let winner: string | null = null;
-    let best = 0;
-    for (const category of MODULE_CATEGORIES) {
-      const count = votes.get(category.label) ?? 0;
-      if (count > best) {
-        best = count;
-        winner = category.label;
-      }
-    }
-
-    /*
-    | اکثریتِ نسبی کافی نیست. `mod-lsp` روی ایندکس واقعی سیزده فایل
-    | منبع دارد که فقط یکی‌شان `LspEnrichmentService.ts` است؛ با
-    | رأی‌گیریِ ساده همان یک رأی برنده می‌شد چون بقیه هیچ رأیی
-    | نمی‌دهند. برچسبی که از ۸٪ فایل‌ها می‌آید، دربارهٔ ماژول چیزی
-    | نمی‌گوید.
-    |
-    | آستانه یک‌سوم است: قضاوت، نه اندازه‌گیری — ولی قضاوتی که نوشته
-    | شده و آزمون دارد.
-    */
-    if (winner && best * MIN_CATEGORY_SHARE_DIVISOR >= nonTestFiles) return winner;
-    if (moduleName === 'src' || moduleName === 'app') {
-      return 'Application entrypoint and core setup';
-    }
-    return `Module ${moduleName}`;
-  }
-
-  private isTestFile(file: FileEntry): boolean {
-    if (file.testFile) return true;
-    return /\.(test|spec)\.[cm]?[jt]sx?$/i.test(file.path);
-  }
-
-  /** دستهٔ یک فایل بر اساس مسیرِ *خودش*، نه الحاقِ مسیرهای ماژول. */
-  private categorizeFile(filePath: string): string | null {
-    const lower = filePath.toLowerCase();
-    for (const category of MODULE_CATEGORIES) {
-      if (category.patterns.some(pattern => lower.includes(pattern))) {
-        return category.label;
-      }
-    }
-    return null;
-  }
-
-
-  private buildFolderStructure(files: readonly FileEntry[]): FolderNode {
-    interface MutableFolderNode {
-      name: string;
-      type: 'file' | 'directory';
-      fileId?: string | null;
-      children?: MutableFolderNode[];
-    }
-
-    const root: MutableFolderNode = { name: '.', type: 'directory', children: [] };
-    const index = new Map<string, MutableFolderNode>();
-    index.set('.', root);
-
-    for (const file of files) {
-      const parts = file.path.split('/');
-      let currentPath = '';
-
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i]!;
-        const isFile = i === parts.length - 1;
-        const parentPath = currentPath || '.';
-        currentPath = currentPath ? `${currentPath}/${part}` : part;
-
-        let node = index.get(currentPath);
-        if (!node) {
-          node = isFile
-            ? { name: part, type: 'file', fileId: file.id }
-            : { name: part, type: 'directory', children: [] };
-          index.set(currentPath, node);
-
-          const parent = index.get(parentPath)!;
-          parent.children = parent.children ?? [];
-          parent.children.push(node);
-        }
-      }
-    }
-
-    this.sortFolderChildren(root);
-    return root as FolderNode;
-  }
-
-  private sortFolderChildren(node: { children?: { name: string; type: 'file' | 'directory'; children?: unknown[] }[] }): void {
-    if (!node.children || node.children.length === 0) return;
-    node.children.sort((a, b) => {
-      if (a.type === b.type) return a.name.localeCompare(b.name);
-      return a.type === 'directory' ? -1 : 1;
-    });
-    for (const child of node.children) {
-      if ('children' in child) {
-        this.sortFolderChildren(child as { children?: { name: string; type: 'file' | 'directory'; children?: unknown[] }[] });
-      }
-    }
   }
 
   private buildDependencyGraph(
@@ -506,68 +303,6 @@ export class BlueprintGenerator {
     return result;
   }
 
-  private buildArchitectureOverview(modules: ModuleEntry[]): ArchitectureOverview {
-    const dataFlow: DataFlowEdge[] = [];
-
-    for (const mod of modules) {
-      for (const dep of mod.dependsOnModuleIds ?? []) {
-        dataFlow.push({
-          from: mod.id,
-          to: dep,
-          description: `${mod.name} depends on ${dep}`,
-        });
-      }
-    }
-
-    return {
-      layers: this.buildLayers(modules),
-      dataFlow,
-    };
-  }
-
-  /**
-   * لایه‌ها از ساختار پوشه — SE-BP-02.
-   *
-   * تطابق روی **قطعه‌های** مسیر است نه زیررشته، به همان دلیلی که
-   * SE-VEC-11 و SE-BP-05 توضیح دادند: `src/models` قطعهٔ `model` دارد
-   * ولی `src/remodeling` ندارد.
-   *
-   * ماژولی که با هیچ الگویی نخواند، در هیچ لایه‌ای قرار نمی‌گیرد. یک
-   * لایهٔ «other» که همه چیز را جمع کند، اطلاعاتی حمل نمی‌کند و فقط
-   * وانمود می‌کند معماری کشف شده.
-   */
-  private buildLayers(modules: ModuleEntry[]): ArchitectureLayer[] {
-    const byLayer = new Map<string, string[]>();
-
-    for (const mod of modules) {
-      const segments = new Set(
-        mod.path
-          .toLowerCase()
-          .split(/[^a-z0-9]+/)
-          .filter(Boolean)
-      );
-      // نامِ ماژول هم یک قطعه است؛ `src/api` باید با «api» بخورد.
-      for (const part of mod.name.toLowerCase().split(/[^a-z0-9]+/)) {
-        if (part) segments.add(part);
-      }
-
-      for (const layer of ARCHITECTURE_LAYERS) {
-        if (!layer.patterns.some(pattern => matchesSegment(pattern, segments))) continue;
-        const list = byLayer.get(layer.name) ?? [];
-        list.push(mod.id);
-        byLayer.set(layer.name, list);
-        break; // اولین تطابق برنده است — هیچ ماژولی در دو لایه نیست.
-      }
-    }
-
-    return ARCHITECTURE_LAYERS.filter(layer => byLayer.has(layer.name)).map(layer => ({
-      name: layer.name,
-      responsibility: layer.responsibility,
-      moduleIds: (byLayer.get(layer.name) ?? []).sort(),
-      derivedFrom: 'heuristic' as const,
-    }));
-  }
-
   private buildSymbolIndex(
     symbols: readonly SymbolEntry[],
     files: readonly FileEntry[]
@@ -594,126 +329,4 @@ export class BlueprintGenerator {
     });
   }
 
-  private buildTechnicalConstraints(projectIndex: ProjectIndex): TechnicalConstraint[] {
-    const constraints: TechnicalConstraint[] = [
-      {
-        id: 'tc-layered-architecture',
-        pattern: 'Layered Architecture',
-        description: 'Modules should respect directory-level separation of concerns (services, controllers, repositories, etc.).',
-        enforcement: 'code-review',
-      },
-      {
-        id: 'tc-no-circular-dependencies',
-        pattern: 'No Circular Dependencies',
-        description: 'File-level import cycles should be avoided to keep coupling low.',
-        enforcement: 'ci-check',
-      },
-    ];
-
-    /*
-    | SE-BP-03 — تشخیص واقعیِ حلقه.
-    |
-    | جای این حلقه قبلاً کدِ مرده بود: روی فایل‌ها می‌چرخید و تنها
-    | دستور مؤثرش `continue` بود، پس `violatingFileIds` هرگز پر
-    | نمی‌شد. و قانونِ «No Circular Dependencies» اعلام می‌شد بی‌آنکه
-    | هیچ حلقه‌ای تشخیص داده شود — با اینکه گراف کامل در دسترس بود.
-    */
-    const cyclic = this.filesInCycles(projectIndex);
-    if (cyclic.length > 0) {
-      constraints[1] = { ...constraints[1]!, violatingFileIds: cyclic };
-    }
-
-    return constraints;
-  }
-
-  /**
-   * فایل‌هایی که در دست‌کم یک حلقهٔ import هستند.
-   *
-   * الگوریتم Tarjan برای مؤلفه‌های قویاً همبند: هر مؤلفه با بیش از
-   * یک عضو یک حلقه است، و یک عضو با یالِ به‌خودش هم.
-   *
-   * فقط یال‌هایی شمرده می‌شوند که **هر دو سرشان فایلِ واقعی** باشد؛
-   * یال به یک پکیج خارجی حلقه نمی‌سازد چون آن سر، گرهی در پروژه
-   * نیست.
-   */
-  private filesInCycles(projectIndex: ProjectIndex): string[] {
-    const fileIds = new Set(projectIndex.files.map(f => f.id));
-    const out = new Map<string, string[]>();
-
-    for (const edge of projectIndex.graphs.dependencyGraph) {
-      if (!fileIds.has(edge.from) || !fileIds.has(edge.to)) continue;
-      const list = out.get(edge.from) ?? [];
-      list.push(edge.to);
-      out.set(edge.from, list);
-    }
-
-    let counter = 0;
-    const indexOf = new Map<string, number>();
-    const lowLink = new Map<string, number>();
-    const onStack = new Set<string>();
-    const stack: string[] = [];
-    const inCycle = new Set<string>();
-
-    /*
-    | پیمایش صریح با پشته، نه بازگشتی. روی مخزنی با هزاران فایل،
-    | Tarjan بازگشتی به سقفِ پشتهٔ Node می‌خورد — همان درسی که فاز
-    | ۳۹ دربارهٔ پیمایش گراف گرفت.
-    */
-    for (const start of fileIds) {
-      if (indexOf.has(start)) continue;
-
-      const work: { node: string; edge: number }[] = [{ node: start, edge: 0 }];
-      indexOf.set(start, counter);
-      lowLink.set(start, counter);
-      counter++;
-      stack.push(start);
-      onStack.add(start);
-
-      while (work.length > 0) {
-        const frame = work[work.length - 1]!;
-        const neighbours = out.get(frame.node) ?? [];
-
-        if (frame.edge < neighbours.length) {
-          const next = neighbours[frame.edge]!;
-          frame.edge++;
-
-          if (next === frame.node) {
-            inCycle.add(next); // یال به خودش
-            continue;
-          }
-
-          if (!indexOf.has(next)) {
-            indexOf.set(next, counter);
-            lowLink.set(next, counter);
-            counter++;
-            stack.push(next);
-            onStack.add(next);
-            work.push({ node: next, edge: 0 });
-          } else if (onStack.has(next)) {
-            lowLink.set(frame.node, Math.min(lowLink.get(frame.node)!, indexOf.get(next)!));
-          }
-          continue;
-        }
-
-        work.pop();
-        const parent = work[work.length - 1];
-        if (parent) {
-          lowLink.set(parent.node, Math.min(lowLink.get(parent.node)!, lowLink.get(frame.node)!));
-        }
-
-        if (lowLink.get(frame.node) === indexOf.get(frame.node)) {
-          const component: string[] = [];
-          for (;;) {
-            const popped = stack.pop()!;
-            onStack.delete(popped);
-            component.push(popped);
-            if (popped === frame.node) break;
-          }
-          if (component.length > 1) for (const id of component) inCycle.add(id);
-        }
-      }
-    }
-
-    return [...inCycle].sort();
-  }
 }

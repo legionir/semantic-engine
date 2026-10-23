@@ -305,3 +305,11 @@ describe('scope and anonymous exports (found during phase 17)', () => {
     expect(byName(symbols, 'get')?.parentId).toBe(byName(symbols, 'api')?.id);
   });
 });
+
+describe('signature of non-callable symbols', () => {
+  it('a constant carries its declaration, not a call-like "NAME()"', async () => {
+    const symbols = await extract('export const DEFAULT_TIMEOUT_MS = 15_000;\nexport function run(a: number): void {}\n');
+    expect(byName(symbols, 'DEFAULT_TIMEOUT_MS')?.signature).toBe('export const DEFAULT_TIMEOUT_MS = 15_000');
+    expect(byName(symbols, 'run')?.signature).toBe('run(a: number): void');
+  });
+});

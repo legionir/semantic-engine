@@ -336,6 +336,11 @@ export class AiMetadataGenerator {
       .split(/[^a-z0-9]+/);
 
     for (const token of tokens) {
+      /*
+      | `hasOwn`: a bare index would also hit inherited keys — a token like `constructor`
+      | or `valueOf` (from `isConstructorNode`) returned a function and crashed keyword extraction.
+      */
+      if (!Object.prototype.hasOwnProperty.call(DOMAIN_PATTERNS, token)) continue;
       const domain = DOMAIN_PATTERNS[token];
       if (domain) domains.add(domain);
     }

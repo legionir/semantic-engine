@@ -1,117 +1,18 @@
-import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ProjectIndexReader } from '../../ai/ProjectIndexReader';
 import { FileEntry, SymbolEntry } from '../types/project-index.types';
 import { compareCanonical, LineIndex, makeSymbolKey, sanitizeKeyPart } from '../contracts/codeintel';
-import {
-  ImportSpecifierBinding,
-  ImportStatement,
-  Scan,
-  matchBrace,
-  matchParen,
-  parseNamedList,
-  memberAfter,
-  occurrences,
-  parseExportFroms,
-  parseImports,
-  withPosition,
-} from './semanticGraphText';
+import { ImportSpecifierBinding, Scan, parseNamedList, memberAfter, occurrences, parseExportFroms, parseImports, withPosition } from './semanticGraphText';
 import { Phase1IndexPlatform } from './Phase1Platform';
+import { CandidateWithFile, ExportRoute, FileExports, HardBinding, HardBindingKind, LocalBinding, OccurrenceAuditRow, OccurrenceClass, ReferenceBindingKind, ResolutionProvenance, SemanticGraph, SymbolReference, UnresolvedReference } from './semanticGraphTypes';
+import { collectLocalBindings, emptyAuditCounts, inSpans, innermostLocal, nextNonWs, prevNonWs, referenceOrder, scanText, stableId } from './semanticGraphUtil';
 
-export type ResolutionConfidence = 'exact' | 'heuristic' | 'ambiguous' | 'unresolved';
-export type ResolutionVia = 'lsp' | 'import-graph' | 'scope' | 'name-only';
-export type ReferenceBindingKind = 'direct' | 'same-file' | 're-export-routed' | 'default-routed' | 'namespace-routed';
-export type HardBindingKind = 'local-shadow' | 'unresolved-use';
-
-/**
- * Occurrence classes (F7): every scanned word occurrence of a candidate name is
- * classified into exactly one class. `reference` and `hard-binding` carry
- * binding information; the rest are audit-only exclusions.
- */
-export type OccurrenceClass =
-  | 'reference' | 'hard-binding'
-  | 'declaration' | 'import-declaration' | 'param-declarator'
-  | 'comment' | 'string' | 'property-access' | 'property-key'
-  | 'namespace-object-use' | 'unclassified';
-
-export interface ResolutionCandidate { readonly symbolId: string; readonly symbolKey: string; readonly path: string; readonly name: string; readonly kind: string; }
-export interface ResolutionProvenance { readonly confidence: ResolutionConfidence; readonly via: ResolutionVia; readonly candidates: readonly ResolutionCandidate[]; readonly reason?: string; }
-export interface SymbolReference {
-  readonly id: string;
-  readonly targetSymbolId?: string;
-  readonly targetSymbolKey: string;
-  readonly sourceFileId: string;
-  readonly sourcePath: string;
-  readonly line: number;
-  readonly column: number;
-  readonly start: number;
-  readonly end: number;
-  readonly text: string;
-  readonly provenance: ResolutionProvenance;
-  /** How the target was bound (F5/F7). */
-  readonly bindingKind?: ReferenceBindingKind;
-  /** Innermost index symbol whose span contains the occurrence on the SOURCE side (F4). */
-  readonly sourceEnclosingSymbolId?: string;
-}
-export interface UnresolvedReference {
-  readonly id: string;
-  readonly sourceFileId: string;
-  readonly sourcePath: string;
-  readonly name: string;
-  readonly line: number;
-  readonly column: number;
-  readonly reason: string;
-  readonly provenance: ResolutionProvenance;
-}
-/** An occurrence that exists in code but does not bind to an index symbol (F1/F7). */
-export interface HardBinding {
-  readonly id: string;
-  readonly sourceFileId: string;
-  readonly sourcePath: string;
-  readonly name: string;
-  readonly line: number;
-  readonly column: number;
-  readonly kind: HardBindingKind;
-  readonly reason: string;
-  readonly sourceEnclosingSymbolId?: string;
-  readonly provenance: ResolutionProvenance;
-}
-export interface OccurrenceAuditRow {
-  readonly fileId: string;
-  readonly path: string;
-  readonly total: number;
-  readonly byClass: Readonly<Record<OccurrenceClass, number>>;
-}
-export interface SemanticGraph {
-  readonly schemaVersion: '3-pilot';
-  readonly language: 'typescript';
-  readonly snapshotId: string;
-  readonly references: readonly SymbolReference[];
-  readonly unresolved: readonly UnresolvedReference[];
-  readonly hardBindings: readonly HardBinding[];
-  readonly occurrenceAudit: readonly OccurrenceAuditRow[];
-  readonly fileDeps: readonly { readonly fromFileId: string; readonly toFileId?: string; readonly specifier: string; readonly resolved: boolean }[];
-}
-
-interface CandidateWithFile extends ResolutionCandidate { readonly fileId: string; }
-
-/** A syntactic local binding (parameter or shadowing declarator) with an approximate scope (F1). */
-interface LocalBinding {
-  readonly name: string;
-  readonly declarator: number;
-  readonly scopeStart: number;
-  readonly scopeEnd: number;
-}
-
-interface ExportRoute {
-  readonly kind: 'local' | 'reexport' | 'star-namespace' | 'default-local';
-  readonly symbolIds?: readonly string[];
-  readonly fromSpecifier?: string;
-  readonly importName?: string;
-}
-interface FileExports { readonly explicit: ReadonlyMap<string, ExportRoute>; readonly stars: readonly string[] }
-
+export type {
+  HardBinding, HardBindingKind, OccurrenceAuditRow, OccurrenceClass, ReferenceBindingKind,
+  ResolutionCandidate, ResolutionConfidence, ResolutionProvenance, ResolutionVia, SemanticGraph,
+  SymbolReference, UnresolvedReference,
+} from './semanticGraphTypes';
 
 const MAX_REEXPORT_DEPTH = 6;
 
@@ -151,7 +52,7 @@ export class Phase3SemanticGraphPilot {
 
     for (const file of files) {
       const text = await this.read(file);
-      const scan = this.scanText(file, text);
+      const scan = this.scanOf(file, text);
       const symbols = [...this.reader.getSymbolsForFile(file.id)];
       const imports = parseImports(text);
       const importSpans = imports.map(i => ({ start: i.start, end: i.end }));
@@ -167,7 +68,7 @@ export class Phase3SemanticGraphPilot {
         list.push(s);
         fileSymbolsByName.set(s.name, list);
       }
-      const localBindings = this.collectLocalBindings(text, scan, symbols, imports);
+      const localBindings = collectLocalBindings(text, scan, symbols, imports);
 
       // Import bindings + file deps + unresolved declarations (F2, F5).
       const importBindings = new Map<string, { candidates: readonly CandidateWithFile[]; route: ReferenceBindingKind } | { unresolvedReason: string }>();
@@ -319,6 +220,12 @@ export class Phase3SemanticGraphPilot {
   private isTypeScript(file: FileEntry): boolean { return file.language === 'typescript' || file.language === 'javascript' || file.language === 'tsx' || /\.(tsx?|jsx?|mts|cts)$/u.test(file.path); }
   private async read(file: FileEntry): Promise<string> { const cached = this.sourceCache.get(file.id); if (cached !== undefined) return cached; const value = (await fs.readFile(path.resolve(this.workspaceRoot, file.path), 'utf8')).replace(/^\uFEFF/u, ''); this.sourceCache.set(file.id, value); return value; }
 
+  private scanOf(file: FileEntry, text: string): Scan {
+    let scan = this.scanCache.get(file.id);
+    if (!scan) { scan = scanText(text); this.scanCache.set(file.id, scan); }
+    return scan;
+  }
+
   // ── Scanning (F1) ───────────────────────────────────────────────────────────
 
   private scanText(file: FileEntry, text: string): Scan {
@@ -359,104 +266,15 @@ export class Phase3SemanticGraphPilot {
     return scan;
   }
 
-
-
-
   // ── Local bindings (F1): parameters and shadowing declarators ───────────────
 
-  private collectLocalBindings(text: string, scan: Scan, symbols: readonly SymbolEntry[], imports: readonly ImportStatement[]): LocalBinding[] {
-    const out: LocalBinding[] = [];
-    const importSpans = imports.map(i => ({ start: i.start, end: i.end }));
-    const declaratorLines = new Map<string, Set<number>>();
-    for (const s of symbols) {
-      const lines = declaratorLines.get(s.name) ?? new Set<number>();
-      lines.add(s.line);
-      declaratorLines.set(s.name, lines);
-    }
-    const fileEnd = text.length;
-    const addParams = (paramsOpen: number, paramsClose: number, scopeStart: number, scopeEnd: number): void => {
-      const slice = text.slice(paramsOpen + 1, paramsClose);
-      const parts = splitTopLevel(slice);
-      let offset = paramsOpen + 1;
-      for (const part of parts) {
-        const nameMatch = /^\s*(?:(?:public|private|protected|readonly)\s+)*([A-Za-z_$][\w$]*)/u.exec(part);
-        if (nameMatch && !/^\s*\.\.\./u.test(part)) {
-          const within = nameMatch[0].indexOf(nameMatch[1]);
-          out.push({ name: nameMatch[1], declarator: offset + within, scopeStart, scopeEnd });
-        }
-        offset += part.length + 1;
-      }
-    };
-    const arrowScope = (arrowEnd: number): number => {
-      const after = nextNonWs(text, arrowEnd);
-      if (after >= 0 && text[after] === '{') {
-        const close = matchBrace(scan, after);
-        if (close !== undefined) return close + 1;
-      }
-      return endOfStatement(text, arrowEnd);
-    };
-    // 1. Indexed function-like symbols: parameters scope over the whole symbol span.
-    for (const symbol of symbols) {
-      if (symbol.kind !== 'function' && symbol.kind !== 'method') continue;
-      const declLineStart = scan.lineIndex.lineStart(symbol.line - 1);
-      const nameAt = text.indexOf(symbol.name, declLineStart);
-      if (nameAt < 0 || scan.lineIndex.positionAt(nameAt).line + 1 !== symbol.line) continue;
-      const open = text.indexOf('(', nameAt + symbol.name.length);
-      if (open < 0) continue;
-      const close = matchParen(text, open);
-      if (close === undefined) continue;
-      addParams(open, close, scan.lineIndex.lineStart(symbol.line - 1), Math.min(fileEnd, scan.lineIndex.contentEnd(symbol.endLine - 1) + 1));
-    }
-    // 2. Nested function declarations (indexed or not): params scope over the body braces.
-    const fnRe = /\bfunction\b\s*[A-Za-z_$][\w$]*\s*\(/gu;
-    let m: RegExpExecArray | null;
-    while ((m = fnRe.exec(text))) {
-      if (scan.mask[m.index] !== 0 || inSpans(m.index, importSpans)) continue;
-      const open = m.index + m[0].length - 1;
-      const close = matchParen(text, open);
-      if (close === undefined) continue;
-      const after = nextNonWs(text, close + 1);
-      const scopeEnd = after >= 0 && text[after] === '{' && matchBrace(scan, after) !== undefined ? (matchBrace(scan, after) as number) + 1 : endOfStatement(text, close + 1);
-      addParams(open, close, open, scopeEnd);
-    }
-    // 3. Arrow functions: parenthesized param lists and single-identifier params.
-    const arrowParenRe = /\(([^(){}]*)\)\s*=>/gu;
-    while ((m = arrowParenRe.exec(text))) {
-      if (scan.mask[m.index] !== 0 || inSpans(m.index, importSpans)) continue;
-      const open = m.index;
-      const close = m.index + m[0].indexOf(')');
-      addParams(open, close, open, arrowScope(m.index + m[0].length));
-    }
-    const arrowSingleRe = /\b([A-Za-z_$][\w$]*)\s*=>/gu;
-    while ((m = arrowSingleRe.exec(text))) {
-      if (scan.mask[m.index] !== 0 || inSpans(m.index, importSpans)) continue;
-      const declarator = m.index + m[0].indexOf(m[1]);
-      out.push({ name: m[1], declarator, scopeStart: m.index, scopeEnd: arrowScope(m.index + m[0].length) });
-    }
-    // 4. const/let/var shadowing declarators: scope approximated by the innermost enclosing block.
-    const declRe = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)/gu;
-    while ((m = declRe.exec(text))) {
-      if (scan.mask[m.index] !== 0 || inSpans(m.index, importSpans)) continue;
-      const name = m[1];
-      const line = scan.lineIndex.positionAt(m.index).line + 1;
-      if (declaratorLines.get(name)?.has(line)) continue; // module declarator of an indexed symbol
-      const pair = innermostBrace(scan, m.index);
-      const declarator = m.index + m[0].indexOf(name);
-      out.push({ name, declarator, scopeStart: m.index, scopeEnd: pair ? pair.close + 1 : endOfStatement(text, m.index) });
-    }
-    return out;
-  }
-
-
   // ── Imports / exports (F2, F5) ──────────────────────────────────────────────
-
-
 
   private async exportsOf(file: FileEntry): Promise<FileExports> {
     const cached = this.exportCache.get(file.id);
     if (cached) return cached;
     const text = await this.read(file);
-    const scan = this.scanText(file, text);
+    const scan = this.scanOf(file, text);
     const explicit = new Map<string, ExportRoute>();
     let m: RegExpExecArray | null;
     // Local named exports from the index.
@@ -660,7 +478,6 @@ export class Phase3SemanticGraphPilot {
   }
 }
 
-
 /** Collision-free pilot symbol key (F6): same name+kind in one file gets a source-order ordinal. */
 export function symbolKeyFor(reader: ProjectIndexReader, symbol: SymbolEntry): string {
   const file = reader.getFileById(symbol.fileId);
@@ -668,57 +485,3 @@ export function symbolKeyFor(reader: ProjectIndexReader, symbol: SymbolEntry): s
   const ordinal = siblings.length > 1 ? [...siblings].sort((a, b) => a.line - b.line || compareCanonical(a.id, b.id)).indexOf(symbol) : undefined;
   return String(makeSymbolKey(file?.path ?? symbol.fileId, sanitizeKeyPart(symbol.fullyQualifiedName ?? symbol.name), sanitizeKeyPart(symbol.kind), ordinal));
 }
-function splitTopLevel(slice: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let current = '';
-  for (const ch of slice) {
-    if (ch === '(' || ch === '{' || ch === '[' || ch === '<') { depth++; current += ch; continue; }
-    if (ch === ')' || ch === '}' || ch === ']' || ch === '>') { depth = Math.max(0, depth - 1); current += ch; continue; }
-    if (ch === ',' && depth === 0) { parts.push(current); current = ''; continue; }
-    current += ch;
-  }
-  parts.push(current);
-  return parts;
-}
-function emptyAuditCounts(): Record<OccurrenceClass, number> {
-  return { reference: 0, 'hard-binding': 0, declaration: 0, 'import-declaration': 0, 'param-declarator': 0, comment: 0, string: 0, 'property-access': 0, 'property-key': 0, 'namespace-object-use': 0, unclassified: 0 };
-}
-function inSpans(offset: number, spans: readonly { start: number; end: number }[]): boolean {
-  return spans.some(s => offset >= s.start && offset < s.end);
-}
-function innermostLocal(bindings: readonly LocalBinding[], name: string, offset: number): LocalBinding | undefined {
-  let best: LocalBinding | undefined;
-  for (const b of bindings) {
-    if (b.name !== name) continue;
-    if (offset < b.scopeStart || offset >= b.scopeEnd) continue;
-    if (offset === b.declarator) return b;
-    if (!best || b.scopeEnd - b.scopeStart < best.scopeEnd - best.scopeStart) best = b;
-  }
-  return best;
-}
-function innermostBrace(scan: Scan, offset: number): { open: number; close: number } | undefined {
-  let best: { open: number; close: number } | undefined;
-  for (const pair of scan.braces) {
-    if (pair.open < offset && offset < pair.close) {
-      if (!best || pair.close - pair.open < best.close - best.open) best = pair;
-    }
-  }
-  return best;
-}
-function prevNonWs(text: string, offset: number): number {
-  for (let i = offset - 1; i >= 0; i--) if (!/\s/u.test(text[i])) return i;
-  return -1;
-}
-function nextNonWs(text: string, offset: number): number {
-  for (let i = offset; i < text.length; i++) if (!/\s/u.test(text[i])) return i;
-  return -1;
-}
-function endOfStatement(text: string, from: number): number {
-  const semi = text.indexOf(';', from);
-  const nl = text.indexOf('\n', from);
-  const candidates = [semi >= 0 ? semi + 1 : undefined, nl >= 0 ? nl + 1 : undefined, text.length].filter((v): v is number => v !== undefined);
-  return Math.min(...candidates);
-}
-function stableId(value: string): string { return crypto.createHash('sha256').update(value, 'utf8').digest('hex').slice(0, 16); }
-function referenceOrder(a: SymbolReference, b: SymbolReference): number { return compareCanonical(`${a.sourcePath}:${a.start}:${a.id}`, `${b.sourcePath}:${b.start}:${b.id}`); }

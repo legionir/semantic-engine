@@ -1,0 +1,329 @@
+{
+  "note": "Task-style questions about this repository. 'expect' lists files (relative to src/) of which ANY one counts as a hit. Ground truth is judged by file responsibility, not by name overlap with the query. 'tune' queries may be used to tune ranking weights; 'holdout' queries were written afterwards and must not be tuned on.",
+  "queries": [
+    {
+      "q": "fix a timeout bug in the language server client",
+      "expect": [
+        "lsp/LspClient.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "how are call graph edges built from the typescript AST",
+      "expect": [
+        "graphs/CallGraphBuilder.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "where is the user config file config.json loaded and saved",
+      "expect": [
+        "core/config/GlobalConfig.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "limit the size of an http request body and answer 413",
+      "expect": [
+        "cli/HttpGuard.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "incrementally update the index when a file changes",
+      "expect": [
+        "incremental/IncrementalEngine.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "download a local embedding model from hugging face",
+      "expect": [
+        "services/providers/LocalModelStore.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "generate the blueprint module map and architecture layers",
+      "expect": [
+        "blueprint/BlueprintGenerator.ts",
+        "blueprint/blueprintCategories.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "compute git hotspot and churn scores for files",
+      "expect": [
+        "core/git/GitInfoCollector.ts",
+        "core/git/GitClient.ts",
+        "services/history/GitHistoryMiner.ts",
+        "ai/tools/GetGitHotspotsTool.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "sqlite export tables for the project index",
+      "expect": [
+        "export/SQLiteExporter.ts",
+        "export/sqliteSchema.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "extract symbols from source code using tree-sitter",
+      "expect": [
+        "symbols/tree-sitter/TreeSitterSymbolExtractor.ts",
+        "symbols/tree-sitter/TreeSitterSymbolMapper.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "rank context candidates by graph distance and importance",
+      "expect": [
+        "ai/ranking/ContextRanker.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "fit the selected context into a token budget",
+      "expect": [
+        "ai/ranking/TokenBudget.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "reject api key environment variable names that are not allowed",
+      "expect": [
+        "core/security/apiKeyEnvPolicy.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "serve the static ui assets without leaving the directory",
+      "expect": [
+        "server/StaticAssetServer.ts",
+        "gateway/GatewayUi.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "proxy a websocket upgrade to the project worker",
+      "expect": [
+        "gateway/GatewayUpgrade.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "supervise worker processes and restart them after a crash",
+      "expect": [
+        "gateway/WorkerSupervisor.ts",
+        "gateway/WorkerProcess.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "resolve python and go imports to files inside the project",
+      "expect": [
+        "pipeline/importResolution.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "skip ignored files using gitignore patterns while scanning",
+      "expect": [
+        "core/config/IgnoreMatcher.ts",
+        "core/config/gitignoreParser.ts",
+        "scanner/WorkspaceScanner.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "watch the filesystem for changes and debounce the events",
+      "expect": [
+        "host/FileWatcher.ts",
+        "incremental/FileChangeQueue.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "cyclomatic complexity of a function",
+      "expect": [
+        "core/metrics/CyclomaticComplexityCalculator.ts",
+        "core/metrics/SymbolMetricsCalculator.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "detect architecture rule violations between layers",
+      "expect": [
+        "services/analysis/ArchitectureRuleEngine.ts",
+        "ai/tools/DetectArchitectureViolationsTool.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "simulate the impact of changing a symbol",
+      "expect": [
+        "services/analysis/ImpactAnalysisEngine.ts",
+        "services/analysis/MutationSimulator.ts",
+        "ai/tools/ImpactAnalysisTool.ts",
+        "ai/tools/SimulateMutationTool.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "mask secrets before sending code to an llm",
+      "expect": [
+        "ai/llm/SecretRedactor.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "keep a monotonic index generation counter in the artifact manifest",
+      "expect": [
+        "core/config/indexGeneration.ts",
+        "core/config/artifactManifest.ts",
+        "pipeline/OutputWriter.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "vector similarity search over code chunks",
+      "expect": [
+        "vector/VectorStore.ts",
+        "ai/tools/SemanticSearchTool.ts",
+        "vector/VectorIndexer.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "start the ui and mcp servers together with a watcher",
+      "expect": [
+        "cli/commands/start-command.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "role based permissions for api keys",
+      "expect": [
+        "security/rbac/PermissionChecker.ts",
+        "security/rbac/ApiKeyStore.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "rate limit requests per client",
+      "expect": [
+        "server/RateLimiter.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "collect language server diagnostics during the deep scan",
+      "expect": [
+        "lsp/DiagnosticsProvider.ts",
+        "lsp/LspEnrichmentService.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "find the tests that cover a symbol",
+      "expect": [
+        "ai/TestMapper.ts",
+        "ai/tools/FindTestsTool.ts"
+      ],
+      "split": "tune"
+    },
+    {
+      "q": "parse tsconfig path aliases when resolving imports",
+      "expect": [
+        "dependencies/typescript/TSPathResolver.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "resolve a re-exported symbol to its original declaration",
+      "expect": [
+        "dependencies/typescript/ReExportResolver.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "write json artifacts atomically so a crash leaves no partial file",
+      "expect": [
+        "host/FileSystem.ts",
+        "pipeline/OutputWriter.ts",
+        "export/schemaValidation.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "structured logger with log levels",
+      "expect": [
+        "host/Logger.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "cancel a long running indexing job",
+      "expect": [
+        "host/Cancellation.ts",
+        "runtime/JobManager.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "push live progress to the browser with server sent events",
+      "expect": [
+        "server/SseManager.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "collect metrics and traces for observability",
+      "expect": [
+        "observability/MetricsCollector.ts",
+        "observability/OpenTelemetryTracer.ts",
+        "gateway/metrics.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "decide which language server handles a file type",
+      "expect": [
+        "lsp/registry.ts",
+        "lsp/LspServerManager.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "split code into chunks before computing embeddings",
+      "expect": [
+        "vector/VectorIndexer.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "check that a project id is safe to use as a directory name",
+      "expect": [
+        "core/config/ProjectIdentity.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "extract symbols from css and html files without a parser",
+      "expect": [
+        "symbols/heuristic/CssSymbolExtractor.ts",
+        "symbols/heuristic/HtmlSymbolExtractor.ts"
+      ],
+      "split": "holdout"
+    },
+    {
+      "q": "audit log of security sensitive actions",
+      "expect": [
+        "security/audit/AuditLogger.ts"
+      ],
+      "split": "holdout"
+    }
+  ]
+}
