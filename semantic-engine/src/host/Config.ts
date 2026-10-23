@@ -19,7 +19,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { coerce, parseFlags, stripPrefix } from './configFlags';
 import { describeAjvError, unknownFlagMessage, unknownKeyMessage } from './configMessages';
-import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
+import Ajv, { ValidateFunction } from 'ajv/dist/2020';
 
 export type ConfigSource = 'flag' | 'env' | 'file' | 'default';
 
