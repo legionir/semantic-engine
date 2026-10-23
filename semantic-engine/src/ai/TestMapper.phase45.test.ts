@@ -265,8 +265,11 @@ describe('TestMapper — هزینه (SE-AI-10)', () => {
     // گرم کردن، تا JIT نتیجه را به‌هم نریزد.
     build(500, 20);
 
-    const small = build(2000, 40);
-    const large = build(4000, 80);
+    /* Best of several runs: one GC pause or a busy neighbour must not decide a growth-rate check. */
+    const best = (symbols: number, tests: number): number =>
+      Math.min(...Array.from({ length: 5 }, () => build(symbols, tests)));
+    const small = best(2000, 40);
+    const large = best(4000, 80);
 
     /*
     | با رفتار درجه‌دوم، دو برابر کردنِ *هر دو* بُعد یعنی چهار برابر

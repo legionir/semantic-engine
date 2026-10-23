@@ -30,13 +30,9 @@ interface EnginePathsModule {
   indexPathCandidates(rootPath: string, options?: { override?: string }): string[];
 }
 
+/* `STRUCTURED_AI_ROOT` points at the consumer's `structured-ai` folder (a different repository). */
 const CONSUMER_PATH = path.join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  '..',
-  'structured-ai',
+  process.env['STRUCTURED_AI_ROOT'] || path.join(__dirname, '..', '..', '..', '..', 'structured-ai'),
   'agent',
   'mcp',
   'enginePaths.js'

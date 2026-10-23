@@ -75,6 +75,9 @@ function managerWith(
   return manager;
 }
 
+/* Each case spawns real fake-server processes (up to three in sequence); on a loaded runner the 5 s default is too tight. */
+jest.setTimeout(30_000);
+
 describe('LSP-05 — spawn تنبل و اشتراک', () => {
   it('سرور فقط با اولین درخواست بالا می‌آید', async () => {
     const manager = managerWith();
@@ -450,7 +453,7 @@ function isAlive(pid: number): boolean {
   }
 }
 
-async function waitFor(condition: () => boolean, timeoutMs = 3000): Promise<void> {
+async function waitFor(condition: () => boolean, timeoutMs = 10_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (!condition()) {
     if (Date.now() > deadline) throw new Error('waitFor timed out');

@@ -34,6 +34,16 @@ jobs:
           cache: npm
           cache-dependency-path: semantic-engine/package-lock.json
       - run: npm ci --no-audit --no-fund
+      # Optional: the consumer package used by the cross-repo contract test
+      # (src/ai/mcp/mcpIndexGeneration.test.ts). Read-only checkout; when the repository
+      # is not readable with this token the suite skips and the recorded skip budget applies.
+      - name: Checkout consumer (structured-ai)
+        id: consumer
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: legionir/semantic-engine-structured-ai
+          path: consumer
       # dist/ must exist: ~10 suites (gateway e2e, CLI, LSP client) run against it
       # and are silently skipped otherwise.
       - run: npm run build
@@ -41,7 +51,12 @@ jobs:
         run: npx tsc -p tsconfig.test.json --noEmit
       - run: npm run lint
       - run: npm run test:gate
+        env:
+          STRUCTURED_AI_ROOT: ${{ steps.consumer.outcome == 'success' && format('{0}/consumer/structured-ai', github.workspace) || '' }}
+          SEMANTIC_ENGINE_SKIP_BUDGET: ${{ steps.consumer.outcome == 'success' && '0' || '' }}
       - name: Jest (must not skip dist-gated suites)
+        env:
+          STRUCTURED_AI_ROOT: ${{ steps.consumer.outcome == 'success' && format('{0}/consumer/structured-ai', github.workspace) || '' }}
         run: |
           npx jest --ci 2>&1 | tee jest.log
           if grep -q "dist/ is not built" jest.log; then
