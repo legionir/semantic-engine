@@ -1,5 +1,7 @@
 # Phase 0 Decisions
 
+> **Note (2026-10-23):** the phase status reports, evidence directories, regate scripts/fixtures and plan/prompt documents cited below were removed from the tree as completed. They are recoverable from git history at commit `0d8d4cf`. Still-open work is tracked only in `docs/OPEN-ITEMS.md`.
+
 **Status:** 🟡 PARTIAL / BLOCKED — evidence baseline started; repository checkout and executable dependency environment are not available to this agent.
 
 ## D-0001 — Existing repository is the source of truth

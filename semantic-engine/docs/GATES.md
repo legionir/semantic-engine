@@ -1,5 +1,7 @@
 # Phase 0–4 Gates
 
+> **Note (2026-10-23):** the phase status reports, evidence directories, regate scripts/fixtures and plan/prompt documents cited below were removed from the tree as completed. They are recoverable from git history at commit `0d8d4cf`. Still-open work is tracked only in `docs/OPEN-ITEMS.md`.
+
 **Revision:** `d1289aec99987065657c6ad824c900c7a7b36dc5` plan baseline
 **Date locked:** 2026-09-21
 **Owner:** Pouya Rahimi / project owner

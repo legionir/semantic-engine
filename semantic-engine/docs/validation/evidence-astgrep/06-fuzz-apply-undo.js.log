@@ -1,4 +1,0 @@
-=== CMD: node docs/validation/scripts/fuzz-apply-undo.js 1500 (ast-grep tree) ===
-TIMESTAMP: 2026-09-21T23:15:33Z
-{"cycles":1500,"applied":1495,"skippedNoop":5,"byteExact":true,"elapsedMs":3334}
-EXIT_CODE:0

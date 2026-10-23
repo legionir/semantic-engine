@@ -1,5 +1,0 @@
-aware (goal-aware)    macro recall@2000 = 1.000  budget-adherent=true
-name-only (ablation)  macro recall@2000 = 0.500  budget-adherent=true
-deterministic=true
-GATE  R>=B1(0.896): true | R>B0(0.787): true | no-overrun: true | PASS=true
-WROTE docs/validation/spike-s/results-phase4-regate.json

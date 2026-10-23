@@ -1,8 +1,0 @@
-PASS src/core/codeintel/GraphSnapshotStore.test.ts
-PASS src/core/codeintel/Phase4Controlled.test.ts
-PASS src/ai/tools/Phase4ControlledTools.test.ts
-
-Test Suites: 3 passed, 3 total
-Tests:       19 passed, 19 total
-Snapshots:   0 total
-Time:        0.535 s, estimated 1 s
