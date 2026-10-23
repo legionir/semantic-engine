@@ -68,7 +68,7 @@ jobs:
       - run: npm audit --audit-level=critical || true
 
   bench:
-    name: Performance snapshot (informational)
+    name: Performance regression gate
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -83,11 +83,12 @@ jobs:
           cache-dependency-path: semantic-engine/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run build
-      # bench/baseline.json was recorded on a developer container, so wall-clock numbers
-      # are not comparable with a hosted runner yet. The snapshot is uploaded for
-      # recording a runner baseline; switch this to `npm run bench:check` once done.
-      - run: node scripts/bench.js | tee bench-result.json
+      # bench/baseline.json was recorded on this runner type (run 39054351297). A metric
+      # more than 35% (+50 ms for timings) above its baseline fails the job. Re-record
+      # with `node scripts/bench.js --write` on a runner when an intended change moves it.
+      - run: node scripts/bench.js --check | tee bench-result.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: bench-result
           path: semantic-engine/bench-result.json

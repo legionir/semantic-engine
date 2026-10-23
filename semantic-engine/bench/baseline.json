@@ -3,34 +3,35 @@
   "corpus": "src",
   "files": 594,
   "symbols": 17081,
-  "node": "v22.22.0",
+  "node": "v22.23.3",
   "cpus": 4,
   "runs": 3,
+  "recordedOn": "GitHub Actions ubuntu-latest (run 39054351297, head 66f4fa5)",
   "metrics": {
     "indexColdMs": {
-      "median": 9249.9,
-      "min": 8757.7,
-      "max": 9432.3
+      "median": 7734.2,
+      "min": 7649.6,
+      "max": 7744.8
     },
     "indexWarmMs": {
-      "median": 9891,
-      "min": 9720.1,
-      "max": 10801.6
+      "median": 8147.4,
+      "min": 8015.1,
+      "max": 8163.1
     },
     "indexPeakRssMb": {
-      "median": 519
+      "median": 526
     },
     "indexFileMb": {
       "median": 47.15
     },
     "readerLoadMs": {
-      "median": 64.4
+      "median": 54.2
     },
     "discoverP50Ms": {
-      "median": 37.5
+      "median": 32.4
     },
     "discoverP95Ms": {
-      "median": 143.3
+      "median": 106.2
     }
   }
 }
