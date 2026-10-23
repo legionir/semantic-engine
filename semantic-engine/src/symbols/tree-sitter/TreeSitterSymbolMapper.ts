@@ -9,17 +9,13 @@
  */
 
 import { Node, Tree } from 'web-tree-sitter';
-import {
-  SymbolEntry,
-  SymbolKind,
-  SymbolVisibility,
-  Parameter,
-} from '../../core/types/project-index.types';
+import { SymbolEntry, SymbolKind, Parameter } from '../../core/types/project-index.types';
 import { makeConfidence, Confidence } from '../../core/types/common.types';
 import { extractDocumentation, declarationSignature } from '../heuristic/SymbolExtractionHelpers';
 import { SymbolIdAllocator, buildFullyQualifiedName } from '../../core/id/SymbolIdentity';
 import { grammarFor, DEFAULT_NAME_NODES } from './languageGrammars';
 import { extractParameters, extractReturnType, buildSignature } from './TreeSitterSignature';
+import { extractModifiers, extractName, extractVisibility, isConstructorNode, isExported } from './treeSitterNodeHelpers';
 import { extractGenerics, extractExtends, extractImplements } from './TreeSitterHeritage';
 
 /** شکل‌هایی که یک `export default` بی‌نام می‌تواند بگیرد. */
@@ -287,7 +283,7 @@ export class TreeSitterSymbolMapper {
     parentFqName: string,
     nameOverride?: string
   ): SymbolEntry | null {
-    const name = nameOverride ?? this.extractName(node);
+    const name = nameOverride ?? extractName(node, this.nameNodeTypes);
     if (!name) return null;
 
     const allocated = this.allocator.allocate({
@@ -307,7 +303,7 @@ export class TreeSitterSymbolMapper {
     | `WeatherController(...): WeatherController` می‌شد — ادعایی که هیچ
     | زبانی نمی‌کند و برای agent نویزِ گمراه‌کننده است.
     */
-    const returnType = this.isConstructorNode(node, name) ? null : this.extractReturnType(node, kind);
+    const returnType = isConstructorNode(node, name) ? null : this.extractReturnType(node, kind);
     /*
     | برای kindهای اعلانی، «امضا» همان سرِ اعلان است — نه `Name()`.
     | (SE-SYM-19)
@@ -319,7 +315,7 @@ export class TreeSitterSymbolMapper {
         extendsTypes: this.extractExtends(node),
         implementsTypes: this.extractImplements(node),
       }) ?? this.fallbackSignature(kind, name, parameters, returnType, node);
-    const modifiers = this.extractModifiers(node);
+    const modifiers = extractModifiers(node);
 
     return {
       id,
@@ -329,12 +325,12 @@ export class TreeSitterSymbolMapper {
       name,
       fullyQualifiedName: fqName,
       signature,
-      visibility: this.extractVisibility(node),
+      visibility: extractVisibility(node, this.nameNodeTypes),
       line: node.startPosition.row + 1,
       endLine: node.endPosition.row + 1,
       documentation: extractDocumentation(this.contentLines, node.startPosition.row + 1, this.languageId),
       deprecated: false,
-      exported: this.isExported(node),
+      exported: isExported(node),
       source: 'tree-sitter',
       confidence: this.computeConfidence(node),
       async: modifiers.async,
@@ -365,72 +361,6 @@ export class TreeSitterSymbolMapper {
    */
   private mapNodeTypeToKind(nodeType: string): SymbolKind | null {
     return this.grammar?.kinds[nodeType] ?? null;
-  }
-
-
-  private extractName(node: Node): string | null {
-    if (node.type === 'constructor_definition') {
-      return 'constructor';
-    }
-
-    /*
-    | GAP-11 — اول فیلدِ `name` خودِ گرامر.
-    |
-    | جست‌وجوی «اولین فرزندی که شبیه شناسه است» یک قاعدهٔ
-    | **TypeScript‌محور** است: آن‌جا نام پیش از نوع می‌آید. در Java
-    | نوع اول است، پس `public String find(String id)` نامش
-    | «String» می‌شد — یعنی هر متد و هر فیلدِ Java نامِ نوعش را
-    | می‌گرفت. اجرای واقعی پیش از رفع:
-    |
-    |   class     UserService
-    |   property  String        ← باید repo باشد
-    |   method    String        ← باید find باشد
-    |
-    | گرامرها خودشان فیلدِ `name` را اعلام می‌کنند؛ پرسیدن از
-    | گرامر به‌جای حدس زدنِ ترتیب، همان درسِ SE-SYM-11 است.
-    */
-    const named = node.childForFieldName?.('name');
-    if (named && named.text.length > 0) {
-      return named.text.replace(/^['"`]|['"`]$/g, '');
-    }
-
-
-    /*
-    | نام یک ambient module یک رشته است: `declare module "legacy"`.
-    | نقل‌قول‌ها بخشی از نام نیستند.
-    */
-    if (node.type === 'module') {
-      const stringName = node.namedChildren.find(c => c.type === 'string');
-      if (stringName) return stringName.text.replace(/^['"`]|['"`]$/g, '');
-    }
-
-    /*
-    | گاهی گرهٔ symbol *خودش* شناسه است و فرزندی ندارد — عضو enum
-    | بدون مقدار (`enum E { Up }`) دقیقاً همین است. جست‌وجو در
-    | فرزندان روی چنین گرهی چیزی پیدا نمی‌کند و symbol بی‌صدا حذف
-    | می‌شود.
-    */
-    if (node.namedChildCount === 0 && this.nameNodeTypes.includes(node.type)) {
-      return node.text;
-    }
-
-    // برای variable_declarator نام می‌تواند identifier، array_pattern یا object_pattern باشد
-    const nameNode = node.namedChildren.find(c => this.nameNodeTypes.includes(c.type));
-
-    return nameNode?.text ?? null;
-  }
-
-  /**
-   * آیا این گره سازنده است؟ F-0037.
-   *
-   * از دو نشانه خوانده می‌شود چون گرامرها یکسان نیستند: نامِ گرهٔ اعلان
-   * (`constructor_declaration` در C#/Java، `constructor_definition` در TS)
-   * و نامِ رویه‌ای پایتون. `fn new()` راست عمداً اینجا نیست — آن یک متد
-   * استاتیک معمولی است، نه سازندهٔ گرامری.
-   */
-  private isConstructorNode(node: Node, name: string): boolean {
-    if (/constructor/i.test(node.type)) return true;
-    return name === '__init__' || name === 'constructor';
   }
 
   private extractParameters(node: Node): Parameter[] {
@@ -464,51 +394,6 @@ export class TreeSitterSymbolMapper {
     return buildSignature(name, parameters, returnType);
   }
 
-  private extractVisibility(node: Node): SymbolVisibility {
-    const accessibility = node.children.find(c => c.type === 'accessibility_modifier');
-    if (accessibility) {
-      const text = accessibility.text;
-      if (text === 'private') return 'private';
-      if (text === 'protected') return 'protected';
-      if (text === 'public') return 'public';
-    }
-
-    const name = this.extractName(node);
-    if (name?.startsWith('#')) return 'private';
-
-    return 'public';
-  }
-
-  private extractModifiers(node: Node): {
-    async: boolean;
-    generator: boolean;
-    abstract: boolean;
-    static: boolean;
-    readonly: boolean;
-  } {
-    const children = node.children;
-    return {
-      async: children.some(c => c.type === 'async'),
-      generator:
-        node.type.includes('generator') ||
-        children.some(c => c.type === '*' || c.text === '*'),
-      abstract: children.some(c => c.type === 'abstract'),
-      static: children.some(c => c.type === 'static'),
-      readonly: children.some(c => c.type === 'readonly'),
-    };
-  }
-
-  private isExported(node: Node): boolean {
-    let current: Node | null = node;
-    while (current) {
-      if (current.type === 'export_statement' || current.type === 'export_declaration') {
-        return true;
-      }
-      current = current.parent;
-    }
-    return false;
-  }
-
   private extractGenerics(node: Node): string[] {
     return extractGenerics(node);
   }
@@ -523,7 +408,7 @@ export class TreeSitterSymbolMapper {
 
   private computeConfidence(node: Node): Confidence {
     let score = 85;
-    if (this.isExported(node)) score += 5;
+    if (isExported(node)) score += 5;
     if (node.hasError) score -= 20;
     return makeConfidence(Math.max(50, Math.min(98, score)));
   }
