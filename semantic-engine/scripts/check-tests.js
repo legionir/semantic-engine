@@ -38,6 +38,16 @@ const result = spawnSync(
 /* Jest writes its summary to stderr. */
 const output = `${result.stdout || ""}${result.stderr || ""}`;
 
+/*
+| ~10 suites (gateway e2e, CLI, LSP client) run against dist/ and silently skip when it is
+| missing; globalSetup says so in its output. Failing here replaces the second Jest run CI used
+| to make only to grep for that line.
+*/
+if (/dist\/ is not built/.test(output)) {
+    console.error("error: dist/ is not built, so the dist-gated suites were skipped. Run `npm run build` first.");
+    process.exit(1);
+}
+
 const suites = output.match(/Test Suites:.*/);
 const tests = output.match(/Tests:.*/);
 

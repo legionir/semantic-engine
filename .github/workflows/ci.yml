@@ -44,8 +44,8 @@ jobs:
         with:
           repository: legionir/semantic-engine-structured-ai
           path: consumer
-      # dist/ must exist: ~10 suites (gateway e2e, CLI, LSP client) run against it
-      # and are silently skipped otherwise.
+      # dist/ must exist: ~10 suites (gateway e2e, CLI, LSP client) run against it;
+      # scripts/check-tests.js fails the gate when they were skipped.
       - run: npm run build
       - name: Type check (tests)
         run: npx tsc -p tsconfig.test.json --noEmit
@@ -54,14 +54,6 @@ jobs:
         env:
           STRUCTURED_AI_ROOT: ${{ steps.consumer.outcome == 'success' && format('{0}/consumer/structured-ai', github.workspace) || '' }}
           SEMANTIC_ENGINE_SKIP_BUDGET: ${{ steps.consumer.outcome == 'success' && '0' || '' }}
-      - name: Jest (must not skip dist-gated suites)
-        env:
-          STRUCTURED_AI_ROOT: ${{ steps.consumer.outcome == 'success' && format('{0}/consumer/structured-ai', github.workspace) || '' }}
-        run: |
-          npx jest --ci 2>&1 | tee jest.log
-          if grep -q "dist/ is not built" jest.log; then
-            echo "dist-gated suites were skipped"; exit 1
-          fi
 
   audit:
     name: Dependency audit
