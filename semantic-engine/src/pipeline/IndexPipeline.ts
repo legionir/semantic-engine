@@ -27,6 +27,7 @@ import { JsonExporter, DependencyResult, GraphResult } from '../export/JsonExpor
 import { CallGraphBuilder, TypeGraphBuilder, DependencyGraphBuilder } from '../graphs';
 import { GitInfoCollector } from '../core/git';
 import { VectorIndexer } from '../vector/VectorIndexer';
+import { CachedExtraction, ExtractionCache } from './ExtractionCache';
 import { rescoreAfterEnrichment } from './rescoreAfterEnrichment';
 import {
   FileEntry,
@@ -97,6 +98,11 @@ export interface IndexPipelineOptions {
    * همان کاری که `diagnosticsSource` در فاز ۳۴ کرد.
    */
   readonly enrichment?: { enrich(input: EnrichmentInput): Promise<EnrichmentResult> } | null;
+  /**
+   * کش استخراج هر فایل (براساس هش محتوا). ندادن آن یعنی همیشه استخراج کامل؛
+   * خروجی در هر دو حالت یکی است. `run()` آن را load و save می‌کند.
+   */
+  readonly extractionCache?: ExtractionCache | null;
   readonly pretty?: boolean;
 }
 
@@ -108,6 +114,8 @@ export interface IndexStats {
   readonly durationMs: number;
   /** چند بار محتوای یک فایل از دیسک خوانده شد. */
   readonly fileReads: number;
+  /** فایل‌هایی که استخراجشان از کش آمد / دوباره انجام شد. */
+  readonly extractionCache?: { readonly hits: number; readonly misses: number };
 }
 
 export interface IndexResult {
@@ -175,6 +183,7 @@ export class IndexPipeline {
       path.dirname(path.resolve(this.options.outputPath))
     );
 
+    this.options.extractionCache?.load();
     const scanned = await scanner.scan(this.progress, this.token);
     if (!scanned.ok) {
       throw new Error(`Scan failed: ${scanned.error.message}`);
@@ -190,6 +199,8 @@ export class IndexPipeline {
     const resolver = new TSPathResolver(workspaceRoot);
     const { symbols, dependencies, diagnosticsByFile, configUsagesByFile, addDiagnostic } =
       await this.extractAll(files, contents, resolver);
+    /* پیش از مراحل بعد ذخیره می‌شود: آن‌ها ممکن است symbolها را غنی کنند و کش باید خام بماند. */
+    this.options.extractionCache?.save();
 
     // ── ۲.۵ diagnostics از زبان‌سرور (فاز ۳۴) ──────────────────────────
     const diagnosticsRun = await this.collectDiagnostics(
@@ -332,6 +343,7 @@ export class IndexPipeline {
       vectorChunks: vectorChunks?.length ?? 0,
       durationMs: Date.now() - startedAt,
       fileReads: this.fileReads,
+      ...(this.options.extractionCache ? { extractionCache: this.options.extractionCache.stats } : {}),
     };
 
     this.logger.info('index built', { ...stats });
@@ -388,78 +400,77 @@ export class IndexPipeline {
       const content = await this.contentOf(file, contents, () => this.fileReads++);
       if (content === null) continue;
 
-      const usages = configUsageMapper.extract(file.path, content);
-      if (usages.length > 0) configUsagesByFile.set(file.id, usages);
+      const cached = this.options.extractionCache?.get(
+        file.path, file.id, file.hash, file.language
+      ) ?? null;
+      const fresh = cached ? null : await this.extractFile(file, content, configUsageMapper);
+      const entry = cached ?? fresh!.entry;
 
-      if (await this.options.symbolExtractors.hasExtractorFor(file.language)) {
-        const result = await this.options.symbolExtractors
-          .extract(file.id, file.path, content, file.language);
+      if (entry.usages.length > 0) configUsagesByFile.set(file.id, entry.usages);
 
-        if (result.ok) {
-          symbols.push(...result.value.symbols);
-          for (const warning of result.value.warnings) {
-            addDiagnostic(file.id, {
-              severity: 'warning',
-              code: 'symbol-extraction',
-              line: 1,
-              message: warning,
-              source: 'symbol-extraction',
-              fileId: file.id,
-            });
-          }
-        } else {
-          this.logger.warn('symbol extraction failed', {
-            file: file.path,
-            reason: result.error.message,
-          });
+      if (entry.symbols) {
+        symbols.push(...entry.symbols.symbols);
+        for (const warning of entry.symbols.warnings) {
           addDiagnostic(file.id, {
-            severity: 'error',
+            severity: 'warning',
             code: 'symbol-extraction',
             line: 1,
-            message: result.error.message,
+            message: warning,
             source: 'symbol-extraction',
             fileId: file.id,
           });
         }
       }
+      if (fresh?.symbolError) {
+        this.logger.warn('symbol extraction failed', { file: file.path, reason: fresh.symbolError });
+        addDiagnostic(file.id, {
+          severity: 'error',
+          code: 'symbol-extraction',
+          line: 1,
+          message: fresh.symbolError,
+          source: 'symbol-extraction',
+          fileId: file.id,
+        });
+      }
 
-      if (await this.options.dependencyExtractors.hasExtractorFor(file.language)) {
-        const result = await this.options.dependencyExtractors
-          .extract(file.id, file.path, content, file.language);
-
-        if (result.ok) {
-          dependencies.push({
-            fileId: file.id,
-            imports: result.value.imports.map(imp =>
-              imp.type === 'local' || PROJECT_PATH_LANGUAGES.has(file.language ?? '')
-                ? resolveImport(imp, file, files, resolver)
-                : imp
-            ),
-            exports: result.value.exports,
-          });
-          for (const message of result.value.diagnostics ?? []) {
-            addDiagnostic(file.id, {
-              severity: 'warning',
-              code: 'dependency-extraction',
-              line: 1,
-              message,
-              source: 'dependency-extraction',
-            });
-          }
-        } else {
-          this.logger.warn('dependency extraction failed', {
-            file: file.path,
-            reason: result.error.message,
-          });
+      if (entry.dependencies) {
+        dependencies.push({
+          fileId: file.id,
+          imports: entry.dependencies.imports.map(imp =>
+            imp.type === 'local' || PROJECT_PATH_LANGUAGES.has(file.language ?? '')
+              ? resolveImport(imp, file, files, resolver)
+              : imp
+          ),
+          exports: entry.dependencies.exports,
+        });
+        for (const message of entry.dependencies.diagnostics) {
           addDiagnostic(file.id, {
-            severity: 'error',
+            severity: 'warning',
             code: 'dependency-extraction',
             line: 1,
-            message: result.error.message,
+            message,
             source: 'dependency-extraction',
-            fileId: file.id,
           });
         }
+      }
+      if (fresh?.dependencyError) {
+        this.logger.warn('dependency extraction failed', {
+          file: file.path,
+          reason: fresh.dependencyError,
+        });
+        addDiagnostic(file.id, {
+          severity: 'error',
+          code: 'dependency-extraction',
+          line: 1,
+          message: fresh.dependencyError,
+          source: 'dependency-extraction',
+          fileId: file.id,
+        });
+      }
+
+      /* شکست‌ها (و نتیجهٔ ناقص) کش نمی‌شوند: اجرای بعد دوباره تلاش می‌کند. */
+      if (fresh && !fresh.symbolError && !fresh.dependencyError) {
+        this.options.extractionCache?.set(file.path, fresh.entry);
       }
 
       processed++;
@@ -476,6 +487,56 @@ export class IndexPipeline {
     }
 
     return { symbols, dependencies, diagnosticsByFile, configUsagesByFile, addDiagnostic };
+  }
+
+  /** استخراج خام یک فایل؛ خروجی همان چیزی است که کش نگه می‌دارد. */
+  private async extractFile(
+    file: FileEntry,
+    content: string,
+    configUsageMapper: ConfigUsageMapper
+  ): Promise<{ entry: CachedExtraction; symbolError?: string; dependencyError?: string }> {
+    const language = file.language ?? '';
+    let symbols: CachedExtraction['symbols'] = null;
+    let dependencies: CachedExtraction['dependencies'] = null;
+    let symbolError: string | undefined;
+    let dependencyError: string | undefined;
+
+    if (await this.options.symbolExtractors.hasExtractorFor(language)) {
+      const result = await this.options.symbolExtractors
+        .extract(file.id, file.path, content, language);
+      if (result.ok) {
+        symbols = { symbols: result.value.symbols, warnings: result.value.warnings };
+      } else {
+        symbolError = result.error.message;
+      }
+    }
+
+    if (await this.options.dependencyExtractors.hasExtractorFor(language)) {
+      const result = await this.options.dependencyExtractors
+        .extract(file.id, file.path, content, language);
+      if (result.ok) {
+        dependencies = {
+          imports: result.value.imports,
+          exports: result.value.exports,
+          diagnostics: result.value.diagnostics ?? [],
+        };
+      } else {
+        dependencyError = result.error.message;
+      }
+    }
+
+    return {
+      entry: {
+        fileId: file.id,
+        hash: file.hash,
+        language,
+        usages: configUsageMapper.extract(file.path, content),
+        symbols,
+        dependencies,
+      },
+      ...(symbolError ? { symbolError } : {}),
+      ...(dependencyError ? { dependencyError } : {}),
+    };
   }
 
   /** مرحلهٔ ۴ — re-exportها: یال‌های import و symbolId مقصدِ هر re-export. */

@@ -209,6 +209,8 @@ export const SQLITE_FILE = 'project-index.sqlite';
 export const PROJECT_ARTIFACTS_MANIFEST_FILE = 'project-artifacts.manifest.json';
 
 export const LOCKS_DIR = 'locks';
+export const CACHE_DIR = 'cache';
+export const EXTRACTION_CACHE_FILE = 'extraction.json';
 export const LOGS_DIR = 'logs';
 export const EVENTS_DIR = 'events';
 export const SNAPSHOTS_DIR = 'snapshots';
@@ -238,6 +240,8 @@ export interface ProjectPaths {
   readonly manifestPath: string;
   readonly lockDir: string;
   readonly logDir: string;
+  /** کش مشتق (قابل بازسازی)؛ حذفش فقط اجرای بعدی را کند می‌کند. */
+  readonly extractionCachePath: string;
 }
 
 export interface ResolveProjectPathsOptions {
@@ -321,5 +325,6 @@ export function resolveProjectPaths(options: ResolveProjectPathsOptions): Projec
     manifestPath: path.join(artifactRoot, PROJECT_ARTIFACTS_MANIFEST_FILE),
     lockDir: path.join(artifactRoot, LOCKS_DIR),
     logDir: path.join(artifactRoot, LOGS_DIR),
+    extractionCachePath: path.join(artifactRoot, CACHE_DIR, EXTRACTION_CACHE_FILE),
   };
 }

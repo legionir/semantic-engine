@@ -25,6 +25,7 @@ import { DiagnosticsProvider, FileDiagnosticsSource } from '../lsp/DiagnosticsPr
 import { LspServerManager } from '../lsp/LspServerManager';
 import { LspServerRegistry, describeMissingServers } from '../lsp/registry';
 import { ILogger, silentLogger } from '../host/Logger';
+import { extractorFingerprint } from './extractorFingerprint';
 
 export interface ExtractorFactoryOptions {
   readonly workspaceRoot: string;
@@ -77,6 +78,11 @@ export interface ExtractorSet {
    * پیش از این، مرحلهٔ فاز ۳۴ در هیچ مسیر production اجرا نمی‌شد.
    */
   readonly diagnosticsSource?: FileDiagnosticsSource | null;
+  /**
+   * اثر انگشت خروجی استخراج‌گرها برای کش استخراج؛ `null` یعنی خروجی
+   * قطعی نیست (استخراج symbol از زبان‌سرور) و کش نباید استفاده شود.
+   */
+  readonly fingerprint: string | null;
   dispose(): void;
 }
 
@@ -167,8 +173,11 @@ export function createExtractors(options: ExtractorFactoryOptions): ExtractorSet
     }
   }
 
-  if (options.treeSitter !== false) {
-    const grammarDir = resolveGrammarDir(options.workspaceRoot, options.grammarDir);
+  const grammarDir = options.treeSitter !== false
+    ? resolveGrammarDir(options.workspaceRoot, options.grammarDir)
+    : null;
+
+  if (grammarDir) {
     parserManager = new TreeSitterParserManager({ grammarDir });
     symbols.register(new TreeSitterSymbolExtractor({ parserManager }));
     logger.debug('tree-sitter extractor registered', { grammarDir });
@@ -192,6 +201,9 @@ export function createExtractors(options: ExtractorFactoryOptions): ExtractorSet
     symbols,
     dependencies,
     diagnosticsSource: diagnosticsSource ?? null,
+    fingerprint: options.lsp === true
+      ? null
+      : extractorFingerprint({ treeSitter: grammarDir !== null, grammarDir }),
     dispose(): void {
       symbols.dispose();
       dependencies.dispose();
