@@ -102,6 +102,8 @@ jobs:
       # more than 35% (+50 ms for timings) above its baseline fails the job. Re-record
       # with `node scripts/bench.js --write` on a runner when an intended change moves it.
       - run: node scripts/bench.js --check | tee bench-result.json
+      # Retrieval quality (eval/queries.json): recall@k / MRR must not drop more than 0.03.
+      - run: node scripts/eval-retrieval.js --check
       - uses: actions/upload-artifact@v4
         if: always()
         with:

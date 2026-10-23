@@ -109,6 +109,31 @@ export interface DiscoverInput {
   readonly maxPerFile?: number;
 }
 
+/**
+ * Retrieval-first weights for candidate discovery.
+ *
+ * The ranker's general-purpose defaults weight structure (importance, readPriority, graph
+ * distance, git signals) close to text relevance. For "which files matter for this task"
+ * that lets hub files (large, heavily imported) outrank the file the query is about.
+ * Measured on eval/queries.json (30 tuning + 12 hold-out questions, hashing vectors): with
+ * the defaults MRR 0.57 / recall@5 0.69; with these weights MRR 0.68 / recall@5 0.76,
+ * on par with plain hybrid search while still returning graph neighbours.
+ */
+export const DISCOVERY_WEIGHTS = Object.freeze({
+  keyword: 3,
+  vector: 3,
+  importance: 0.1,
+  readPriority: 0.1,
+  hotness: 0,
+  hotspot: 0,
+  churn: 0,
+  graphDistance: 0.3,
+  centrality: 0.2,
+  complexity: 0.05,
+  tested: 0.05,
+  exported: 0.1,
+});
+
 export interface ContextDiscovererOptions {
   readonly blueprint?: BlueprintIndex;
   readonly embeddingGenerator?: IEmbeddingGenerator;
@@ -201,7 +226,14 @@ export class ContextDiscoverer {
     // به‌خاطر نبودشان در گراف حذف شوند.
     for (const id of seedIds) if (!hopsById.has(id)) hopsById.set(id, 0);
 
-    const candidates = this.rankEntities(this.buildEntities(hopsById, seeds, includeTests), keywordById);
+    const ranked = this.rankEntities(this.buildEntities(hopsById, seeds, includeTests), keywordById);
+    /*
+    | Direct matches (search and blueprint seeds) come before graph-expansion neighbours.
+    | Expansion exists to ADD related files; on the evaluation set it used to outrank the
+    | file that was actually matched (eval/queries.json, recall@1 0.19 vs 0.26 for plain search).
+    */
+    const tier = (c: DiscoveredCandidate): number => (c.origin === 'expansion' ? 1 : 0);
+    const candidates = [...ranked].sort((a, b) => tier(a) - tier(b) || b.score - a.score);
     const diversified = this.diversify(candidates, maxPerFile);
     const expanded = diversified.filter(c => c.origin === 'expansion').length;
 
@@ -254,6 +286,13 @@ export class ContextDiscoverer {
       const owner = this.reader.getSymbolById(item.id);
       if (!owner) continue;
       const ownerFile = this.reader.getFileById(owner.fileId);
+      /*
+      | A file inherits the best keyword score of its matched symbols. Without it the
+      | file candidate has NO keyword signal and is ranked on structural signals alone,
+      | which lets hub files (high importance, many imports) beat the file that was
+      | actually matched.
+      */
+      if (ownerFile) keywordById.set(ownerFile.id, Math.max(keywordById.get(ownerFile.id) ?? 0, score));
       if (!ownerFile || seeds.has(ownerFile.id)) continue;
       seeds.set(ownerFile.id, {
         id: ownerFile.id,
@@ -396,6 +435,8 @@ export class ContextDiscoverer {
     });
 
     const ranked = this.ranker.rank<Entity>(rankCandidates, {
+      coreRelevanceSignals: ['keyword'],
+      weights: DISCOVERY_WEIGHTS,
       ...(churnRanks.length > 0 ? { churnRankOutOf: Math.max(...churnRanks) } : {}),
     });
 

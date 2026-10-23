@@ -64,20 +64,22 @@ function score(rankedByQuery, queries) {
   return { metrics, detail };
 }
 
-async function main() {
-  if (!fs.existsSync(path.join(DIST, 'cli/commands/index-command.js'))) {
-    console.error('dist/ missing - run "npm run build" first');
-    process.exit(2);
-  }
-  const { queries } = JSON.parse(fs.readFileSync(path.join(ROOT, 'eval', 'queries.json'), 'utf8'));
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-eval-'));
+async function runConfig(vectors, queries) {
+  /* SEMANTIC_EVAL_INDEX_DIR keeps the indexes between runs so tuning iterations skip the 10 s index step. */
+  const base = process.env.SEMANTIC_EVAL_INDEX_DIR ? path.resolve(process.env.SEMANTIC_EVAL_INDEX_DIR) : null;
+  const reuse = base ? path.join(base, vectors ? 'hashing' : 'keyword') : null;
+  const tmp = reuse || fs.mkdtempSync(path.join(os.tmpdir(), 'se-eval-'));
+  if (reuse) fs.mkdirSync(reuse, { recursive: true });
   try {
-    const indexed = spawnSync(
-      process.execPath,
-      [path.join(ROOT, 'bin', 'semantic-engine.js'), 'index', '--root', CORPUS, '--out', tmp, '--no-git', '--data-dir', path.join(tmp, '.data'), '--project-id', 'prj-eval-12345678'],
-      { cwd: ROOT, encoding: 'utf8', env: { ...process.env, SEMANTIC_ENGINE_LOG_LEVEL: 'error' } }
-    );
-    if (indexed.status !== 0) throw new Error(`index failed: ${indexed.stderr || indexed.stdout}`);
+    const existing = reuse ? findFile(tmp, 'project-index.json') : null;
+    if (!existing) {
+      const indexed = spawnSync(
+        process.execPath,
+        [path.join(ROOT, 'bin', 'semantic-engine.js'), 'index', '--root', CORPUS, '--out', tmp, '--no-git', '--data-dir', path.join(tmp, '.data'), '--project-id', 'prj-eval-12345678', ...(vectors ? ['--vectors'] : [])],
+        { cwd: ROOT, encoding: 'utf8', env: { ...process.env, SEMANTIC_ENGINE_LOG_LEVEL: 'error' } }
+      );
+      if (indexed.status !== 0) throw new Error(`index failed: ${indexed.stderr || indexed.stdout}`);
+    }
 
     const indexPath = findFile(tmp, 'project-index.json');
     const projectIndex = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
@@ -96,46 +98,69 @@ async function main() {
     const searchRanked = [];
     const discoverRanked = [];
     for (const query of queries) {
-      const s = await search.execute({ query: query.q, mode: 'keyword', limit: 40 });
+      const s = await search.execute({ query: query.q, mode: vectors ? 'hybrid' : 'keyword', limit: 40 });
       searchRanked.push(distinctFiles(s.items.map(item => ({ path: item.path || (item.file && item.file.path) }))));
       const d = await discoverer.discover({ task: query.q, limit: 40 });
       discoverRanked.push(distinctFiles(d.candidates));
     }
 
-    const result = {
-      version: 1,
-      corpus: 'src',
-      files: projectIndex.files.length,
-      queries: queries.length,
-      search: score(searchRanked, queries).metrics,
-      discover: score(discoverRanked, queries).metrics,
+    const only = (ranked, split) => {
+      const idx = queries.map((query, i) => (split === 'all' || query.split === split ? i : -1)).filter(i => i >= 0);
+      return score(idx.map(i => ranked[i]), idx.map(i => queries[i]));
     };
-    const detail = score(discoverRanked, queries).detail;
-    console.log(JSON.stringify(result, null, 2));
-    if (process.argv.includes('--detail')) {
-      for (const row of detail) console.error(`${row.rank === null ? 'MISS' : '#' + row.rank}\t${row.q}\t${row.top.join(', ')}`);
-    }
+    return {
+      files: projectIndex.files.length,
+      search: only(searchRanked, 'all').metrics,
+      discover: only(discoverRanked, 'all').metrics,
+      holdout: { search: only(searchRanked, 'holdout').metrics, discover: only(discoverRanked, 'holdout').metrics },
+      detail: only(discoverRanked, 'all').detail,
+    };
+  } finally {
+    if (!reuse) fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
 
-    if (process.argv.includes('--write')) {
-      fs.mkdirSync(path.dirname(BASELINE), { recursive: true });
-      fs.writeFileSync(BASELINE, JSON.stringify(result, null, 2) + '\n');
-      console.error(`baseline written: ${path.relative(ROOT, BASELINE)}`);
-    }
-    if (process.argv.includes('--check')) {
-      const base = JSON.parse(fs.readFileSync(BASELINE, 'utf8'));
-      let failed = false;
+async function main() {
+  if (!fs.existsSync(path.join(DIST, 'cli/commands/index-command.js'))) {
+    console.error('dist/ missing - run "npm run build" first');
+    process.exit(2);
+  }
+  const { queries } = JSON.parse(fs.readFileSync(path.join(ROOT, 'eval', 'queries.json'), 'utf8'));
+  const keyword = await runConfig(false, queries);
+  const hashing = await runConfig(true, queries);
+  const strip = ({ detail, ...rest }) => rest;
+  const result = {
+    version: 3,
+    corpus: 'src',
+    queries: queries.length,
+    holdoutQueries: queries.filter(query => query.split === 'holdout').length,
+    /* keyword: index without vectors. hashing: index with the built-in hashing embeddings (what `start` builds by default). */
+    configs: { keyword: strip(keyword), hashing: strip(hashing) },
+  };
+  console.log(JSON.stringify(result, null, 2));
+  if (process.argv.includes('--detail')) {
+    for (const row of hashing.detail) console.error(`${row.rank === null ? 'MISS' : '#' + row.rank}\t${row.q}\t${row.top.join(', ')}`);
+  }
+
+  if (process.argv.includes('--write')) {
+    fs.mkdirSync(path.dirname(BASELINE), { recursive: true });
+    fs.writeFileSync(BASELINE, JSON.stringify(result, null, 2) + '\n');
+    console.error(`baseline written: ${path.relative(ROOT, BASELINE)}`);
+  }
+  if (process.argv.includes('--check')) {
+    const base = JSON.parse(fs.readFileSync(BASELINE, 'utf8'));
+    let failed = false;
+    for (const config of Object.keys(result.configs)) {
       for (const system of ['search', 'discover']) {
-        for (const [name, value] of Object.entries(result[system])) {
-          const was = base[system][name];
+        for (const [name, value] of Object.entries(result.configs[config][system])) {
+          const was = base.configs[config][system][name];
           const ok = value >= was - TOLERANCE;
-          console.error(`${ok ? 'ok  ' : 'FAIL'} ${system} ${name}: ${value} (baseline ${was})`);
+          console.error(`${ok ? 'ok  ' : 'FAIL'} ${config} ${system} ${name}: ${value} (baseline ${was})`);
           if (!ok) failed = true;
         }
       }
-      if (failed) process.exitCode = 1;
     }
-  } finally {
-    fs.rmSync(tmp, { recursive: true, force: true });
+    if (failed) process.exitCode = 1;
   }
 }
 
