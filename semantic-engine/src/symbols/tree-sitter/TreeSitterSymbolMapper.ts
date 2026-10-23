@@ -318,7 +318,7 @@ export class TreeSitterSymbolMapper {
         generics: this.extractGenerics(node),
         extendsTypes: this.extractExtends(node),
         implementsTypes: this.extractImplements(node),
-      }) ?? this.buildSignature(name, parameters, returnType);
+      }) ?? this.fallbackSignature(kind, name, parameters, returnType, node);
     const modifiers = this.extractModifiers(node);
 
     return {
@@ -439,6 +439,25 @@ export class TreeSitterSymbolMapper {
 
   private extractReturnType(node: Node, kind: SymbolKind): string | null {
     return extractReturnType(this.grammar, node, kind);
+  }
+
+  /*
+  | Only callables get `name(params)`. A constant, variable or property used to be reported as
+  | `DEFAULT_TIMEOUT_MS()`, which tells a reader (or a model) it is a function. For those, the
+  | declaration line itself is the useful signature (`const DEFAULT_TIMEOUT_MS = 15_000`).
+  */
+  private fallbackSignature(
+    kind: SymbolKind,
+    name: string,
+    parameters: Parameter[],
+    returnType: string | null,
+    node: Node
+  ): string {
+    if (kind === 'function' || kind === 'method' || kind === 'decorator') {
+      return this.buildSignature(name, parameters, returnType);
+    }
+    const line = (this.contentLines[node.startPosition.row] ?? '').trim().replace(/[;{,]\s*$/, '').trim();
+    return line.length > 0 && line.length <= 160 ? line : name;
   }
 
   private buildSignature(name: string, parameters: Parameter[], returnType: string | null): string {

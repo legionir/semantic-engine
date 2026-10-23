@@ -411,3 +411,32 @@ describe('AssembleContextTool — مسیرهای پایه', () => {
     expect(a.context).toBe(b.context);
   });
 });
+
+describe('AssembleContextTool — پاسخ فشرده برای مدل', () => {
+  const input = { task: 'fix runTarget', targetFiles: ['src/target.ts'], maxTokens: 400 } as const;
+
+  it('پیش‌فرض: بدون signals و keptIds', async () => {
+    const result = await new AssembleContextTool(reader()).execute(input);
+    expect(result.success).toBe(true);
+    expect(result.items.length).toBeGreaterThan(0);
+    for (const item of result.items) {
+      expect(item.metadata).not.toHaveProperty('signals');
+    }
+    const budget = result.metadata!['budget'] as { sections: Array<Record<string, unknown>> };
+    for (const section of budget.sections) {
+      expect(section).not.toHaveProperty('keptIds');
+    }
+  });
+
+  it('explain: true توضیح رتبه‌بندی را برمی‌گرداند', async () => {
+    const result = await new AssembleContextTool(reader()).execute({ ...input, explain: true });
+    expect(result.items.some(item => Array.isArray((item.metadata as { signals?: unknown })?.signals))).toBe(true);
+    const budget = result.metadata!['budget'] as { sections: Array<{ keptIds?: string[] }> };
+    expect(budget.sections.some(section => Array.isArray(section.keptIds))).toBe(true);
+  });
+
+  it('explain نامعتبر رد می‌شود', async () => {
+    const result = await new AssembleContextTool(reader()).execute({ ...input, explain: 'yes' as unknown as boolean });
+    expect(result.success).toBe(false);
+  });
+});

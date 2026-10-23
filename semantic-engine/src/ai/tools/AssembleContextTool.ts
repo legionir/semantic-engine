@@ -56,6 +56,12 @@ export interface AssembleContextInput extends AiToolInput {
   readonly includeTests?: boolean;
   readonly includeRecentChanges?: boolean;
   readonly dependencyDepth?: number;
+  /**
+   * Include ranking explanations (per-item signal names and the ids kept in each budget
+   * section). Off by default: they are for debugging a ranking, and cost about a fifth of the
+   * response in tokens that a model gets nothing from.
+   */
+  readonly explain?: boolean;
 }
 
 export interface AssembleContextOptions {
@@ -155,6 +161,7 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
       includeTests: { type: 'boolean', default: true },
       includeRecentChanges: { type: 'boolean', default: false },
       dependencyDepth: { type: 'integer', default: 1 },
+      explain: { type: 'boolean', default: false, description: 'Include ranking signals and kept ids (debugging; costs ~20% more tokens)' },
     },
     required: ['task'],
   };
@@ -189,6 +196,8 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
       if (input.dependencyDepth !== undefined && (!Number.isInteger(input.dependencyDepth) || input.dependencyDepth < 1)) return { success: false, error: 'dependencyDepth must be a positive integer', items: [] };
       if (input.includeTests !== undefined && typeof input.includeTests !== 'boolean') return { success: false, error: 'includeTests must be a boolean', items: [] };
       if (input.includeRecentChanges !== undefined && typeof input.includeRecentChanges !== 'boolean') return { success: false, error: 'includeRecentChanges must be a boolean', items: [] };
+      if (input.explain !== undefined && typeof input.explain !== 'boolean') return { success: false, error: 'explain must be a boolean', items: [] };
+      const explain = input.explain === true;
 
       const maxTokens = input.maxTokens ?? 4000;
       const includeTests = input.includeTests ?? true;
@@ -331,7 +340,7 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
             metadata: {
               section: entity.section,
               graphHops: entity.hops,
-              signals: r.contributions.map(c => c.signal),
+              ...(explain ? { signals: r.contributions.map(c => c.signal) } : {}),
             },
           };
         });
@@ -354,7 +363,9 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
           budget: {
             usedTokens: assembled.usedTokens,
             maxTokens: assembled.maxTokens,
-            sections: assembled.sections,
+            sections: explain
+              ? assembled.sections
+              : assembled.sections.map(({ keptIds: _keptIds, ...section }) => section),
           },
           ...(recentChangesNote ? { recentChanges: recentChangesNote } : {}),
         },
