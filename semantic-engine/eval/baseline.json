@@ -35,6 +35,12 @@
           "recall@5": 0.417,
           "recall@10": 0.75
         }
+      },
+      "assemble": {
+        "coverage@1000": 0.714,
+        "avgTokens@1000": 942,
+        "coverage@4000": 0.81,
+        "avgTokens@4000": 1914
       }
     },
     "hashing": {
@@ -68,6 +74,12 @@
           "recall@5": 0.667,
           "recall@10": 0.833
         }
+      },
+      "assemble": {
+        "coverage@1000": 0.81,
+        "avgTokens@1000": 969,
+        "coverage@4000": 0.881,
+        "avgTokens@4000": 1771
       }
     }
   }

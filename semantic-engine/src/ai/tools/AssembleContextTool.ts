@@ -239,7 +239,8 @@ export class AssembleContextTool implements AiTool<AssembleContextInput> {
         */
         const discovery = await this.discoverer().discover({
           task: input.task,
-          limit: 30,
+          /* A larger budget can hold more candidates; a fixed 30 left most of an 8k budget unused. */
+          limit: Math.min(80, Math.max(30, Math.floor(maxTokens / 100))),
           expansionDepth: dependencyDepth + 1,
           ...(includeTests ? { includeTests: true } : {}),
         });

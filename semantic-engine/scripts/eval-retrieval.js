@@ -95,6 +95,27 @@ async function runConfig(vectors, queries) {
     const search = new SemanticSearchTool(reader);
     const discoverer = new ContextDiscoverer(reader, blueprint ? { blueprint } : {});
 
+    const { AssembleContextTool } = require(path.join(DIST, 'ai/tools/AssembleContextTool'));
+    const assembler = new AssembleContextTool(reader, undefined, {
+      workspaceRoot: CORPUS,
+      ...(blueprint ? { blueprint } : {}),
+    });
+    /* Coverage: share of questions whose expected file appears in the assembled context at a token budget. */
+    const assemble = {};
+    for (const budget of [1000, 4000]) {
+      let covered = 0;
+      let tokens = 0;
+      for (const query of queries) {
+        const out = await assembler.execute({ task: query.q, maxTokens: budget });
+        const paths = (out.items || []).map(item => item.path).filter(Boolean);
+        const text = out.context || '';
+        if (query.expect.some(file => paths.includes(file) || text.includes(file))) covered++;
+        tokens += (out.metadata && out.metadata.estimatedTokens) || 0;
+      }
+      assemble[`coverage@${budget}`] = Math.round((covered / queries.length) * 1000) / 1000;
+      assemble[`avgTokens@${budget}`] = Math.round(tokens / queries.length);
+    }
+
     const searchRanked = [];
     const discoverRanked = [];
     for (const query of queries) {
@@ -113,6 +134,7 @@ async function runConfig(vectors, queries) {
       search: only(searchRanked, 'all').metrics,
       discover: only(discoverRanked, 'all').metrics,
       holdout: { search: only(searchRanked, 'holdout').metrics, discover: only(discoverRanked, 'holdout').metrics },
+      assemble,
       detail: only(discoverRanked, 'all').detail,
     };
   } finally {
@@ -158,6 +180,15 @@ async function main() {
           console.error(`${ok ? 'ok  ' : 'FAIL'} ${config} ${system} ${name}: ${value} (baseline ${was})`);
           if (!ok) failed = true;
         }
+      }
+    }
+    for (const config of Object.keys(result.configs)) {
+      for (const [name, value] of Object.entries(result.configs[config].assemble)) {
+        if (!name.startsWith('coverage')) continue;
+        const was = base.configs[config].assemble[name];
+        const ok = value >= was - TOLERANCE;
+        console.error(`${ok ? 'ok  ' : 'FAIL'} ${config} assemble ${name}: ${value} (baseline ${was})`);
+        if (!ok) failed = true;
       }
     }
     if (failed) process.exitCode = 1;
