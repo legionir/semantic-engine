@@ -218,4 +218,27 @@ describe('AiMetadataGenerator — relatedFileIds فقط fileId معتبر (SE-AI
 
     expect(generated.get('f1')!.relatedFileIds ?? []).toEqual([]);
   });
+
+  it('tokens that name Object.prototype members (constructor, valueOf) do not crash keyword extraction', () => {
+    const files = [
+      createFile('f1', 'src/isConstructorNode.ts', {
+        exports: [
+          { name: 'isConstructorNode', kind: 'function' },
+          { name: 'toString', kind: 'function' },
+          { name: 'valueOf', kind: 'function' },
+        ] as unknown as FileEntry['exports'],
+      }),
+    ];
+
+    const generated = new AiMetadataGenerator().generate({
+      workspaceRoot: '/tmp/fixture',
+      files,
+      symbols: [],
+      dependencyGraph: [],
+    });
+
+    const metadata = generated.get('f1')!;
+    expect(metadata.businessDomains ?? []).toEqual([]);
+    expect(metadata.keywords).toEqual(expect.arrayContaining(['constructor', 'value']));
+  });
 });

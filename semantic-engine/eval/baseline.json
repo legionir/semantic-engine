@@ -5,31 +5,31 @@
   "holdoutQueries": 12,
   "configs": {
     "keyword": {
-      "files": 594,
+      "files": 638,
       "search": {
-        "mrr": 0.47,
-        "recall@1": 0.286,
+        "mrr": 0.484,
+        "recall@1": 0.31,
         "recall@3": 0.571,
-        "recall@5": 0.714,
+        "recall@5": 0.738,
         "recall@10": 0.881
       },
       "discover": {
-        "mrr": 0.434,
-        "recall@1": 0.286,
-        "recall@3": 0.5,
-        "recall@5": 0.643,
+        "mrr": 0.453,
+        "recall@1": 0.31,
+        "recall@3": 0.548,
+        "recall@5": 0.667,
         "recall@10": 0.762
       },
       "holdout": {
         "search": {
-          "mrr": 0.329,
+          "mrr": 0.328,
           "recall@1": 0.167,
           "recall@3": 0.333,
           "recall@5": 0.583,
-          "recall@10": 0.917
+          "recall@10": 0.833
         },
         "discover": {
-          "mrr": 0.289,
+          "mrr": 0.29,
           "recall@1": 0.167,
           "recall@3": 0.25,
           "recall@5": 0.417,
@@ -37,49 +37,49 @@
         }
       },
       "assemble": {
-        "coverage@1000": 0.786,
-        "avgTokens@1000": 961,
+        "coverage@1000": 0.81,
+        "avgTokens@1000": 962,
         "coverage@4000": 0.833,
-        "avgTokens@4000": 2002
+        "avgTokens@4000": 1981
       }
     },
     "hashing": {
-      "files": 594,
+      "files": 638,
       "search": {
-        "mrr": 0.684,
-        "recall@1": 0.595,
+        "mrr": 0.7,
+        "recall@1": 0.619,
         "recall@3": 0.762,
         "recall@5": 0.762,
         "recall@10": 0.857
       },
       "discover": {
-        "mrr": 0.675,
-        "recall@1": 0.595,
+        "mrr": 0.688,
+        "recall@1": 0.619,
         "recall@3": 0.738,
         "recall@5": 0.762,
-        "recall@10": 0.81
+        "recall@10": 0.786
       },
       "holdout": {
         "search": {
-          "mrr": 0.561,
-          "recall@1": 0.417,
+          "mrr": 0.602,
+          "recall@1": 0.5,
           "recall@3": 0.667,
           "recall@5": 0.667,
           "recall@10": 0.917
         },
         "discover": {
-          "mrr": 0.55,
-          "recall@1": 0.417,
+          "mrr": 0.581,
+          "recall@1": 0.5,
           "recall@3": 0.583,
           "recall@5": 0.667,
-          "recall@10": 0.833
+          "recall@10": 0.75
         }
       },
       "assemble": {
-        "coverage@1000": 0.857,
-        "avgTokens@1000": 970,
-        "coverage@4000": 0.881,
-        "avgTokens@4000": 1773
+        "coverage@1000": 0.81,
+        "avgTokens@1000": 966,
+        "coverage@4000": 0.857,
+        "avgTokens@4000": 1768
       }
     }
   }
