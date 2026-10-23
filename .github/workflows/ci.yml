@@ -109,3 +109,28 @@ jobs:
         with:
           name: bench-result
           path: semantic-engine/bench-result.json
+
+  e2e:
+    name: Panel e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: semantic-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: semantic-engine/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm run fixture
+      # Playwright is a test-only tool: installed without touching package.json/lock.
+      - run: npm install --no-save --no-audit --no-fund playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      # Real server + real browser against the panel and visualizer (scripts/e2e-panel.js).
+      - run: node scripts/e2e-panel.js
+        env:
+          E2E_REQUIRED: '1'
