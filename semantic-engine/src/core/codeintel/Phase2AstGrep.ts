@@ -46,7 +46,24 @@ const LANGUAGE_MAP: Readonly<Record<string, string>> = {
   typescript: 'TypeScript',
   javascript: 'JavaScript',
   tsx: 'Tsx',
+  // Dynamic parser (optional package `@ast-grep/lang-python`, prebuilt binaries for linux/macOS/windows).
+  python: 'python',
 };
+
+/** Languages that need `registerDynamicLanguage` before use, and the package that provides them. */
+const DYNAMIC_LANGUAGE_PACKAGES: Readonly<Record<string, string>> = { python: '@ast-grep/lang-python' };
+const registeredDynamic = new Set<string>();
+
+function ensureLanguage(napi: NapiModule, napiLang: string, language: string): void {
+  const packageName = DYNAMIC_LANGUAGE_PACKAGES[language];
+  if (!packageName || registeredDynamic.has(language)) return;
+  try {
+    napi.registerDynamicLanguage({ [napiLang]: require(packageName) });
+  } catch (error) {
+    throw new Error(`AST_GREP_UNAVAILABLE: ${language} parser (${packageName}) could not be loaded: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  registeredDynamic.add(language);
+}
 
 type NapiModule = typeof import('@ast-grep/napi');
 
@@ -88,10 +105,11 @@ export function searchAstGrep(
   const napiLang = LANGUAGE_MAP[request.language];
   if (!napiLang) {
     throw new Error(
-      `UNSUPPORTED_LANGUAGE: ${request.language} (ast-grep engine ${AST_GREP_VERSION} supports: typescript, javascript, tsx)`,
+      `UNSUPPORTED_LANGUAGE: ${request.language} (ast-grep engine ${AST_GREP_VERSION} supports: typescript, javascript, tsx, python)`,
     );
   }
   const napi = loadNapi();
+  ensureLanguage(napi, napiLang, request.language);
   let root;
   try {
     root = napi.parse(napiLang, text);

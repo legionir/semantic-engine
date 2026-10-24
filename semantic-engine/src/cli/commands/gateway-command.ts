@@ -9,6 +9,7 @@
  * CLI, so `--json` on stdout stays parseable.
  */
 
+import { networkFilesystemOf, networkFilesystemWarning } from '../../host/networkFilesystem';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
 import { GatewayServer, DEFAULT_GATEWAY_PORT } from '../../gateway/GatewayServer';
@@ -34,6 +35,9 @@ export async function runGateway(
   const dataRoot = stringOption(args.options, 'dataDir')
     ? String(stringOption(args.options, 'dataDir'))
     : resolveDataRoot({ env: process.env });
+
+  const networkFs = networkFilesystemOf(dataRoot);
+  if (networkFs) context.logger.warn(networkFilesystemWarning(dataRoot, networkFs));
 
   const gateway = new GatewayServer({ dataRoot, port, host, token });
   const info = await gateway.start();

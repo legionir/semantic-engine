@@ -549,3 +549,13 @@
 - **Decision:** the measured, gated targets are cold index ≤ 8 s and re-index ≤ 5 s on this repository (GitHub runner: 7.65 s / 4.93 s). The earlier aspiration of 6 s / 2 s is not a gate; reaching it needs parallel parsing or a full incremental index and is only worth the risk if a real workload demands it. Output quality outranks speed.
 - **Status:** DECIDED. `bench/baseline.json` is the runner baseline (±35 % gate).
 
+## D-0031 — Dependency and topology boundaries
+
+- **Date:** 2026-10-24
+- **Decisions:**
+  1. `chokidar` stays on 4.x. 5.x only changes the module format (ESM-only); the project is CommonJS and gains nothing functional.
+  2. `@xenova/transformers` 2.17.x stays (optional dependency; production audit clean, `sharp` patched through `overrides`). Migrating to `@huggingface/transformers` cannot be verified without downloading a real model, which this environment cannot do (HuggingFace is blocked), so it is not attempted blind.
+  3. Supported topology: one host per data directory, local disk. Lock files and atomic renames are not guaranteed over NFS/SMB; `gateway` and `start` now warn when the data directory is on a network file system (`host/networkFilesystem.ts`). Multiple replicas would need a distributed queue and store; that is out of scope.
+  4. Python structural search is available through the optional `@ast-grep/lang-python` (prebuilt, no network at install). PHP stays unavailable: the PHP grammar uses `$` as its own sigil, so ast-grep metavariable patterns do not match (verified: every metavariable pattern returned 0).
+- **Status:** DECIDED, implemented.
+

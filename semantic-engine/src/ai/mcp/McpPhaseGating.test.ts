@@ -31,7 +31,7 @@ function createIndex(rootPath: string): ProjectIndex {
     files: [
       { id: 'fa', path: 'src/a.ts', language: 'typescript', encoding: 'utf8', size: A_TS.length, lines: 2, hash: contentHash(A_TS), modified: '2026-01-01T00:00:00.000Z', binary: false, testFile: false, generated: false },
       { id: 'fb', path: 'src/b.ts', language: 'typescript', encoding: 'utf8', size: B_TS.length, lines: 3, hash: contentHash(B_TS), modified: '2026-01-01T00:00:00.000Z', binary: false, testFile: false, generated: false },
-      { id: 'fc', path: 'src/c.py', language: 'python', encoding: 'utf8', size: C_PY.length, lines: 1, hash: contentHash(C_PY), modified: '2026-01-01T00:00:00.000Z', binary: false, testFile: false, generated: false },
+      { id: 'fc', path: 'src/c.php', language: 'php', encoding: 'utf8', size: C_PY.length, lines: 1, hash: contentHash(C_PY), modified: '2026-01-01T00:00:00.000Z', binary: false, testFile: false, generated: false },
     ],
     symbols: [
       { id: 's-add', fileId: 'fb', parentId: null, kind: 'function', name: 'add', fullyQualifiedName: 'add', line: 1, endLine: 3, signature: 'function add(a: number, b: number)', source: 'tree-sitter', confidence: makeConfidence(100), exported: true },
@@ -56,7 +56,7 @@ describe('MCP Phase 2/3/4 gating', () => {
     fs.mkdirSync(path.join(root, 'src'), { recursive: true });
     fs.writeFileSync(path.join(root, 'src', 'a.ts'), A_TS, 'utf8');
     fs.writeFileSync(path.join(root, 'src', 'b.ts'), B_TS, 'utf8');
-    fs.writeFileSync(path.join(root, 'src', 'c.py'), C_PY, 'utf8');
+    fs.writeFileSync(path.join(root, 'src', 'c.php'), C_PY, 'utf8');
   });
 
   afterEach(() => {
@@ -170,13 +170,13 @@ describe('MCP Phase 2/3/4 gating', () => {
       expect(body.metadata.passed).toBe(false);
 
       // A rule the engine cannot execute must FAIL, never report passed:true.
-      const pyPack = JSON.stringify({ rules: [{ id: 'r-py', language: 'python', pattern: 'x', message: 'py' }] });
-      const bad = await server.callTool('structural_rule_test', { rules: pyPack, path: 'src/c.py' });
+      const pyPack = JSON.stringify({ rules: [{ id: 'r-py', language: 'php', pattern: 'x', message: 'py' }] });
+      const bad = await server.callTool('structural_rule_test', { rules: pyPack, path: 'src/c.php' });
       expect(bad.isError).toBe(true);
       expect(payload(bad).error).toContain('UNSUPPORTED_LANGUAGE');
       expect(payload(bad).error).not.toContain('INVALID_RULE_PACK');
 
-      const search = await server.callTool('structural_search', { pattern: 'x', language: 'python', path: 'src/c.py' });
+      const search = await server.callTool('structural_search', { pattern: 'x', language: 'php', path: 'src/c.php' });
       expect(search.isError).toBe(true);
       expect(payload(search).error).toContain('UNSUPPORTED_LANGUAGE');
     } finally {

@@ -109,12 +109,12 @@ describe('Phase 2 ast-grep engine', () => {
     expect(() => searchTextStructurally('x();\n', req('x()', 'typescript', { maxResults: 0 }))).toThrow('maxResults must be a positive integer');
   });
 
-  test.each(['python', 'php', 'unknown', 'cobol'])('fails closed for unsupported language %s', language => {
+  test.each(['php', 'unknown', 'cobol'])('fails closed for unsupported language %s', language => {
     // The tool layer casts arbitrary input strings (as here); the engine must
     // still fail closed with a named error instead of guessing a parser.
     const request = { path: 'a', language: language as unknown as import('./Phase2Structural').StructuralLanguage, pattern: 'x' };
     expect(() => searchAstGrep('x = 1\n', request)).toThrow('UNSUPPORTED_LANGUAGE');
-    expect(() => searchAstGrep('x = 1\n', request)).toThrow('supports: typescript, javascript, tsx');
+    expect(() => searchAstGrep('x = 1\n', request)).toThrow('supports: typescript, javascript, tsx, python');
   });
 
   test('bounds output and reports truncation honestly', () => {
@@ -132,6 +132,16 @@ describe('Phase 2 ast-grep engine', () => {
     const second = searchTextStructurally(src, req('$F($A)', 'typescript', { ruleId: 'r1' }));
     expect(second).toEqual(first);
     expect(first.matches.every(m => m.ruleId === 'r1')).toBe(true);
+  });
+
+  test('python is searched through the dynamic parser with captures and exact ranges', () => {
+    const source = 'def add(a, b):\n    return a + b\n\nclass K:\n    def m(self):\n        return add(1, 2)\n';
+    const result = searchAstGrep(source, { pattern: 'def $NAME($$$ARGS): $$$BODY', language: 'python', path: 'a.py' });
+    expect(result.matches.map(m => m.captures.NAME)).toEqual(['add', 'm']);
+    const first = result.matches[0];
+    expect(source.slice(first.start, first.end)).toBe(first.text);
+    expect(first.captures.ARGS).toBe('a, b');
+    expect(first.line).toBe(1);
   });
 
   test('parses typescript, javascript and tsx through their own parsers', () => {
