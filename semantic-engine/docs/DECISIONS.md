@@ -61,8 +61,12 @@
   *read* boundary should not inherit (it blocks `.bin`/`.so`/… extensions, which are
   legitimately readable, just not source). The duplication is real and recorded here rather
   than hidden; unifying both under one confinement helper is a Phase 1 decision.
-- **Status:** DECIDED; both copies are executed by tests
-  (`ReadBoundary.phase0.test.ts`, `fileProvider.test.ts`).
+- **Status:** SUPERSEDED 2026-10-24 — unified. The rules (lexical check, secret/`.git`
+  denylist, canonical comparison with the deepest-existing-ancestor walk) now live once in
+  `core/contracts/pathConfinement.ts`. `ConfinedFileProvider` (async, deadlines, byte caps) and
+  `SourceSecurityGuard` (sync; read tools and sync/write) both call it; the extension policy
+  stays with the guard. Side effect: the sync/write boundary now also refuses secret and `.git`
+  paths. Tests: `pathConfinement.test.ts`, `ReadBoundary.phase0.test.ts`, `fileProvider.test.ts`.
 
 ## D-0008 — Incremental updates must match a full rebuild for rename
 
