@@ -16,11 +16,10 @@
 
 | مورد | وضعیت و جزئیات |
 |---|---|
-| پرسش‌های با شکاف واژگانی | ۶ از ۴۲ پرسش (مثل «parse tsconfig path aliases»، «push live progress … server sent events») با جست‌وجوی کلیدواژه‌ای و embedding هشینگ پیدا نمی‌شوند. راه‌حل واقعی embedding معنایی است (پایین)؛ فهرست مترادف برای همین پرسش‌ها عمداً اضافه نشد چون فقط معیار را بالا می‌برد |
+| پرسش‌های با شکاف واژگانی | با مدل واقعی `Xenova/all-MiniLM-L6-v2` (اندازه‌گیری روی runner گیت‌هاب، workflow «Real embedding model») ۳ از ۴۲ پرسش هنوز miss می‌شوند: «mask secrets before sending code to an llm»، «start the ui and mcp servers together with a watcher»، «push live progress to the browser with server sent events». با embedding هشینگ ۶ miss بود. فهرست مترادف عمداً اضافه نشد |
 | پوشش `assemble_context` | ۶ از ۴۲ پرسش با ۴۰۰۰ توکن (بدون بردار ۷ تا) فایل درست را ندارند |
 | `discover` بدون بردار | کمی پایین‌تر از search ترکیبی ساده (MRR ۰٫۴۵ در برابر ۰٫۴۸) |
 | `code_outline` سنگین | پیش‌فرض بدون تغییر (قرارداد فیلدها)؛ گزینهٔ `compact: true` خروجی را به name/kind/خطوط/signature می‌رساند (کمتر از ۷۰٪ بایت) |
-| مسیر واقعی embedding | با مدل دانلودشده و `sharp ^0.35.5` اجرا نشده: HuggingFace در محیط توسعه مسدود است (HTTP 403 از پروکسی). مسیر ناموفق دانلود در e2e تست شده. نیاز به یک اجرا در محیط با دسترسی شبکه |
 
 ## ۳. امنیت و وابستگی‌ها
 

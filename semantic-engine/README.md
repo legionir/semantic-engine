@@ -963,3 +963,15 @@ semantic-engine serve --ui --host 0.0.0.0 --allow-remote --token "..."
 
 ## مجوز (License)
 این پروژه تحت مجوز **MIT** منتشر شده است.
+
+## کیفیت بازیابی با مدل embedding واقعی
+
+workflow «Real embedding model» (`.github/workflows/embedding.yml`؛ هفتگی، دستی، و روی PRهایی که `src/vector/**` را تغییر می‌دهند) مدل `Xenova/all-MiniLM-L6-v2` را واقعاً دانلود می‌کند و مسیر کامل را می‌سنجد. اندازه‌گیری روی ۴۲ پرسش `eval/queries.json` (هر سه روش روی همان corpus):
+
+| روش | search MRR | recall@1 | recall@5 | assemble coverage@1000 |
+|---|---|---|---|---|
+| کلیدواژه | 0.505 | 0.333 | 0.738 | 0.810 |
+| embedding هشینگ (پیش‌فرض `start`) | 0.699 | 0.619 | 0.762 | 0.810 |
+| مدل واقعی MiniLM | 0.826 | 0.762 | 0.857 | 0.833 |
+
+برای استفاده: مدل را از پنل Embeddings دانلود کنید و `--embedding-provider local --embedding-model Xenova/all-MiniLM-L6-v2` بدهید.
