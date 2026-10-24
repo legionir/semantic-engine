@@ -12,6 +12,10 @@ import {
   MANIFEST_FILE_NAME,
   STALE_ARTIFACT_MESSAGE,
   assertIndexMatchesCommittedManifest,
+  generationFilePath,
+  preserveCommittedGeneration,
+  pruneGenerations,
+  readCommittedIndexBytes,
   readManifestBeside,
 } from './artifactManifest';
 
@@ -86,5 +90,55 @@ describe('readManifestBeside', () => {
     writeIndex({});
     writeManifest('abc');
     expect(readManifestBeside(indexPath)?.artifacts?.index?.sha256).toBe('abc');
+  });
+});
+
+const sha = (bytes: Buffer) => crypto.createHash('sha256').update(bytes).digest('hex');
+
+describe('atomic publication (D-0014)', () => {
+  it('serves the previously committed generation while a writer is between index and manifest', () => {
+    const oldBytes = writeIndex({ v: 1 });
+    writeManifest(sha(oldBytes));
+
+    // writer step 1: keep the committed generation; step 2: replace the index; (crash before the manifest)
+    preserveCommittedGeneration(indexPath);
+    // replace like the real writer (temp file + rename): a new inode, so the hard-linked copy keeps the old bytes
+    const newBytes = Buffer.from(JSON.stringify({ v: 2 }), 'utf8');
+    fs.writeFileSync(`${indexPath}.tmp`, newBytes);
+    fs.renameSync(`${indexPath}.tmp`, indexPath);
+
+    expect(readCommittedIndexBytes(indexPath).equals(oldBytes)).toBe(true);
+
+    // writer step 3: manifest commit
+    writeManifest(sha(newBytes));
+    expect(readCommittedIndexBytes(indexPath).equals(newBytes)).toBe(true);
+  });
+
+  it('fails closed when the committed generation was never preserved', () => {
+    writeManifest(sha(writeIndex({ v: 1 })));
+    writeIndex({ v: 2 });
+    expect(() => readCommittedIndexBytes(indexPath)).toThrow(STALE_ARTIFACT_MESSAGE);
+  });
+
+  it('does not trust a preserved file whose bytes do not match the pinned digest', () => {
+    const oldBytes = writeIndex({ v: 1 });
+    writeManifest(sha(oldBytes));
+    fs.mkdirSync(path.dirname(generationFilePath(indexPath, sha(oldBytes))), { recursive: true });
+    fs.writeFileSync(generationFilePath(indexPath, sha(oldBytes)), '{"v":"tampered"}');
+    writeIndex({ v: 2 });
+    expect(() => readCommittedIndexBytes(indexPath)).toThrow(STALE_ARTIFACT_MESSAGE);
+  });
+
+  it('prunes old generations but keeps the current one', () => {
+    const dirPath = path.dirname(generationFilePath(indexPath, 'x'));
+    fs.mkdirSync(dirPath, { recursive: true });
+    for (let i = 0; i < 5; i++) {
+      const file = path.join(dirPath, `g${i}.json`);
+      fs.writeFileSync(file, '{}');
+      fs.utimesSync(file, new Date(2026, 0, i + 1), new Date(2026, 0, i + 1));
+    }
+    fs.writeFileSync(path.join(dirPath, 'cur.json'), '{}');
+    pruneGenerations(indexPath, 'cur');
+    expect(fs.readdirSync(dirPath).sort()).toEqual(['cur.json', 'g3.json', 'g4.json']);
   });
 });

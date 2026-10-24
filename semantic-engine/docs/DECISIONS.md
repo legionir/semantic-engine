@@ -2,7 +2,7 @@
 
 > **Note (2026-10-23):** the phase status reports, evidence directories, regate scripts/fixtures and plan/prompt documents cited below were removed from the tree as completed. They are recoverable from git history at commit `0d8d4cf`. Still-open work is tracked only in `docs/OPEN-ITEMS.md`.
 
-**Status (2026-10-24):** Phases 1–4 gates are closed (D-0018, D-0026, D-0027); Phase 0 stays 🟡 CONDITIONAL on two owned, non-blocking gaps — set-atomic artifact publication (D-0014) and wiring the confined read boundary into MCP/HTTP. The environment blocker recorded in D-0003 no longer applies: the full suite runs locally and in CI.
+**Status (2026-10-24):** Phases 1–4 gates are closed (D-0018, D-0026, D-0027); Phase 0's two owned gaps are closed — set-atomic artifact publication (D-0014, 2026-10-24) and the freshness-handle runtime path (code_read over MCP); wiring the confined read boundary into every MCP/HTTP read remains. The environment blocker recorded in D-0003 no longer applies: the full suite runs locally and in CI.
 
 ## D-0001 — Existing repository is the source of truth
 
@@ -160,7 +160,15 @@
 - **Reason:** recording the architectural boundary honestly is better than claiming atomicity that
   two independent files cannot have. SE-P0-PUB-01 is closed at the consumption layer and open at
   the layout layer by decision.
-- **Status:** DECIDED (layout migration: POSTPONED, needs owner sign-off).
+- **Status:** SUPERSEDED 2026-10-24 — atomic without a layout migration. The manifest rename is the
+  commit point. Before the index is replaced, the committed index is hard-linked to
+  `generations/<sha256>.json` (last 2 kept besides the current one); `readCommittedIndexBytes`
+  serves that copy when the manifest still pins it, so a reader sees the old committed set or the
+  new one, never a mismatch. Paths consumers use are unchanged. Anything unverifiable still fails
+  closed. Limits: the blueprint is not preserved this way (it is derived and digest-checked
+  separately); a writer that edits the index in place instead of rename would also change the
+  linked copy — the reader then fails closed, it never serves wrong bytes. Tests:
+  `artifactManifest.test.ts`, `OutputWriter.test.ts`.
 
 ## D-0015 — Unsatisfiable checks fail closed with named reasons; absent features are recorded, not faked
 
