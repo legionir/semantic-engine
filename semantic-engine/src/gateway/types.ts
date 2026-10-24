@@ -37,7 +37,6 @@ export const WORKER_TRANSPORTS: readonly WorkerTransport[] = ['loopback', 'socke
 
 export interface WorkerIndexingConfig {
   readonly vectors: boolean;
-  readonly sqlite: boolean;
   readonly blueprint: boolean;
   readonly git: boolean;
   readonly treeSitter: boolean;

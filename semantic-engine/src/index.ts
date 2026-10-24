@@ -85,7 +85,6 @@ export {
   PROJECT_INDEX_FILE,
   PROJECTS_DIR_NAME,
   BLUEPRINT_FILE,
-  SQLITE_FILE,
   PROJECT_ARTIFACTS_MANIFEST_FILE,
   artifactRootFor,
   canonicalIndexPath,

@@ -59,7 +59,6 @@ export const DEFAULT_WORKER_CONFIG: Omit<
   watch: true,
   indexing: {
     vectors: false,
-    sqlite: false,
     blueprint: true,
     git: true,
     treeSitter: true,
@@ -135,7 +134,6 @@ export function createWorkerConfig(input: WorkerConfigInput): ProjectWorkerConfi
     cache: { mode: cache.mode ?? base.cache.mode },
     indexing: {
       vectors: indexing.vectors ?? base.indexing.vectors,
-      sqlite: indexing.sqlite ?? base.indexing.sqlite,
       blueprint: indexing.blueprint ?? base.indexing.blueprint,
       git: indexing.git ?? base.indexing.git,
       treeSitter: indexing.treeSitter ?? base.indexing.treeSitter,
@@ -393,7 +391,6 @@ export const WORKER_CONFIG_JSON_SCHEMA = {
       additionalProperties: false,
       properties: {
         vectors: { type: 'boolean', default: false },
-        sqlite: { type: 'boolean', default: false },
         blueprint: { type: 'boolean', default: true },
         git: { type: 'boolean', default: true },
         treeSitter: { type: 'boolean', default: true },

@@ -26,7 +26,7 @@ const config: ProjectWorkerConfig = {
   rootPath: '/srv/app',
   dataDir: '/srv/data',
   indexing: {
-    vectors: false, sqlite: false, blueprint: true, git: true, treeSitter: true, pretty: true,
+    vectors: false, blueprint: true, git: true, treeSitter: true, pretty: true,
   },
   watch: false,
   watchOptions: { debounceMs: 500, blueprintMode: 'always' },

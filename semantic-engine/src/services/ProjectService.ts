@@ -216,7 +216,6 @@ export class ProjectService {
         registry = new AiToolRegistry({
           reader,
           workspaceRoot: rootPath,
-          /* SQLite کنار همین ایندکس است — در حالت external یعنی data root. */
           artifactRoot: path.dirname(actualIndexPath),
           projectHash: index.generatedAt,
           enableCache: true,

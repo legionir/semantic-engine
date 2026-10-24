@@ -8,7 +8,6 @@ import {
   PROJECT_ARTIFACTS_MANIFEST_FILE,
   PROJECT_INDEX_FILE,
   PROJECTS_DIR_NAME,
-  SQLITE_FILE,
   artifactRootFor,
   canonicalIndexPath,
   resolveProjectPaths,
@@ -70,7 +69,6 @@ describe('resolveProjectPaths — source and generated data never share a root',
     expect(paths.artifactRoot).toBe(artifactRoot);
     expect(paths.indexPath).toBe(path.join(artifactRoot, PROJECT_INDEX_FILE));
     expect(paths.blueprintPath).toBe(path.join(artifactRoot, BLUEPRINT_FILE));
-    expect(paths.sqlitePath).toBe(path.join(artifactRoot, SQLITE_FILE));
     expect(paths.manifestPath).toBe(path.join(artifactRoot, PROJECT_ARTIFACTS_MANIFEST_FILE));
     expect(paths.lockDir).toBe(path.join(artifactRoot, LOCKS_DIR));
     expect(paths.logDir).toBe(path.join(artifactRoot, LOGS_DIR));

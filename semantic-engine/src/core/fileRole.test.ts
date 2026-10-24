@@ -5,7 +5,7 @@
  *
  * | فیلد | وضعیت |
  * |---|---|
- * | `FileEntry.role` | هرگز نوشته نمی‌شود (فقط در لایهٔ SQLiteٔ پیشین خوانده می‌شد) |
+ * | `FileEntry.role` | هرگز نوشته نمی‌شود |
  * | `FileEntry.entryPoint` | محاسبه می‌شود ولی فقط داخل `aiScore.factors` می‌ماند |
  * | `FileEntry.blueprintRef` | هرگز نوشته نمی‌شود |
  *

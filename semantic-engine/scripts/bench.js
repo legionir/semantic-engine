@@ -38,7 +38,7 @@ const QUERIES = [
   'embedding model download',
   'blueprint module dependency graph',
   'git history hotspot scoring',
-  'sqlite export schema',
+  'json export of the project index',
   'symbol extraction with tree-sitter',
 ];
 

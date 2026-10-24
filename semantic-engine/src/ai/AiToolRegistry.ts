@@ -45,7 +45,7 @@ export interface AiToolRegistryOptions {
   readonly reader: ProjectIndexReader;
   readonly workspaceRoot?: string;
   /**
-   * پوشهٔ artifact پروژه (جایی که `project-index.sqlite` واقعاً هست).
+   * پوشهٔ artifact پروژه (جایی که `project-index.json` واقعاً هست).
    *
    * تا فاز ۳ این مسیر از `resolveProjectIndexPath(workspaceRoot)` حدس زده
    * می‌شد، یعنی همیشه داخل root؛ وقتی artifact به data directory می‌رود آن

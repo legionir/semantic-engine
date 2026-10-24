@@ -34,7 +34,6 @@ export interface WorkerHealthSnapshot {
   readonly symbols?: number;
   readonly dependencies?: number;
   readonly vectorChunks?: number;
-  readonly sqlite?: boolean;
   readonly blueprint?: boolean;
   readonly memoryMb?: number;
   readonly queueSize?: number;

@@ -205,7 +205,6 @@ export function workspaceRootFromIndex(
 export const PROJECTS_DIR_NAME = 'projects';
 
 export const BLUEPRINT_FILE = 'blueprint.json';
-export const SQLITE_FILE = 'project-index.sqlite';
 export const PROJECT_ARTIFACTS_MANIFEST_FILE = 'project-artifacts.manifest.json';
 
 export const LOCKS_DIR = 'locks';
@@ -236,7 +235,6 @@ export interface ProjectPaths {
   readonly artifactRoot: string;
   readonly indexPath: string;
   readonly blueprintPath: string;
-  readonly sqlitePath: string;
   readonly manifestPath: string;
   readonly lockDir: string;
   readonly logDir: string;
@@ -321,7 +319,6 @@ export function resolveProjectPaths(options: ResolveProjectPathsOptions): Projec
     artifactRoot,
     indexPath: path.join(artifactRoot, PROJECT_INDEX_FILE),
     blueprintPath: path.join(artifactRoot, BLUEPRINT_FILE),
-    sqlitePath: path.join(artifactRoot, SQLITE_FILE),
     manifestPath: path.join(artifactRoot, PROJECT_ARTIFACTS_MANIFEST_FILE),
     lockDir: path.join(artifactRoot, LOCKS_DIR),
     logDir: path.join(artifactRoot, LOGS_DIR),

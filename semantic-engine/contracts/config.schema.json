@@ -12,7 +12,7 @@
         "null"
       ],
       "default": null,
-      "description": "Directory holding generated data (indexes, blueprints, SQLite databases, locks, logs) instead of the workspace root. Defaults to the platform data directory: $XDG_DATA_HOME/semantic-engine on Linux, ~/Library/Application Support/SemanticEngine on macOS, %LOCALAPPDATA%/SemanticEngine on Windows. Also settable with SEMANTIC_ENGINE_DATA_DIR."
+      "description": "Directory holding generated data (indexes, blueprints, locks, logs) instead of the workspace root. Defaults to the platform data directory: $XDG_DATA_HOME/semantic-engine on Linux, ~/Library/Application Support/SemanticEngine on macOS, %LOCALAPPDATA%/SemanticEngine on Windows. Also settable with SEMANTIC_ENGINE_DATA_DIR."
     },
     "semanticEngine.artifactLocation": {
       "type": "string",

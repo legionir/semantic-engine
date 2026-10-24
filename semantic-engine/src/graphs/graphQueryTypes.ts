@@ -103,7 +103,7 @@ export interface SubgraphResult {
 
 export const DEFAULT_GRAPH_MAX_NODES = 5_000;
 export const DEFAULT_GRAPH_DEPTH = 2;
-/** Shortest-path search needs a deeper default than neighbourhood traversal; shared by in-memory and SQLite. */
+/** Shortest-path search needs a deeper default than neighbourhood traversal; shared by the traversals. */
 export const DEFAULT_GRAPH_PATH_DEPTH = 8;
 export const DEFAULT_GRAPH_DIRECTION: Direction = 'out';
 export const DEFAULT_GRAPH_MIN_CONFIDENCE = HIGH_CONFIDENCE_THRESHOLD;

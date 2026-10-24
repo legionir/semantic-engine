@@ -49,7 +49,6 @@ export function workerArgv(config: ProjectWorkerConfig): string[] {
 
   const { indexing } = config;
   booleanFlag(argv, 'vectors', indexing.vectors);
-  booleanFlag(argv, 'sqlite', indexing.sqlite);
   booleanFlag(argv, 'blueprint', indexing.blueprint);
   booleanFlag(argv, 'git', indexing.git);
   booleanFlag(argv, 'tree-sitter', indexing.treeSitter);

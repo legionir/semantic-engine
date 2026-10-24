@@ -5,20 +5,20 @@
   "holdoutQueries": 12,
   "configs": {
     "keyword": {
-      "files": 638,
+      "files": 627,
       "search": {
-        "mrr": 0.484,
-        "recall@1": 0.31,
-        "recall@3": 0.571,
-        "recall@5": 0.738,
-        "recall@10": 0.881
+        "mrr": 0.505,
+        "recall@1": 0.333,
+        "recall@3": 0.595,
+        "recall@5": 0.762,
+        "recall@10": 0.905
       },
       "discover": {
-        "mrr": 0.453,
-        "recall@1": 0.31,
-        "recall@3": 0.548,
-        "recall@5": 0.667,
-        "recall@10": 0.762
+        "mrr": 0.475,
+        "recall@1": 0.333,
+        "recall@3": 0.571,
+        "recall@5": 0.69,
+        "recall@10": 0.786
       },
       "holdout": {
         "search": {
@@ -38,13 +38,13 @@
       },
       "assemble": {
         "coverage@1000": 0.81,
-        "avgTokens@1000": 962,
-        "coverage@4000": 0.833,
-        "avgTokens@4000": 1981
+        "avgTokens@1000": 958,
+        "coverage@4000": 0.857,
+        "avgTokens@4000": 1976
       }
     },
     "hashing": {
-      "files": 638,
+      "files": 627,
       "search": {
         "mrr": 0.7,
         "recall@1": 0.619,
@@ -53,7 +53,7 @@
         "recall@10": 0.857
       },
       "discover": {
-        "mrr": 0.688,
+        "mrr": 0.689,
         "recall@1": 0.619,
         "recall@3": 0.738,
         "recall@5": 0.762,
@@ -78,8 +78,8 @@
       "assemble": {
         "coverage@1000": 0.81,
         "avgTokens@1000": 966,
-        "coverage@4000": 0.857,
-        "avgTokens@4000": 1768
+        "coverage@4000": 0.881,
+        "avgTokens@4000": 1833
       }
     }
   }

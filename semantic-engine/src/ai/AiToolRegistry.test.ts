@@ -96,7 +96,7 @@ describe('AiToolRegistry', () => {
     expect(tools.map(t => t.name)).toContain('impact_analysis');
     expect(tools.map(t => t.name)).toContain('find_tests');
     expect(tools.map(t => t.name)).toContain('get_file_summary');
-    /* ابزار SQL خام با SQLite حذف شد؛ دیگر نباید ثبت شود. */
+    /* ابزار SQL خام حذف شده است؛ نباید ثبت شود. */
     expect(tools.map(t => t.name)).not.toContain('query_index');
     expect(tools.map(t => t.name)).toContain('get_recent_changes');
   });

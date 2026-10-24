@@ -91,7 +91,7 @@ describe('contract: ownership validation', () => {
 });
 
 describe('contract: graph traversal defaults and validation', () => {
-  it('exposes one set of defaults shared by the in-memory and SQLite engines', () => {
+  it('exposes one set of defaults shared by the traversals', () => {
     expect(DEFAULT_GRAPH_DEPTH).toBe(2);
     expect(DEFAULT_GRAPH_PATH_DEPTH).toBeGreaterThan(DEFAULT_GRAPH_DEPTH);
     expect(DEFAULT_GRAPH_DIRECTION).toBe('out');

@@ -124,7 +124,7 @@ describe('DataRootResolver — one platform-aware data directory', () => {
 
       expect(created).toBe(target);
       expect(fs.statSync(created).isDirectory()).toBe(true);
-      /* 0700 — indexes, SQLite databases and logs are not world-readable. */
+      /* 0700 — indexes, blueprints and logs are not world-readable. */
       expect(fs.statSync(created).mode & 0o777).toBe(0o700);
 
       /* Idempotent: a second call must not throw. */
