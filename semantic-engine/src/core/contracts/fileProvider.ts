@@ -18,15 +18,9 @@
  *
  * The port deliberately has no write method. `readOnly` is `true` as a literal.
  *
- * ── Known duplication (recorded as D-0007, not silently fixed) ──────────
- *
- * `src/services/source/SourceSecurityGuard.ts` implements the same two checks
- * (lexical + realpath confinement) for the sync path. This provider does not
- * import it: `core/contracts` must not depend on `services`, and the guard
- * carries policy (blocked extensions) that a *read* boundary should not inherit
- * — `.bin` files are legitimately readable, they are just not source. Unifying
- * the two under one confinement helper is a Phase 1 decision, not something a
- * Phase 0 contract may quietly do.
+ * Confinement rules (lexical, denylist, canonical comparison) live in `pathConfinement.ts` and
+ * are shared with `SourceSecurityGuard` (D-0007). This provider keeps what only a read port
+ * needs: async I/O through the injectable file system, byte caps, deadlines and cancellation.
  */
 
 import * as path from 'path';
@@ -38,7 +32,10 @@ import {
   ProviderFileSystem, ProviderStats, nodeProviderFileSystem,
 } from './fileProviderTypes';
 
+import { isInside, isDeniedPath } from './pathConfinement';
+
 export * from './fileProviderTypes';
+export { isInside, isDeniedPath } from './pathConfinement';
 
 /** Prefix read for binary detection: a NUL byte in the first 8 KiB. */
 const BINARY_SNIFF_BYTES = 8000;
@@ -408,37 +405,6 @@ export class ConfinedFileProvider implements FileProvider {
       throw new FileProviderError(CODEINTEL_ERROR_CODES.CANCELLED, `${label} was cancelled`);
     }
   }
-}
-
-/** `target` is `root` or lives under it. Both arguments are absolute. */
-export function isInside(root: string, target: string): boolean {
-  const relative = path.relative(root, target);
-  if (relative === '') return true;
-  return !relative.startsWith('..') && !path.isAbsolute(relative);
-}
-
-/**
- * Is this workspace-relative path on the secret/`.git` denylist? Shared by the provider and by the
- * MCP source tools, which read indexed files directly and must not hand out `.env`, keys or `.git`.
- */
-export function isDeniedPath(
-  relativePath: string,
-  patterns: readonly string[] = DEFAULT_DENIED_PATTERNS,
-  segments: readonly string[] = DEFAULT_DENIED_SEGMENTS
-): boolean {
-  const parts = relativePath.replace(/\\/g, '/').split('/');
-  if (segments.some(segment => parts.includes(segment))) return true;
-  const name = parts[parts.length - 1] ?? '';
-  return patterns.some(pattern => matchesPattern(name, pattern));
-}
-
-function matchesPattern(name: string, pattern: string): boolean {
-  if (pattern === name) return true;
-  const star = pattern.indexOf('*');
-  if (star === -1) return false;
-  const prefix = pattern.slice(0, star);
-  const suffix = pattern.slice(star + 1);
-  return name.startsWith(prefix) && name.endsWith(suffix) && name.length >= prefix.length + suffix.length;
 }
 
 function isNotFound(error: unknown): boolean {

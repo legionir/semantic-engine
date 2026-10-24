@@ -48,7 +48,6 @@
 | مورد | وضعیت و جزئیات |
 |---|---|
 | انتشار اتمیک مجموعهٔ artifact | نیاز به مهاجرت به generation-directory + pointer (D-0014)؛ به‌تصمیم عقب افتاده. فعلاً همهٔ مسیرهای serve در برابر ناسازگاری fail-closed هستند |
-| یکی‌کردن `SourceSecurityGuard` با `ConfinedFileProvider` (D-0007) | denylist رازها و `.git` حالا در ابزارهای خواندن (`code_read`، `search_text`، ابزارهای ساختاری) اعمال می‌شود؛ باقی‌مانده فقط ادغام دو پیاده‌سازی confinement است (`SourceSecurityGuard` برای sync نوشتنی هم استفاده می‌شود) |
 | `InMemorySnapshotStore` و `STALE_HANDLE`/`STALE_SNAPSHOT` | اتصال به مسیر اجرایی MCP کامل نشده (فقط Phase 3 با `GraphSnapshotStore` متصل است) |
 | ast-grep برای Python و PHP | در دسترس نیست؛ نیاز به CLI-fallback یا dylib پویا (D-0018) |
 | قفل `config.json` روی NFS | تضمین ندارد (در README ثبت شده) |

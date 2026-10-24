@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import { confinePathSync } from '../../core/contracts/pathConfinement';
 
 export interface SecurityPolicy {
   readonly allowedExtensions?: readonly string[];
@@ -24,58 +25,16 @@ export const DEFAULT_SECURITY_POLICY: SecurityPolicy = {
 export class SourceSecurityGuard {
   constructor(private readonly policy: SecurityPolicy = DEFAULT_SECURITY_POLICY) {}
 
+  /** Confinement is shared with `ConfinedFileProvider` (core/contracts/pathConfinement); only the extension policy is local. */
   validateRelativePath(baseRoot: string, relativePath: string): { ok: boolean; reason?: string; resolvedPath?: string } {
-    if (!relativePath || relativePath.trim() === '') {
-      return { ok: false, reason: 'Path cannot be empty' };
-    }
-
-    // Reject null byte injection
-    if (relativePath.includes('\0')) {
-      return { ok: false, reason: 'Null byte injection detected' };
-    }
-
-    const resolved = path.resolve(baseRoot, relativePath);
-    const lexicalRoot = path.resolve(baseRoot);
-    let normalizedRoot: string;
-
-    try {
-      normalizedRoot = fs.realpathSync(lexicalRoot);
-    } catch {
-      return { ok: false, reason: `Root does not exist: '${baseRoot}'` };
-    }
-
-    if (!resolved.startsWith(lexicalRoot + path.sep) && resolved !== lexicalRoot) {
-      return { ok: false, reason: `Path traversal detected: '${relativePath}' escapes root '${baseRoot}'` };
-    }
-
-    /*
-    | The lexical check above is not enough for a write: an existing
-    | ancestor may be a symlink to another tree. Resolve the deepest
-    | existing ancestor and check its canonical location before the caller
-    | creates missing directories or opens the destination.
-    */
-    let existing = resolved;
-    while (!fs.existsSync(existing)) {
-      const parent = path.dirname(existing);
-      if (parent === existing) break;
-      existing = parent;
-    }
-
-    try {
-      const realExisting = fs.realpathSync(existing);
-      if (!realExisting.startsWith(normalizedRoot + path.sep) && realExisting !== normalizedRoot) {
-        return { ok: false, reason: `Symlink traversal detected for '${relativePath}'` };
-      }
-    } catch {
-      return { ok: false, reason: `Unable to resolve path safely: '${relativePath}'` };
-    }
+    const confined = confinePathSync(baseRoot, relativePath);
+    if (!confined.ok) return { ok: false, reason: confined.reason };
 
     const ext = path.extname(relativePath).toLowerCase();
     if (this.policy.blockedExtensions?.includes(ext)) {
       return { ok: false, reason: `Disallowed binary/executable file extension: ${ext}` };
     }
-
-    return { ok: true, resolvedPath: resolved };
+    return { ok: true, resolvedPath: confined.absolute };
   }
 
   validateFileSize(bytes: number): { ok: boolean; reason?: string } {
