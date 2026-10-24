@@ -52,8 +52,30 @@ export class ProjectIndexStore {
   /** نگاشت وارونهٔ وابستگی — تنبل، چون هر تغییر باطلش می‌کند. */
   private dependentsByFileId: Map<string, Set<string>> | null = null;
 
-  constructor(public projectIndex: ProjectIndex) {
+  private currentIndex: ProjectIndex;
+  /** `files`/`symbols` arrays are stale; rebuilt once, on the next read of `projectIndex`. */
+  private arraysDirty = false;
+
+  constructor(projectIndex: ProjectIndex) {
+    this.currentIndex = projectIndex;
     this.rebuildIndexes();
+  }
+
+  /**
+   * The index with up-to-date `files`/`symbols` arrays.
+   *
+   * Every `upsertFile`/`setSymbolsForFile` used to rebuild and re-sort both arrays eagerly. A change
+   * to one file with 136 dependents did that ≈270 times (≈4 s of a ≈8 s update, measured). The maps
+   * are the source of truth, so the arrays are now rebuilt once, when somebody reads them.
+   */
+  get projectIndex(): ProjectIndex {
+    if (this.arraysDirty) this.rebuildArrays();
+    return this.currentIndex;
+  }
+
+  set projectIndex(value: ProjectIndex) {
+    this.currentIndex = value;
+    this.arraysDirty = false;
   }
 
   /**
@@ -273,6 +295,12 @@ export class ProjectIndexStore {
    * ساخته‌اند، کار بیهوده است.
    */
   private syncArrays(): void {
+    this.arraysDirty = true;
+    this.dependentsByFileId = null;
+  }
+
+  private rebuildArrays(): void {
+    this.arraysDirty = false;
     const files = Array.from(this.fileById.values()).sort((a, b) => a.path.localeCompare(b.path));
 
     const symbols: SymbolEntry[] = [];
@@ -280,12 +308,11 @@ export class ProjectIndexStore {
       symbols.push(...(this.symbolsByFileId.get(file.id) ?? []));
     }
 
-    this.projectIndex = {
-      ...this.projectIndex,
+    this.currentIndex = {
+      ...this.currentIndex,
       files,
       symbols: sortSymbolsDeterministically(symbols),
     };
-    this.dependentsByFileId = null;
   }
 
   /**
