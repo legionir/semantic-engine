@@ -21,7 +21,7 @@ import {
 import { FileProcessor } from '../scanner/FileProcessor';
 import { FileIdGenerator } from '../core/id/FileIdGenerator';
 import { LanguageRegistry } from '../language/LanguageRegistry';
-import { createScannerConfig } from '../core/config/ScannerConfig';
+import { createScannerConfig, ScannerConfig } from '../core/config/ScannerConfig';
 import { SymbolExtractorManager } from '../symbols/SymbolExtractorManager';
 import { DependencyExtractorManager } from '../dependencies/DependencyExtractorManager';
 import { TSPathResolver } from '../dependencies/typescript/TSPathResolver';
@@ -43,6 +43,8 @@ export interface IncrementalEngineOptions {
   /** بردارساز incremental؛ null/undefined یعنی vectorها دست‌نخورده بمانند. */
   readonly vectorIndexer?: VectorIndexer | null;
   readonly blueprintRebuildThreshold?: number;
+  /** Same scan overrides the initial index used (`--max-file-size-mb`, `--ignore`, …). */
+  readonly scannerConfig?: Partial<ScannerConfig>;
   readonly logger?: ILogger;
 }
 
@@ -70,12 +72,13 @@ export class IncrementalEngine {
       ...options,
       vectorIndexer: options.vectorIndexer ?? null,
       blueprintRebuildThreshold: options.blueprintRebuildThreshold ?? 0.05,
+      scannerConfig: options.scannerConfig ?? {},
       logger: options.logger ?? defaultLogger,
     };
 
     this.idGenerator = new FileIdGenerator();
     this.languageRegistry = new LanguageRegistry();
-    const config = createScannerConfig();
+    const config = createScannerConfig(options.scannerConfig);
     this.fileProcessor = new FileProcessor(
       this.idGenerator,
       this.languageRegistry,

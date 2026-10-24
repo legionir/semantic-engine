@@ -248,6 +248,26 @@ describe('IncrementalEngine', () => {
     expect(mainFile).toBeDefined();
   });
 
+  it('applies the scan overrides of the initial index to changed files', async () => {
+    const limited = new IncrementalEngine({
+      workspaceRoot,
+      symbolExtractorManager: symbolManager,
+      dependencyExtractorManager: dependencyManager,
+      scannerConfig: { maxFileSizeBytes: 64 },
+    });
+    limited.load(createInitialProjectIndex(workspaceRoot));
+    engine.load(createInitialProjectIndex(workspaceRoot));
+
+    const big = `export function big(): number { return 1; }\n${'// padding line\n'.repeat(40)}`;
+    fs.writeFileSync(path.join(workspaceRoot, 'src', 'big.ts'), big, 'utf8');
+
+    const withLimit = await limited.applyChanges([{ type: 'created', path: 'src/big.ts' }]);
+    const withDefault = await engine.applyChanges([{ type: 'created', path: 'src/big.ts' }]);
+
+    expect(withLimit.projectIndex.files.find(f => f.path === 'src/big.ts')?.truncated).toBe(true);
+    expect(withDefault.projectIndex.files.find(f => f.path === 'src/big.ts')?.truncated).toBeUndefined();
+  });
+
   it('should refresh affected vectors and reuse unchanged embeddings', async () => {
     const base = createInitialProjectIndex(workspaceRoot);
     const utilsId = base.files.find(f => f.path === 'src/utils.ts')!.id;
