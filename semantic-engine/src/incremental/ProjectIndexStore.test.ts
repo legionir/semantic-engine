@@ -102,6 +102,23 @@ function createMockProjectIndex(): ProjectIndex {
 }
 
 describe('ProjectIndexStore', () => {
+  it('rebuilds the files/symbols arrays lazily and keeps them consistent after many updates', () => {
+    const store = new ProjectIndexStore(createMockProjectIndex());
+    const base = store.projectIndex.files.find(f => f.id === 'file-a')!;
+    const symbol = (id: string, fileId: string, line: number): SymbolEntry => ({ ...store.projectIndex.symbols[0]!, id, fileId, name: id, line });
+
+    for (let i = 0; i < 50; i++) {
+      store.upsertFile({ ...base, hash: `hash-${i}` });
+      store.setSymbolsForFile('file-a', [symbol(`s-${i}-b`, 'file-a', 5), symbol(`s-${i}-a`, 'file-a', 2)]);
+    }
+
+    const index = store.projectIndex;
+    expect(index.files.find(f => f.id === 'file-a')!.hash).toBe('hash-49');
+    expect(index.symbols.filter(s => s.fileId === 'file-a').map(s => s.id)).toEqual(['s-49-a', 's-49-b']);
+    expect(store.projectIndex).toBe(index);
+    expect(index.files.map(f => f.path)).toEqual([...index.files.map(f => f.path)].sort());
+  });
+
   it('should find direct dependents of a file', () => {
     const store = new ProjectIndexStore(createMockProjectIndex());
     const dependents = store.getDirectDependents('file-b');

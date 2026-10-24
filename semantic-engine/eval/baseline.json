@@ -5,12 +5,12 @@
   "holdoutQueries": 12,
   "configs": {
     "keyword": {
-      "files": 627,
+      "files": 633,
       "search": {
         "mrr": 0.505,
         "recall@1": 0.333,
         "recall@3": 0.595,
-        "recall@5": 0.762,
+        "recall@5": 0.738,
         "recall@10": 0.905
       },
       "discover": {
@@ -22,14 +22,14 @@
       },
       "holdout": {
         "search": {
-          "mrr": 0.328,
+          "mrr": 0.326,
           "recall@1": 0.167,
           "recall@3": 0.333,
-          "recall@5": 0.583,
+          "recall@5": 0.5,
           "recall@10": 0.833
         },
         "discover": {
-          "mrr": 0.29,
+          "mrr": 0.288,
           "recall@1": 0.167,
           "recall@3": 0.25,
           "recall@5": 0.417,
@@ -37,23 +37,23 @@
         }
       },
       "assemble": {
-        "coverage@1000": 0.81,
-        "avgTokens@1000": 958,
+        "coverage@1000": 0.833,
+        "avgTokens@1000": 957,
         "coverage@4000": 0.857,
-        "avgTokens@4000": 1976
+        "avgTokens@4000": 1991
       }
     },
     "hashing": {
-      "files": 627,
+      "files": 633,
       "search": {
-        "mrr": 0.7,
+        "mrr": 0.699,
         "recall@1": 0.619,
         "recall@3": 0.762,
         "recall@5": 0.762,
-        "recall@10": 0.857
+        "recall@10": 0.833
       },
       "discover": {
-        "mrr": 0.689,
+        "mrr": 0.687,
         "recall@1": 0.619,
         "recall@3": 0.738,
         "recall@5": 0.762,
@@ -61,11 +61,11 @@
       },
       "holdout": {
         "search": {
-          "mrr": 0.602,
+          "mrr": 0.6,
           "recall@1": 0.5,
           "recall@3": 0.667,
           "recall@5": 0.667,
-          "recall@10": 0.917
+          "recall@10": 0.833
         },
         "discover": {
           "mrr": 0.581,
@@ -78,8 +78,8 @@
       "assemble": {
         "coverage@1000": 0.81,
         "avgTokens@1000": 966,
-        "coverage@4000": 0.881,
-        "avgTokens@4000": 1833
+        "coverage@4000": 0.833,
+        "avgTokens@4000": 1844
       }
     }
   }
