@@ -1,0 +1,42 @@
+name: Real embedding model
+
+# The default CI jobs run offline and use the hashing embeddings. This job downloads the real
+# all-MiniLM-L6-v2 model from the hub and checks the whole local-embedding path with it
+# (scripts/e2e-embedding.js). It needs network, so it is kept out of the blocking CI workflow:
+# it runs weekly, on demand, and on pull requests that touch the embedding code.
+
+on:
+  schedule:
+    - cron: '41 4 * * 3'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'semantic-engine/src/vector/**'
+      - 'semantic-engine/scripts/e2e-embedding.js'
+      - 'semantic-engine/package.json'
+      - '.github/workflows/embedding.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  embedding:
+    name: Real embedding model
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: semantic-engine
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: semantic-engine/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm run fixture
+      - run: node scripts/e2e-embedding.js
+        env:
+          E2E_REQUIRED: '1'
