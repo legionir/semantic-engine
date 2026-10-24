@@ -82,7 +82,7 @@ describe('gateway console — form ↔ WorkerConfig schema', () => {
       rootPath: '/srv/app',
       autoStart: true,
       watch: true,
-      indexing: { vectors: true, sqlite: false, blueprint: true, git: true, treeSitter: true, pretty: false },
+      indexing: { vectors: true, blueprint: true, git: true, treeSitter: true, pretty: false },
       watchOptions: { debounceMs: 250, blueprintMode: 'threshold', skipInitialIndex: true },
       service: { transport: 'socket', host: '127.0.0.1', socketPath: '/run/app.sock', web: true },
       security: { gatewayManaged: true, allowRemote: false, tokenEnvVar: 'SE_TOKEN' },
@@ -148,7 +148,7 @@ describe('gateway console — preview and rendering', () => {
     projectId: 'prj-app-12345678',
     rootPath: '/srv/app',
     dataDir: '/srv/data',
-    indexing: { vectors: true, sqlite: false, blueprint: true, git: true, treeSitter: true, pretty: true },
+    indexing: { vectors: true, blueprint: true, git: true, treeSitter: true, pretty: true },
     watchOptions: { debounceMs: 250, blueprintMode: 'threshold' },
     service: { transport: 'loopback', host: '127.0.0.1' },
     security: { gatewayManaged: true, tokenEnvVar: 'SE_TOKEN' },
@@ -163,7 +163,7 @@ describe('gateway console — preview and rendering', () => {
     expect(preview).toContain('--root /srv/app');
     expect(preview).toContain('--data-dir /srv/data');
     expect(preview).toContain('--vectors');
-    expect(preview).toContain('--no-sqlite');
+    expect(preview).not.toContain('sqlite');
     expect(preview).toContain('--debounce 250');
     expect(preview).toContain('--blueprint-mode threshold');
     expect(preview).toContain('--gateway-managed');
@@ -271,7 +271,7 @@ describe('gateway console — SE-F-057 save request contract', () => {
     scan: { useGitignore: false, skipHiddenDirectories: false, maxDepth: 6, maxFileSizeMb: 2, ignore: '**/*.snap,vendor/**' },
     diagnostics: { lsp: true, budgetMs: 30000 },
     cache: { mode: 'full' },
-    indexing: { vectors: true, sqlite: true, blueprint: true, git: false, treeSitter: true, pretty: false },
+    indexing: { vectors: true, blueprint: true, git: false, treeSitter: true, pretty: false },
     watchOptions: { debounceMs: 250, blueprintMode: 'threshold', skipInitialIndex: true },
     service: { transport: 'socket', host: '127.0.0.1', socketPath: '/run/app.sock', http: true, stdio: false, web: true },
     security: { gatewayManaged: true, allowRemote: false, tokenEnvVar: 'SE_TOKEN' },
@@ -288,7 +288,7 @@ describe('gateway console — SE-F-057 save request contract', () => {
     /* the keys the old payload dropped */
     expect(req.body['watch']).toBe(false);
     expect(req.body['indexing']).toEqual(
-      expect.objectContaining({ vectors: true, sqlite: true, git: false, pretty: false })
+      expect.objectContaining({ vectors: true, git: false, pretty: false })
     );
     expect(req.body['watchOptions']).toEqual(
       expect.objectContaining({ debounceMs: 250, blueprintMode: 'threshold', skipInitialIndex: true })

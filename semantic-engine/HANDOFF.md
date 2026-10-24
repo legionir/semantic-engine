@@ -25,7 +25,7 @@ Semantic Engine یک code-intelligence engine مستقل است که از یک w
 - blueprint و architecture mapping
 - keyword/vector/hybrid search
 - context assembly برای AI
-- کپی SQLite حذف شده؛ `project-index.json` تنها منبع حقیقت است
+- `project-index.json` تنها منبع حقیقت است
 - REST/HTTP platform server
 - MCP server روی stdio یا HTTP
 - watch/incremental indexing

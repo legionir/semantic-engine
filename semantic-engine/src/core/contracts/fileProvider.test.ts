@@ -235,10 +235,10 @@ describe('ConfinedFileProvider — confinement and the denylist', () => {
   });
 
   test('the denylist can be widened but not silently emptied for secrets', async () => {
-    const custom = provider({ deniedPatterns: ['*.sqlite'], deniedSegments: [] });
+    const custom = provider({ deniedPatterns: ['*.dat'], deniedSegments: [] });
     await expect(custom.read('.env', 1024)).resolves.toBeInstanceOf(Uint8Array);
-    write(path.join(workspace, 'db.sqlite'), 'binary');
-    expect(await codeOf(() => custom.read('db.sqlite', 1024))).toBe('DENIED');
+    write(path.join(workspace, 'db.dat'), 'binary');
+    expect(await codeOf(() => custom.read('db.dat', 1024))).toBe('DENIED');
   });
 
   test('confinement is measured against the canonical root, not a symlinked one', async () => {

@@ -6,7 +6,7 @@ import {
   MIGRATION_MODE_COPY_READONLY,
   migrateLegacyArtifacts,
 } from './migrateLegacyArtifacts';
-import { PROJECT_INDEX_FILE, BLUEPRINT_FILE, SQLITE_FILE } from './ProjectPaths';
+import { PROJECT_INDEX_FILE, BLUEPRINT_FILE } from './ProjectPaths';
 import { projectIdFor } from './ProjectIdentity';
 
 const PROJECT_ID = 'prj-app-12345678';
@@ -63,7 +63,6 @@ describe('migrateLegacyArtifacts — copy, never delete', () => {
   ])('copies from the legacy location %s (%s) and keeps the original', (legacyDir) => {
     const legacy = writeLegacy(root, legacyDir, '{"generatedAt":"2026-08-01T00:00:00.000Z"}');
     fs.writeFileSync(path.join(legacy, BLUEPRINT_FILE), '{"modules":[]}');
-    fs.writeFileSync(path.join(legacy, SQLITE_FILE), 'not really sqlite');
 
     const result = run();
 
@@ -72,13 +71,12 @@ describe('migrateLegacyArtifacts — copy, never delete', () => {
     expect(result.from).toBe(legacy);
     expect(result.to).toBe(artifactRoot());
     expect(result.copied).toEqual(
-      expect.arrayContaining([PROJECT_INDEX_FILE, BLUEPRINT_FILE, SQLITE_FILE])
+      expect.arrayContaining([PROJECT_INDEX_FILE, BLUEPRINT_FILE])
     );
 
     /* Copied… */
     expect(fs.existsSync(path.join(artifactRoot(), PROJECT_INDEX_FILE))).toBe(true);
     expect(fs.existsSync(path.join(artifactRoot(), BLUEPRINT_FILE))).toBe(true);
-    expect(fs.existsSync(path.join(artifactRoot(), SQLITE_FILE))).toBe(true);
 
     /* …and the legacy files are untouched. */
     expect(fs.existsSync(path.join(legacy, PROJECT_INDEX_FILE))).toBe(true);

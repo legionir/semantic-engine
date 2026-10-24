@@ -24,7 +24,7 @@ Semantic Gateway :4000          ← the only public port
 ```
 
 A Worker stays single-project: one `workspaceRoot`, one project index, one
-blueprint, one SQLite database, one vector index, one watcher, one MCP/REST
+blueprint, one vector index, one watcher, one MCP/REST
 runtime. The Gateway orchestrates; it does not analyse code.
 
 ---
@@ -148,7 +148,7 @@ working untouched.
 ### D8 — `indexGeneration`
 
 A monotonic counter persisted in `<artifactRoot>/project-artifacts.manifest.json`,
-incremented on every successful index/blueprint/SQLite write, published
+incremented on every successful index/blueprint write, published
 additively as `structuredContent: { projectId, indexGeneration }` on MCP
 results. The consumer already reads it
 (`structured-ai/agent/mcp/SemanticClient.js:251-262`) and invalidates its
@@ -226,7 +226,7 @@ class ProjectRegistry {
 | field | meaning |
 |---|---|
 | `workspaceRoot` | source; read-only for the engine |
-| `artifactRoot` | everything generated: index, blueprint, SQLite, manifest |
+| `artifactRoot` | everything generated: index, blueprint, manifest |
 | `lockDir`, `logDir` | `locks/`, `logs/` under `artifactRoot` |
 
 Rules that follow from this and are enforced by tests:
@@ -309,7 +309,7 @@ in-root legacy locations as readable fallbacks
 (`indexPathCandidates(workspaceRoot, lookup)`).
 
 **Migration** (`migrateLegacyArtifacts`) copies `project-index.json`,
-`blueprint.json`, `project-index.sqlite` and `project-artifacts.manifest.json`
+`blueprint.json` and `project-artifacts.manifest.json`
 from the first existing legacy directory into the artifact root and writes
 `migration.json`:
 
@@ -421,7 +421,7 @@ Internal surface (every route needs the token, in both profiles):
 
 | route | behaviour |
 |---|---|
-| `GET /internal/health`, `GET /internal/status` | 200 when the index is loaded, otherwise 503, with `projectId, pid, state, indexState, watcher, files, symbols, dependencies, vectorChunks, sqlite, blueprint, memoryMb, queueSize, lastIndexedAt` |
+| `GET /internal/health`, `GET /internal/status` | 200 when the index is loaded, otherwise 503, with `projectId, pid, state, indexState, watcher, files, symbols, dependencies, vectorChunks, blueprint, memoryMb, queueSize, lastIndexedAt` |
 | `GET /internal/ready` | 200 only once an index is loaded — this is what the Gateway waits for instead of guessing |
 | `GET /internal/metrics` | `worker_*` counters |
 | `POST /internal/reindex` | 202, one run at a time (409 while busy) |

@@ -243,7 +243,6 @@ describeIfBuilt('MIG-51 — دستور index', () => {
         'index',
         '--root',
         workspace,
-        '--no-sqlite',
         '--project-id',
         projectId,
         '--data-dir',

@@ -43,7 +43,6 @@ interface WorkerStatus {
   readonly symbols: number;
   readonly dependencies: number;
   readonly vectorChunks: number;
-  readonly sqlite: boolean;
   readonly blueprint: boolean;
   readonly memoryMb: number;
   readonly queueSize: number;
@@ -205,10 +204,6 @@ export async function runWorker(
       symbols: stats?.symbolsCount ?? 0,
       dependencies: stats?.dependenciesCount ?? 0,
       vectorChunks: current?.index?.vectorChunks?.length ?? 0,
-      /* SQLite artifacts were removed from the canonical writer; retain the
-         stable worker-status field for gateway clients without reaching into
-         a field that no longer exists on ManagedProject. */
-      sqlite: false,
       blueprint: Boolean(current?.blueprint),
       memoryMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       queueSize: reindexing ? 1 : 0,

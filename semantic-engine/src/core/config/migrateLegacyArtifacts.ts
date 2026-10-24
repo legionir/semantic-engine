@@ -22,7 +22,6 @@ import {
   BLUEPRINT_FILE,
   PROJECT_ARTIFACTS_MANIFEST_FILE,
   PROJECT_INDEX_FILE,
-  SQLITE_FILE,
   indexPathCandidates,
   resolveProjectPaths,
 } from './ProjectPaths';
@@ -71,7 +70,6 @@ export interface MigrateLegacyArtifactsOptions {
 const MIGRATABLE_FILES: readonly string[] = [
   PROJECT_INDEX_FILE,
   BLUEPRINT_FILE,
-  SQLITE_FILE,
   PROJECT_ARTIFACTS_MANIFEST_FILE,
 ];
 

@@ -62,10 +62,10 @@
       "split": "tune"
     },
     {
-      "q": "sqlite export tables for the project index",
+      "q": "build the project index json from the scan and symbols",
       "expect": [
-        "export/SQLiteExporter.ts",
-        "export/sqliteSchema.ts"
+        "export/JsonExporter.ts",
+        "export/projectIndexAttach.ts"
       ],
       "split": "tune"
     },

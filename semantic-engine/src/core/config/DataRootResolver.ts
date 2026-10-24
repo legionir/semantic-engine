@@ -175,7 +175,7 @@ export function resolveDataRoot(options: DataRootOptions = {}): string {
 
 /**
  * `resolveDataRoot` plus the guarantee that the directory exists and is
- * writable by this user, created with `0700`: indexes, SQLite databases and
+ * writable by this user, created with `0700`: indexes, blueprints and
  * logs are not world-readable material.
  *
  * The mode is applied with an explicit `chmod` after creation because

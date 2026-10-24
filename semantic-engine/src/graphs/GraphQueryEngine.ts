@@ -71,7 +71,7 @@ function edgeOf(fact: ResolvedFact<EdgeAttributes>): GraphEdge {
   };
 }
 
-/** Shared runtime validation for in-memory and SQLite traversals. */
+/** Runtime validation of traversal options. */
 export function validateGraphTraversalOptions(options: Partial<TraversalOptions>): void {
   if (options.depth !== undefined && (!Number.isInteger(options.depth) || options.depth < 0)) {
     throw new Error('depth must be a non-negative integer');
@@ -445,7 +445,7 @@ export class GraphQueryEngine {
           cameFrom.set(neighbour, { previous: current, edge });
 
           // maxNodes bounds discovered nodes (the start is not an output
-          // node), matching bfs()/SQLite neighbors().
+          // node), matching bfs().
           if (visited.size - 1 > maxNodes) {
             truncated = true;
             break;

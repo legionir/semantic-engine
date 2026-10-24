@@ -73,11 +73,6 @@ describe('workerArgv — deterministic, whitelisted, secret-free', () => {
       check: argv => expect(hasFlag(argv, '--no-vectors')).toBe(true),
     },
     {
-      name: 'indexing.sqlite → --sqlite',
-      patch: { indexing: { sqlite: true } },
-      check: argv => expect(hasFlag(argv, '--sqlite')).toBe(true),
-    },
-    {
       name: 'indexing.blueprint=false → --no-blueprint',
       patch: { indexing: { blueprint: false } },
       check: argv => expect(hasFlag(argv, '--no-blueprint')).toBe(true),
@@ -182,8 +177,8 @@ describe('workerArgv — deterministic, whitelisted, secret-free', () => {
   });
 
   it('is deterministic: same config, same vector, in the same order', () => {
-    const first = workerArgv(config({ indexing: { sqlite: true, vectors: true } }));
-    const second = workerArgv(config({ indexing: { sqlite: true, vectors: true } }));
+    const first = workerArgv(config({ indexing: { vectors: true } }));
+    const second = workerArgv(config({ indexing: { vectors: true } }));
     expect(second).toEqual(first);
   });
 

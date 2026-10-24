@@ -157,7 +157,6 @@ Windows   %LOCALAPPDATA%\SemanticEngine
 
 <dataRoot>/projects/<projectId>/project-index.json
                              /blueprint.json
-                             /project-index.sqlite
                              /project-artifacts.manifest.json
 ```
 
@@ -211,11 +210,8 @@ import/export، configUsage) براساس هش محتوا در `<artifactRoot>/c
 
 `blueprint.json` در watcher با حالت `always` (پیش‌فرض CLI) بازسازی می‌شود؛
 با `--blueprint-mode threshold` می‌توان رفتار قدیمیِ مبتنی بر drift را فعال
-کرد. کپی SQLite (`project-index.sqlite`) که پیش‌تر به‌عنوان artifact دوم
-نوشته می‌شد حذف شده است: `project-index.json` تنها منبع حقیقت است و SQLite
-هرگز منبع خواندن نبود — همان داده به شکل دیگر، با یک writer دوم و باگ‌های
-هم‌زمانی خودش (SE-EXP-02). برای پرس‌وجوی ساختاریافته از ابزارهای
-`query_*`/`find_*` روی همان ایندکس استفاده می‌شود.
+کرد. `project-index.json` تنها منبع حقیقت است؛ برای پرس‌وجوی ساختاریافته از
+ابزارهای `query_*`/`find_*` روی همان ایندکس استفاده می‌شود.
 
 فرمان `start` همین watcher را هم به‌صورت پیش‌فرض زیر نظر می‌گیرد. علاوه بر
 این، UI/Platform cache و MCP snapshot هنگام تغییر artifactها reload می‌شوند.
@@ -371,7 +367,6 @@ Windows   %LOCALAPPDATA%\SemanticEngine
 
 <dataRoot>/projects/<projectId>/project-index.json
                              /blueprint.json
-                             /project-index.sqlite
                              /project-artifacts.manifest.json
                              /migration.json
 <dataRoot>/gateway/sockets/<projectId>.sock

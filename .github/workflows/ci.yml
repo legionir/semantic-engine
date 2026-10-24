@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 20.x is the engines floor; 22.x has the built-in node:sqlite.
+        # 20.x is the engines floor; 22.x is the current LTS the app is run on.
         node-version: [20, 22]
     defaults:
       run:

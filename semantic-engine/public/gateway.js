@@ -38,7 +38,6 @@ const GatewayUi = (function () {
         { name: "watch", section: "watch", type: "checkbox", configPath: "watch", label: "Keep the index up to date" },
 
         { name: "vectors", section: "indexing", type: "checkbox", configPath: "indexing.vectors", label: "Build vectors" },
-        { name: "sqlite", section: "indexing", type: "checkbox", configPath: "indexing.sqlite", label: "Write SQLite index" },
         { name: "blueprint", section: "indexing", type: "checkbox", configPath: "indexing.blueprint", label: "Build blueprint" },
         { name: "git", section: "indexing", type: "checkbox", configPath: "indexing.git", label: "Collect Git metadata" },
         { name: "treeSitter", section: "indexing", type: "checkbox", configPath: "indexing.treeSitter", label: "Use Tree-sitter" },
@@ -117,7 +116,6 @@ const GatewayUi = (function () {
         treeSitter: true,
         pretty: true,
         vectors: false,
-        sqlite: false,
         debounceMs: 500,
         blueprintMode: "always",
         skipInitialIndex: false,
@@ -320,7 +318,6 @@ const GatewayUi = (function () {
 
         const indexing = config.indexing || {};
         bool("vectors", Boolean(indexing.vectors));
-        bool("sqlite", Boolean(indexing.sqlite));
         bool("blueprint", indexing.blueprint !== false);
         bool("git", indexing.git !== false);
         bool("tree-sitter", indexing.treeSitter !== false);
@@ -481,7 +478,6 @@ const GatewayUi = (function () {
         { key: "process", label: "Process", from: function (h) { return h && h.pid ? "ok" : "unknown"; } },
         { key: "index", label: "Index", from: function (h) { return h && h.indexState === "fresh" ? "ok" : h && h.indexState ? "warn" : "unknown"; } },
         { key: "watcher", label: "Watcher", from: function (h) { return h && h.watcher === "running" ? "ok" : "warn"; } },
-        { key: "sqlite", label: "SQLite", from: function (h) { return h && h.sqlite === true ? "ok" : "off"; } },
         { key: "blueprint", label: "Blueprint", from: function (h) { return h && h.blueprint === true ? "ok" : "off"; } },
         { key: "vectors", label: "Vectors", from: function (h) { return h && h.vectorChunks > 0 ? "ok" : "off"; } },
         { key: "lsp", label: "LSP", from: function (h) { return h && h.lsp === false ? "warn" : "unknown"; } }
