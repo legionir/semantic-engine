@@ -40,3 +40,9 @@ jobs:
       - run: node scripts/e2e-embedding.js
         env:
           E2E_REQUIRED: '1'
+      # Report-only: retrieval quality of the real model on the 42 eval queries (compare with the
+      # hashing numbers in eval/baseline.json; the vocabulary-gap queries are the interesting ones).
+      - name: Retrieval quality with the real model
+        run: node scripts/eval-retrieval.js --real
+        env:
+          E2E_REQUIRED: '1'

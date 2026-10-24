@@ -64,10 +64,10 @@ function score(rankedByQuery, queries) {
   return { metrics, detail };
 }
 
-async function runConfig(vectors, queries) {
+async function runConfig(vectors, queries, real = null) {
   /* SEMANTIC_EVAL_INDEX_DIR keeps the indexes between runs so tuning iterations skip the 10 s index step. */
   const base = process.env.SEMANTIC_EVAL_INDEX_DIR ? path.resolve(process.env.SEMANTIC_EVAL_INDEX_DIR) : null;
-  const reuse = base ? path.join(base, vectors ? 'hashing' : 'keyword') : null;
+  const reuse = base ? path.join(base, real ? 'real' : vectors ? 'hashing' : 'keyword') : null;
   const tmp = reuse || fs.mkdtempSync(path.join(os.tmpdir(), 'se-eval-'));
   if (reuse) fs.mkdirSync(reuse, { recursive: true });
   try {
@@ -75,7 +75,7 @@ async function runConfig(vectors, queries) {
     if (!existing) {
       const indexed = spawnSync(
         process.execPath,
-        [path.join(ROOT, 'bin', 'semantic-engine.js'), 'index', '--root', CORPUS, '--out', tmp, '--no-git', '--data-dir', path.join(tmp, '.data'), '--project-id', 'prj-eval-12345678', ...(vectors ? ['--vectors'] : [])],
+        [path.join(ROOT, 'bin', 'semantic-engine.js'), 'index', '--root', CORPUS, '--out', tmp, '--no-git', '--data-dir', path.join(tmp, '.data'), '--project-id', 'prj-eval-12345678', ...(vectors ? ['--vectors'] : []), ...(real ? ['--embedding-provider', 'local', '--embedding-model', real.model] : [])],
         { cwd: ROOT, encoding: 'utf8', env: { ...process.env, SEMANTIC_ENGINE_LOG_LEVEL: 'error' } }
       );
       if (indexed.status !== 0) throw new Error(`index failed: ${indexed.stderr || indexed.stdout}`);
@@ -92,8 +92,8 @@ async function runConfig(vectors, queries) {
     const loaded = loadBlueprintBeside(indexPath);
     const blueprint = loaded.index || undefined;
     if (!blueprint) console.error(`note: running without blueprint (${loaded.note})`);
-    const search = new SemanticSearchTool(reader);
-    const discoverer = new ContextDiscoverer(reader, blueprint ? { blueprint } : {});
+    const search = new SemanticSearchTool(reader, real ? real.generator : undefined);
+    const discoverer = new ContextDiscoverer(reader, { ...(blueprint ? { blueprint } : {}), ...(real ? { embeddingGenerator: real.generator } : {}) });
 
     const { AssembleContextTool } = require(path.join(DIST, 'ai/tools/AssembleContextTool'));
     const assembler = new AssembleContextTool(reader, undefined, {
@@ -148,6 +148,29 @@ async function main() {
     process.exit(2);
   }
   const { queries } = JSON.parse(fs.readFileSync(path.join(ROOT, 'eval', 'queries.json'), 'utf8'));
+  if (process.argv.includes('--real')) {
+    /* Report-only: the real local model against the same queries (needs network for the download). */
+    const MODEL = 'Xenova/all-MiniLM-L6-v2';
+    const tmpData = fs.mkdtempSync(path.join(os.tmpdir(), 'se-eval-real-'));
+    const modelsDir = path.join(tmpData, 'models');
+    const { LocalModelStore } = require(path.join(DIST, 'services/providers/LocalModelStore'));
+    const { LocalEmbeddingGenerator } = require(path.join(DIST, 'vector/LocalEmbeddingGenerator'));
+    const store = new LocalModelStore({ modelsDir });
+    store.start(MODEL);
+    await store.finished(MODEL);
+    if (!store.isReady(MODEL)) {
+      console.error('eval-retrieval --real: the model could not be downloaded (no network?)');
+      process.exit(process.env.E2E_REQUIRED === '1' ? 1 : 0);
+    }
+    const generator = new LocalEmbeddingGenerator({ model: MODEL, localModelPath: modelsDir });
+    process.env.SEMANTIC_ENGINE_MODELS_DIR = modelsDir;
+    const real = await runConfig(true, queries, { model: MODEL, generator, dataDir: tmpData });
+    const { detail, ...rest } = real;
+    console.log(JSON.stringify({ model: MODEL, queries: queries.length, real: rest }, null, 2));
+    for (const row of detail) console.error(`${row.rank === null ? 'MISS' : '#' + row.rank}\t${row.q}`);
+    fs.rmSync(tmpData, { recursive: true, force: true });
+    return;
+  }
   const keyword = await runConfig(false, queries);
   const hashing = await runConfig(true, queries);
   const strip = ({ detail, ...rest }) => rest;
