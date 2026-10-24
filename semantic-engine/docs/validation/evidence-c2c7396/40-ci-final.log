@@ -1,7 +1,0 @@
-=== CMD: npm ci (post audit-fix) ===
-TIMESTAMP: 2026-09-21T22:19:20Z
-100 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-EXIT_CODE:0

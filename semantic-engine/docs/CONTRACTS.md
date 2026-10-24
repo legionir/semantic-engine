@@ -1,6 +1,6 @@
 # Phase 0 Contract Inventory
 
-**Status:** 🟡 PARTIALLY EXECUTED — see `phase0-executed-evidence-2026-09-21.md`.
+**Status:** contracts as executed by the test suites; open work is in `docs/OPEN-ITEMS.md`.
 Rows marked `TESTED` below have a test that runs under `npm test` and passed in the recorded
 run at revision `6a67a7f`. Rows still marked `UNKNOWN` have no executed evidence.
 
@@ -44,8 +44,7 @@ Still open after this stage (updated 2026-09-21, continuation):
    LOCALLY tested; wiring to the permanent store and exposing `STALE_HANDLE`/`STALE_SNAPSHOT`
    on the MCP runtime path remains open (matrix row 13).
 5. ~~Compatibility/traceability/adopt-vs-build~~ **DELIVERED:**
-   `phase0-compatibility-matrix.md` (0.8), `phase0-traceability-matrix.md` (0.9),
-   `phase0-adopt-vs-build.md` (0.10).
+   (removed phase 0 matrices; see git history at `0d8d4cf`).
 
 ## Phase 2 ast-grep engine contract (D-0016, executed 2026-09-22)
 

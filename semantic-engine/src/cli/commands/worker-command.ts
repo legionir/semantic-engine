@@ -50,6 +50,34 @@ interface WorkerStatus {
   readonly lastIndexedAt?: string;
 }
 
+/*
+| The watch child used to get only root/project-id/data-dir/out, so every indexing option of the
+| worker (vectors, git, blueprint mode, debounce, scan and embedding flags, …) was silently
+| dropped for the part of the worker that keeps the index fresh. These are passed through.
+*/
+const FORWARDED_BOOLEAN_OPTIONS = [
+  'vectors', 'blueprint', 'git', 'treeSitter', 'pretty', 'lspDiagnostics', 'gitignore',
+  'skipHidden', 'embeddingNormalize',
+] as const;
+const FORWARDED_VALUE_OPTIONS = [
+  'debounce', 'blueprintMode', 'diagnosticsBudget', 'embeddingProvider', 'embeddingModel',
+  'embeddingBaseUrl', 'embeddingApiKeyEnv', 'maxDepth', 'maxFileSizeMb', 'ignore', 'artifactLocation',
+] as const;
+
+const kebab = (name: string): string => name.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+
+export function forwardedWatchFlags(options: ParsedArgs['options']): string[] {
+  const flags: string[] = [];
+  for (const name of FORWARDED_BOOLEAN_OPTIONS) {
+    if (name in options) flags.push(boolOption(options, name, true) ? `--${kebab(name)}` : `--no-${kebab(name)}`);
+  }
+  for (const name of FORWARDED_VALUE_OPTIONS) {
+    const value = stringOption(options, name);
+    if (value !== undefined) flags.push(`--${kebab(name)}`, value);
+  }
+  return flags;
+}
+
 export async function runWorker(
   args: ParsedArgs,
   context: CommandContext
@@ -387,6 +415,7 @@ export async function runWorker(
           '--out',
           paths.artifactRoot,
           '--skip-initial-index',
+          ...forwardedWatchFlags(args.options),
         ],
         /press Ctrl\+C/,
         paths.workspaceRoot

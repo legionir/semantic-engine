@@ -22,6 +22,7 @@ import { loadGlobalConfig, scannerOverridesFrom } from '../../core/config/Global
 import { normalizeWorkspaceRoot, PROJECT_OUTPUT_DIR } from '../../core/config/ProjectPaths';
 import { migrateLegacyArtifacts } from '../../core/config/migrateLegacyArtifacts';
 import { projectPathsFromArgs } from '../projectPathsFromArgs';
+import { mergeScanOverrides, parseScanFlags } from '../scanFlags';
 
 export const DEFAULT_OUTPUT_DIR = PROJECT_OUTPUT_DIR;
 
@@ -59,7 +60,12 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
 
   const wantsBlueprint = boolOption(args.options, 'blueprint', true);
   const wantsGit = boolOption(args.options, 'git', true);
-  const scanOverrides = scannerOverridesFrom(loadGlobalConfig(projectPaths.dataRoot).config);
+  const scanFlags = parseScanFlags(args);
+  if (!scanFlags.ok) return { code: EXIT.usage, error: scanFlags.error };
+  const scanOverrides = mergeScanOverrides(
+    scannerOverridesFrom(loadGlobalConfig(projectPaths.dataRoot).config),
+    scanFlags.overrides
+  );
   /*
   | SE-VEC-02 — تا فاز ۴۴ اینجا `vectorIndexer: null` هاردکد بود و
   | هیچ پرچمی هم نداشت، پس `vectorChunks` هرگز تولید نمی‌شد و

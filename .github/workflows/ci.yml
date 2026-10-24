@@ -126,3 +126,7 @@ jobs:
       - run: node scripts/e2e-panel.js
         env:
           E2E_REQUIRED: '1'
+      # Gateway console: instance table, create/edit/stop/start/remove, options reaching the worker.
+      - run: node scripts/e2e-gateway.js
+        env:
+          E2E_REQUIRED: '1'

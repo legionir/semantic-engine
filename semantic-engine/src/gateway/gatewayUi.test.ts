@@ -267,6 +267,10 @@ describe('gateway console — SE-F-057 save request contract', () => {
     name: 'App',
     rootPath: '/srv/app',
     watch: false,
+    artifactLocation: 'in-root',
+    scan: { useGitignore: false, skipHiddenDirectories: false, maxDepth: 6, maxFileSizeMb: 2, ignore: '**/*.snap,vendor/**' },
+    diagnostics: { lsp: true, budgetMs: 30000 },
+    cache: { mode: 'full' },
     indexing: { vectors: true, sqlite: true, blueprint: true, git: false, treeSitter: true, pretty: false },
     watchOptions: { debounceMs: 250, blueprintMode: 'threshold', skipInitialIndex: true },
     service: { transport: 'socket', host: '127.0.0.1', socketPath: '/run/app.sock', http: true, stdio: false, web: true },
@@ -292,6 +296,12 @@ describe('gateway console — SE-F-057 save request contract', () => {
     expect(req.body['service']).toEqual(expect.objectContaining({ transport: 'socket', socketPath: '/run/app.sock' }));
     expect(req.body['security']).toEqual(expect.objectContaining({ gatewayManaged: true, tokenEnvVar: 'SE_TOKEN' }));
     expect(req.body['embedding']).toEqual(expect.objectContaining({ enabled: true, provider: 'ollama' }));
+    expect(req.body['scan']).toEqual(
+      expect.objectContaining({ useGitignore: false, skipHiddenDirectories: false, maxDepth: 6, maxFileSizeMb: 2, ignore: '**/*.snap,vendor/**' })
+    );
+    expect(req.body['diagnostics']).toEqual({ lsp: true, budgetMs: 30000 });
+    expect(req.body['cache']).toEqual({ mode: 'full' });
+    expect(req.body['artifactLocation']).toBe('in-root');
   });
 
   it('update is a PATCH on the project resource, never the collection', () => {

@@ -90,7 +90,11 @@ export class WorkerConfigStore {
     const CONFIG_KEYS = [
       'dataDir',
       'outOverride',
+      'artifactLocation',
       'watch',
+      'scan',
+      'diagnostics',
+      'cache',
       'indexing',
       'watchOptions',
       'service',

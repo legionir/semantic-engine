@@ -1,3 +1,0 @@
-v22.22.3
-10.9.8
-Linux e2b.local 6.1.158+ #1 SMP PREEMPT_DYNAMIC Mon May 11 18:48:24 UTC 2026 x86_64 GNU/Linux

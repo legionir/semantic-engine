@@ -17,6 +17,7 @@ import { IncrementalEngine } from '../../incremental/IncrementalEngine';
 import { VectorIndexer } from '../../vector/VectorIndexer';
 import { resolveVectorPlan } from '../embeddingFromArgs';
 import { projectPathsFromArgs } from '../projectPathsFromArgs';
+import { mergeScanOverrides, parseScanFlags } from '../scanFlags';
 import { ProjectIndex } from '../../core/types/project-index.types';
 import { GitInfoCollector } from '../../core/git';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
@@ -101,6 +102,10 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
     return { code: EXIT.usage, error: error instanceof Error ? error.message : String(error) };
   }
 
+  /* Before the pid file is claimed: a usage error must not leave a claim behind. */
+  const scanFlags = parseScanFlags(args);
+  if (!scanFlags.ok) return { code: EXIT.usage, error: scanFlags.error };
+
   /* همان resolver دستور `index`؛ watch و write هرگز واگرا نمی‌شوند. */
   const watchPaths = projectPathsFromArgs(args, root);
   const outputDir = watchPaths.artifactRoot;
@@ -127,8 +132,9 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
   });
 
   const wantsGit = boolOption(args.options, 'git', true);
-  const scanOverrides = scannerOverridesFrom(
-    loadGlobalConfig(projectPathsFromArgs(args, root).dataRoot).config
+  const scanOverrides = mergeScanOverrides(
+    scannerOverridesFrom(loadGlobalConfig(watchPaths.dataRoot).config),
+    scanFlags.overrides
   );
   const pretty = boolOption(args.options, 'pretty', true);
 

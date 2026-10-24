@@ -21,6 +21,8 @@ import {
   ProjectWorkerConfig,
   WORKER_TRANSPORTS,
   WorkerConfigInput,
+  ARTIFACT_LOCATIONS,
+  CACHE_MODES,
 } from './types';
 import { apiKeyEnvVarProblem } from '../core/security/apiKeyEnvPolicy';
 import { assertProjectRoot, isPathSafeProjectId } from '../core/config/ProjectIdentity';
@@ -63,6 +65,18 @@ export const DEFAULT_WORKER_CONFIG: Omit<
     treeSitter: true,
     pretty: true,
   },
+  scan: {
+    useGitignore: true,
+    skipHiddenDirectories: true,
+    maxDepth: 0,
+    maxFileSizeMb: 5,
+  },
+  diagnostics: {
+    lsp: false,
+  },
+  cache: {
+    mode: 'use',
+  },
   watchOptions: {
     debounceMs: 500,
     blueprintMode: 'always',
@@ -91,6 +105,9 @@ export function createWorkerConfig(input: WorkerConfigInput): ProjectWorkerConfi
   const base = DEFAULT_WORKER_CONFIG;
   const indexing = input.indexing ?? {};
   const watchOptions = input.watchOptions ?? {};
+  const scan = input.scan ?? {};
+  const diagnostics = input.diagnostics ?? {};
+  const cache = input.cache ?? {};
   const service = input.service ?? {};
   const security = input.security ?? {};
   const embedding = input.embedding ?? {};
@@ -101,8 +118,21 @@ export function createWorkerConfig(input: WorkerConfigInput): ProjectWorkerConfi
     rootPath: String(input.rootPath ?? ''),
     ...(input.dataDir !== undefined ? { dataDir: input.dataDir } : {}),
     ...(input.outOverride !== undefined ? { outOverride: input.outOverride } : {}),
+    ...(input.artifactLocation !== undefined ? { artifactLocation: input.artifactLocation } : {}),
     autoStart: input.autoStart ?? base.autoStart,
     watch: input.watch ?? base.watch,
+    scan: {
+      useGitignore: scan.useGitignore ?? base.scan.useGitignore,
+      skipHiddenDirectories: scan.skipHiddenDirectories ?? base.scan.skipHiddenDirectories,
+      maxDepth: scan.maxDepth ?? base.scan.maxDepth,
+      maxFileSizeMb: scan.maxFileSizeMb ?? base.scan.maxFileSizeMb,
+      ...(scan.ignore !== undefined && scan.ignore !== '' ? { ignore: scan.ignore } : {}),
+    },
+    diagnostics: {
+      lsp: diagnostics.lsp ?? base.diagnostics.lsp,
+      ...(diagnostics.budgetMs !== undefined ? { budgetMs: diagnostics.budgetMs } : {}),
+    },
+    cache: { mode: cache.mode ?? base.cache.mode },
     indexing: {
       vectors: indexing.vectors ?? base.indexing.vectors,
       sqlite: indexing.sqlite ?? base.indexing.sqlite,
@@ -197,6 +227,25 @@ export function validateWorkerConfig(
         `dataDir ${resolvedData} is inside the workspace root; generated data must live outside the checkout`
       );
     }
+  }
+
+  const { scan } = config;
+  if (!Number.isInteger(scan.maxDepth) || scan.maxDepth < 0 || scan.maxDepth > 1000) {
+    errors.push('scan.maxDepth must be an integer between 0 (unlimited) and 1000');
+  }
+  if (!Number.isFinite(scan.maxFileSizeMb) || scan.maxFileSizeMb <= 0 || scan.maxFileSizeMb > 10_240) {
+    errors.push('scan.maxFileSizeMb must be greater than 0 and at most 10240');
+  }
+  if (config.diagnostics.budgetMs !== undefined
+    && (!Number.isInteger(config.diagnostics.budgetMs) || config.diagnostics.budgetMs < 0)) {
+    errors.push('diagnostics.budgetMs must be a non-negative integer (milliseconds)');
+  }
+  if (!(CACHE_MODES as readonly string[]).includes(config.cache.mode)) {
+    errors.push(`cache.mode must be one of: ${CACHE_MODES.join(', ')}`);
+  }
+  if (config.artifactLocation !== undefined
+    && !(ARTIFACT_LOCATIONS as readonly string[]).includes(config.artifactLocation)) {
+    errors.push(`artifactLocation must be one of: ${ARTIFACT_LOCATIONS.join(', ')}`);
   }
 
   const { debounceMs } = config.watchOptions;
@@ -310,8 +359,35 @@ export const WORKER_CONFIG_JSON_SCHEMA = {
     rootPath: { type: 'string', minLength: 1 },
     dataDir: { type: 'string' },
     outOverride: { type: 'string' },
+    artifactLocation: { type: 'string', enum: [...ARTIFACT_LOCATIONS] },
     autoStart: { type: 'boolean', default: false },
     watch: { type: 'boolean', default: true },
+    scan: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        useGitignore: { type: 'boolean', default: true },
+        skipHiddenDirectories: { type: 'boolean', default: true },
+        maxDepth: { type: 'integer', minimum: 0, maximum: 1000, default: 0 },
+        maxFileSizeMb: { type: 'number', exclusiveMinimum: 0, maximum: 10240, default: 5 },
+        ignore: { type: 'string' },
+      },
+    },
+    diagnostics: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        lsp: { type: 'boolean', default: false },
+        budgetMs: { type: 'integer', minimum: 0 },
+      },
+    },
+    cache: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        mode: { type: 'string', enum: [...CACHE_MODES], default: 'use' },
+      },
+    },
     indexing: {
       type: 'object',
       additionalProperties: false,
