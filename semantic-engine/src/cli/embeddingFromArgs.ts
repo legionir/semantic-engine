@@ -10,6 +10,7 @@
  * variable, and the value is read here, at the last moment, and never logged.
  */
 
+import { apiKeyEnvVarProblem } from '../core/security/apiKeyEnvPolicy';
 import { ParsedArgs, boolOption, stringOption } from './args';
 import {
   createEmbeddingGenerator,
@@ -53,6 +54,13 @@ export function embeddingFromArgs(args: ParsedArgs): EmbeddingArgs {
     throw new Error(
       `--embedding-provider must be one of: local, ollama, openai-compatible (got "${rawProvider}")`
     );
+  }
+
+  /* Same allowlist as `PUT /settings` and the gateway worker config: a flag must not be able to name an
+     arbitrary variable (AWS_SECRET_ACCESS_KEY, …) as "the API key" and send it to a configured endpoint. */
+  if (apiKeyEnvVar !== undefined) {
+    const problem = apiKeyEnvVarProblem(apiKeyEnvVar);
+    if (problem) throw new Error(`--embedding-api-key-env ${problem}`);
   }
 
   return {
