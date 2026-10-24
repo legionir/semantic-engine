@@ -336,7 +336,9 @@ function autoArrange(hubId) {
   const { nodes, edges } = visibleGraph();
   if (nodes.length === 0) return;
 
-  const W = 1200, H = 800, cx = W / 2, cy = H / 2;
+  // The canvas grows with the node count: a fixed 1200x800 cannot hold 160x60 module boxes without overlap.
+  const side = Math.ceil(Math.sqrt(nodes.length));
+  const W = Math.max(1200, side * 260), H = Math.max(800, side * 170), cx = W / 2, cy = H / 2;
 
   // چیدمان اولیهٔ دایره‌ای (قطعی) تا هر بار یکسان شروع شود.
   nodes.forEach((n, i) => {
@@ -367,7 +369,7 @@ function autoArrange(hubId) {
   }
 
   const iterations = nodes.length > 120 ? 120 : 220;
-  const k = Math.max(120, Math.sqrt((W * H) / nodes.length) * 0.9); // فاصلهٔ ایده‌آل
+  const k = Math.max(220, Math.sqrt((W * H) / nodes.length) * 0.9); // فاصلهٔ ایده‌آل (≥ عرض یک نود)
   let temp = W / 8;
 
   for (let it = 0; it < iterations; it++) {
@@ -408,6 +410,33 @@ function autoArrange(hubId) {
       n.y += (cy - n.y) * 0.01;
     }
     temp *= 0.96;
+  }
+
+  // Separate boxes that still overlap after the force pass (nodes are up to 170x70 with a margin).
+  const BOX_W = 180, BOX_H = 80;
+  for (let pass = 0; pass < 80; pass++) {
+    let moved = false;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const ox = BOX_W - Math.abs(dx), oy = BOX_H - Math.abs(dy);
+        if (ox <= 0 || oy <= 0) continue;
+        // Push along the axis with the smaller overlap; fixed nodes (hub, pinned) do not move.
+        const aFixed = a.id === hub || a._pinned, bFixed = b.id === hub || b._pinned;
+        if (aFixed && bFixed) continue;
+        const shareA = aFixed ? 0 : (bFixed ? 1 : 0.5), shareB = bFixed ? 0 : (aFixed ? 1 : 0.5);
+        if (ox < oy) {
+          const dir = dx >= 0 ? 1 : -1;
+          a.x -= dir * ox * shareA; b.x += dir * ox * shareB;
+        } else {
+          const dir = dy >= 0 ? 1 : -1;
+          a.y -= dir * oy * shareA; b.y += dir * oy * shareB;
+        }
+        moved = true;
+      }
+    }
+    if (!moved) break;
   }
 
   // hub دقیقاً وسط

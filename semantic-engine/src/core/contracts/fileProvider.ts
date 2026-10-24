@@ -252,12 +252,7 @@ export class ConfinedFileProvider implements FileProvider {
   }
 
   private isDenied(relativePath: string): boolean {
-    const segments = relativePath.split('/');
-    for (const segment of this.deniedSegments) {
-      if (segments.includes(segment)) return true;
-    }
-    const name = segments[segments.length - 1];
-    return this.deniedPatterns.some(pattern => matchesPattern(name, pattern));
+    return isDeniedPath(relativePath, this.deniedPatterns, this.deniedSegments);
   }
 
   /**
@@ -420,6 +415,21 @@ export function isInside(root: string, target: string): boolean {
   const relative = path.relative(root, target);
   if (relative === '') return true;
   return !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+/**
+ * Is this workspace-relative path on the secret/`.git` denylist? Shared by the provider and by the
+ * MCP source tools, which read indexed files directly and must not hand out `.env`, keys or `.git`.
+ */
+export function isDeniedPath(
+  relativePath: string,
+  patterns: readonly string[] = DEFAULT_DENIED_PATTERNS,
+  segments: readonly string[] = DEFAULT_DENIED_SEGMENTS
+): boolean {
+  const parts = relativePath.replace(/\\/g, '/').split('/');
+  if (segments.some(segment => parts.includes(segment))) return true;
+  const name = parts[parts.length - 1] ?? '';
+  return patterns.some(pattern => matchesPattern(name, pattern));
 }
 
 function matchesPattern(name: string, pattern: string): boolean {

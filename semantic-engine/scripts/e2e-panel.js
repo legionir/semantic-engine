@@ -194,6 +194,19 @@ async function main() {
     await viz.goto(`${base}/visualizer.html?token=${TOKEN}`);
     await viz.waitForFunction(() => /Nodes:\s*[1-9]/.test(document.body.innerText), null, { timeout: 30_000 });
     check('visualizer renders a non-empty graph', true);
+    const overlaps = await viz.evaluate(() => {
+      const boxes = [...document.querySelectorAll('.graph-node')].map(node => node.getBoundingClientRect());
+      let count = 0;
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i];
+          const b = boxes[j];
+          if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) count++;
+        }
+      }
+      return count;
+    });
+    check('no two graph nodes overlap', overlaps === 0, `${overlaps} overlapping pairs`);
     check('visualizer loads without API or script errors', vizErrors.length === 0, vizErrors.join('; '));
     check('panel made no failing API calls after connecting', apiErrors.length === 0, apiErrors.join('; '));
     check('panel raised no script errors', pageErrors.length === 0, pageErrors.join('; '));

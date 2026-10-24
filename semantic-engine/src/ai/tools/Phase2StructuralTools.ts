@@ -1,3 +1,5 @@
+import { isDeniedPath } from '../../core/contracts/fileProvider';
+import { SourceSecurityGuard } from '../../services/source/SourceSecurityGuard';
 import * as fs from 'fs/promises';
 import { AiTool, AiToolInput, AiToolOutput } from './types';
 import { ProjectIndexReader } from '../ProjectIndexReader';
@@ -10,9 +12,17 @@ const ok = (items: AiToolOutput['items'], metadata?: Record<string, unknown>): A
 
 abstract class StructuralTool {
   constructor(protected readonly reader: ProjectIndexReader, protected readonly workspaceRoot?: string) {}
-  protected files(input: AiToolInput): FileEntry[] { const requested = typeof input.path === 'string' ? this.reader.getFileByPath(input.path) : undefined; return (requested ? [requested] : [...this.reader.getAllFiles()]).filter(f => !f.binary).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0); }
+  protected files(input: AiToolInput): FileEntry[] { const requested = typeof input.path === 'string' ? this.reader.getFileByPath(input.path) : undefined; return (requested ? [requested] : [...this.reader.getAllFiles()]).filter(f => !f.binary && !isDeniedPath(f.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0); }
   protected absolute(relative: string): string { if (!this.workspaceRoot) throw new Error('workspaceRoot is not configured'); return require('path').resolve(this.workspaceRoot, relative); }
-  protected async source(file: FileEntry): Promise<string> { return (await fs.readFile(this.absolute(file.path), 'utf8')).replace(/^\uFEFF/u, ''); }
+  private readonly guard = new SourceSecurityGuard();
+  protected async source(file: FileEntry): Promise<string> {
+    /* Same boundary as code_read: secrets/.git are never read, and a symlink must not leave the workspace. */
+    if (isDeniedPath(file.path)) throw new Error(`DENIED: ${file.path} is on the secret/.git denylist`);
+    if (!this.workspaceRoot) throw new Error('workspaceRoot is not configured');
+    const checked = this.guard.validateRelativePath(this.workspaceRoot, file.path);
+    if (!checked.ok || !checked.resolvedPath) throw new Error(checked.reason ?? 'Source path denied');
+    return (await fs.readFile(checked.resolvedPath, 'utf8')).replace(/^\uFEFF/u, '');
+  }
 }
 
 export class StructuralSearchTool extends StructuralTool implements AiTool {

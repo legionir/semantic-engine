@@ -35,6 +35,18 @@ Thresholds below are starting values from Appendix B. They are locked before mea
 
 Required evidence: data/functional metrics require `LOCALLY VERIFIED`; tool paths require `MCP VERIFIED`; lifecycle/worker paths require `GATEWAY VERIFIED`. A static type, schema, test file, README, or prompt is not evidence of completion.
 
+## Summary (2026-10-24)
+
+| Phase | State |
+|---|---|
+| 0 | 🟡 CONDITIONAL — two owned, non-blocking gaps (D-0014 set-atomic publication; read boundary not yet wired into MCP/HTTP) |
+| 1 | 🟢 ACCEPTED |
+| 2 | 🟢 ACCEPTED (D-0018) |
+| 3 | 🟢 ACCEPTED (D-0026) |
+| 4 | 🟢 ACCEPTED (D-0027) |
+
+The detailed per-phase sections below are the historical record; the Phase 0 section describes the 2026-09-21 state.
+
 ## Current gate
 
 **Phase 0: 🟡 CONDITIONAL** (updated 2026-09-21, continuation) — every executable check in
