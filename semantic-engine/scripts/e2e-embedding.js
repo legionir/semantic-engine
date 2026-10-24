@@ -35,6 +35,11 @@ function skip(reason) {
   process.exit(0);
 }
 
+function fail(reason) {
+  console.error(`e2e-embedding: FAILED — ${reason}`);
+  process.exit(1);
+}
+
 function check(name, condition, detail = '') {
   console.log(`${condition ? 'ok  ' : 'FAIL'} ${name}${condition || !detail ? '' : ` — ${detail}`}`);
   if (!condition) failures.push(name);
@@ -47,8 +52,18 @@ async function main() {
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'se-embed-'));
   try {
     const { LocalEmbeddingGenerator, cosine } = require(path.join(ROOT, 'dist'));
-    const generator = new LocalEmbeddingGenerator({ model: MODEL, cacheDir: path.join(work, 'models') });
-    if (!(await generator.isReady())) skip('the model could not be downloaded or loaded (no network?)');
+    const { LocalModelStore } = require(path.join(ROOT, 'dist', 'services', 'providers', 'LocalModelStore'));
+
+    /* The same download the Embeddings panel performs; `index --embedding-provider local` reads from here. */
+    const dataDir = path.join(work, 'data');
+    const modelsDir = path.join(dataDir, 'models');
+    const store = new LocalModelStore({ modelsDir });
+    store.start(MODEL);
+    await store.finished(MODEL);
+    if (!store.isReady(MODEL)) skip('the model could not be downloaded (no network?)');
+
+    const generator = new LocalEmbeddingGenerator({ model: MODEL, localModelPath: modelsDir });
+    if (!(await generator.isReady())) fail('the downloaded model could not be loaded by the generator');
 
     const [query, paraphrase, unrelated] = (await generator.generateBatch([
       'read the configuration file',
@@ -68,7 +83,7 @@ async function main() {
     const out = path.join(work, 'out');
     const run = spawnSync(process.execPath, [
       path.join(ROOT, 'bin', 'semantic-engine.js'), 'index', '--root', project, '--out', out, '--no-git',
-      '--data-dir', path.join(work, 'data'), '--project-id', 'prj-embed-12345678',
+      '--data-dir', dataDir, '--project-id', 'prj-embed-12345678',
       '--embedding-provider', 'local', '--embedding-model', MODEL, '--vectors',
     ], { encoding: 'utf8', timeout: 600_000 });
     check('index with the local provider exits 0', run.status === 0, `${run.stderr}`.slice(-600));
