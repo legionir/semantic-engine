@@ -18,7 +18,7 @@ import { validateAgainstSchema } from '../export/schemaValidation';
 import { FileSystemPort, NodeFileSystem } from '../host/FileSystem';
 import { ILogger, silentLogger } from '../host/Logger';
 import { nextIndexGeneration, parseIndexGeneration } from '../core/config/indexGeneration';
-import { MANIFEST_FILE_NAME } from '../core/config/artifactManifest';
+import { MANIFEST_FILE_NAME, preserveCommittedGeneration, pruneGenerations } from '../core/config/artifactManifest';
 
 export interface OutputWriterOptions {
   readonly outputDir: string;
@@ -162,6 +162,8 @@ export class OutputWriter {
       this.logger.debug('wrote blueprint', { path: blueprintPath });
     }
 
+    /* D-0014: keep the committed generation readable while the pair is being replaced. */
+    preserveCommittedGeneration(this.indexPath);
     await this.fs.writeJsonAtomic(this.indexPath, indexToWrite, { pretty });
     this.logger.debug('wrote index', {
       path: this.indexPath,
@@ -187,6 +189,7 @@ export class OutputWriter {
       },
     };
     await this.fs.writeJsonAtomic(manifestPath, manifest, { pretty });
+    pruneGenerations(this.indexPath, manifest.artifacts.index.sha256);
 
     return { indexPath: this.indexPath, blueprintPath };
   }

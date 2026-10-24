@@ -27,7 +27,7 @@ import {
 } from '../../core/config/ProjectPaths';
 import type { IndexLookupOptions } from '../../core/config/ProjectPaths';
 import { artifactLocationOrDefault, DATA_DIR_ENV_VAR } from '../../core/config/DataRootResolver';
-import { assertIndexMatchesCommittedManifest } from '../../core/config/artifactManifest';
+import { readCommittedIndexBytes } from '../../core/config/artifactManifest';
 import { canonicalizeRoot, projectIdFor } from '../../core/config/ProjectIdentity';
 import { migrateLegacyArtifacts } from '../../core/config/migrateLegacyArtifacts';
 import { ARTIFACT_LOCATION_ENV_VAR } from '../../cli/projectPathsFromArgs';
@@ -283,8 +283,7 @@ async function runHttp(
     void guard.handle(req, res, async body => {
       const currentIndex = (() => {
         try {
-          const rawBytes = fs.readFileSync(args.projectIndexPath);
-          assertIndexMatchesCommittedManifest(args.projectIndexPath, rawBytes);
+          const rawBytes = readCommittedIndexBytes(args.projectIndexPath);
           return JSON.parse(rawBytes.toString('utf8')) as ProjectIndex;
         } catch {
           return projectIndex;
@@ -384,9 +383,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const rawBytes = fs.readFileSync(args.projectIndexPath);
   // همان دروازهٔ fail-closed مسیر HTTP/MCP — شروع با index ناسازگار ممنوع است.
-  assertIndexMatchesCommittedManifest(args.projectIndexPath, rawBytes);
+  const rawBytes = readCommittedIndexBytes(args.projectIndexPath);
   const projectIndex = JSON.parse(rawBytes.toString('utf8')) as ProjectIndex;
 
   /*

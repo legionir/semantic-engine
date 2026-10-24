@@ -2,7 +2,7 @@
 
 > **Note (2026-10-23):** the phase status reports, evidence directories, regate scripts/fixtures and plan/prompt documents cited below were removed from the tree as completed. They are recoverable from git history at commit `0d8d4cf`. Still-open work is tracked only in `docs/OPEN-ITEMS.md`.
 
-**Status (2026-10-24):** Phases 1–4 gates are closed (D-0018, D-0026, D-0027); Phase 0 stays 🟡 CONDITIONAL on two owned, non-blocking gaps — set-atomic artifact publication (D-0014) and wiring the confined read boundary into MCP/HTTP. The environment blocker recorded in D-0003 no longer applies: the full suite runs locally and in CI.
+**Status (2026-10-24):** Phases 1–4 gates are closed (D-0018, D-0026, D-0027); Phase 0's two owned gaps are closed — set-atomic artifact publication (D-0014, 2026-10-24) and the freshness-handle runtime path (code_read over MCP); wiring the confined read boundary into every MCP/HTTP read remains. The environment blocker recorded in D-0003 no longer applies: the full suite runs locally and in CI.
 
 ## D-0001 — Existing repository is the source of truth
 
@@ -160,7 +160,15 @@
 - **Reason:** recording the architectural boundary honestly is better than claiming atomicity that
   two independent files cannot have. SE-P0-PUB-01 is closed at the consumption layer and open at
   the layout layer by decision.
-- **Status:** DECIDED (layout migration: POSTPONED, needs owner sign-off).
+- **Status:** SUPERSEDED 2026-10-24 — atomic without a layout migration. The manifest rename is the
+  commit point. Before the index is replaced, the committed index is hard-linked to
+  `generations/<sha256>.json` (last 2 kept besides the current one); `readCommittedIndexBytes`
+  serves that copy when the manifest still pins it, so a reader sees the old committed set or the
+  new one, never a mismatch. Paths consumers use are unchanged. Anything unverifiable still fails
+  closed. Limits: the blueprint is not preserved this way (it is derived and digest-checked
+  separately); a writer that edits the index in place instead of rename would also change the
+  linked copy — the reader then fails closed, it never serves wrong bytes. Tests:
+  `artifactManifest.test.ts`, `OutputWriter.test.ts`.
 
 ## D-0015 — Unsatisfiable checks fail closed with named reasons; absent features are recorded, not faked
 
@@ -540,4 +548,14 @@
 - **Date:** 2026-10-24
 - **Decision:** the measured, gated targets are cold index ≤ 8 s and re-index ≤ 5 s on this repository (GitHub runner: 7.65 s / 4.93 s). The earlier aspiration of 6 s / 2 s is not a gate; reaching it needs parallel parsing or a full incremental index and is only worth the risk if a real workload demands it. Output quality outranks speed.
 - **Status:** DECIDED. `bench/baseline.json` is the runner baseline (±35 % gate).
+
+## D-0031 — Dependency and topology boundaries
+
+- **Date:** 2026-10-24
+- **Decisions:**
+  1. `chokidar` stays on 4.x. 5.x only changes the module format (ESM-only); the project is CommonJS and gains nothing functional.
+  2. `@xenova/transformers` 2.17.x stays (optional dependency; production audit clean, `sharp` patched through `overrides`). Migrating to `@huggingface/transformers` cannot be verified without downloading a real model, which this environment cannot do (HuggingFace is blocked), so it is not attempted blind.
+  3. Supported topology: one host per data directory, local disk. Lock files and atomic renames are not guaranteed over NFS/SMB; `gateway` and `start` now warn when the data directory is on a network file system (`host/networkFilesystem.ts`). Multiple replicas would need a distributed queue and store; that is out of scope.
+  4. Python structural search is available through the optional `@ast-grep/lang-python` (prebuilt, no network at install). PHP stays unavailable: the PHP grammar uses `$` as its own sigil, so ast-grep metavariable patterns do not match (verified: every metavariable pattern returned 0).
+- **Status:** DECIDED, implemented.
 

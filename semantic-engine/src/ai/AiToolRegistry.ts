@@ -91,6 +91,13 @@ const NON_CACHEABLE_TOOLS: ReadonlySet<string> = new Set([
   // superseded — stale/mismatched handles must fail closed on every call.
   'symbol_references',
   'semantic_graph_inspect',
+  // These read source bytes from disk on every call. The cache key only sees the index hash, so a
+  // file edited after indexing would keep answering from the cache — hiding STALE_HANDLE and
+  // serving old source. Their cost is one file read, so they always execute.
+  'code_read',
+  'code_fold',
+  'search_text',
+  'structural_search',
 ]);
 
 export class AiToolRegistry {

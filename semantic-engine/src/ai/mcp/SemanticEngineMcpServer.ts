@@ -28,7 +28,7 @@ import { AiToolInput } from '../tools/types';
 import { ProjectIndex } from '../../core/types/project-index.types';
 import { resolveProjectIndexPath } from '../../core/config/ProjectPaths';
 import { parseIndexGeneration } from '../../core/config/indexGeneration';
-import { MANIFEST_FILE_NAME, assertIndexMatchesCommittedManifest } from '../../core/config/artifactManifest';
+import { MANIFEST_FILE_NAME, readCommittedIndexBytes } from '../../core/config/artifactManifest';
 import { loadBlueprintBeside } from '../discovery/loadBlueprint';
 
 export interface McpServerOptions {
@@ -197,8 +197,7 @@ export class SemanticEngineMcpServer {
       | می‌شد؛ حالا تا سازگارشدن digest، آخرین snapshot سالم فعال می‌ماند
       | و reload بعدی دوباره تلاش می‌کند.
       */
-      const indexBytes = fs.readFileSync(indexPath);
-      assertIndexMatchesCommittedManifest(indexPath, indexBytes);
+      const indexBytes = readCommittedIndexBytes(indexPath);
       const projectIndex = JSON.parse(indexBytes.toString('utf8')) as ProjectIndex;
       this.refreshGeneration(indexPath);
       const loaded = loadBlueprintBeside(indexPath);

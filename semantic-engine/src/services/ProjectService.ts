@@ -24,7 +24,7 @@ import type { ProjectRecord, ProjectRegistry } from '../core/config/ProjectRegis
 import { canonicalizeRoot, isPathSafeProjectId, isSafeProjectId, projectIdFor } from '../core/config/ProjectIdentity';
 import {
   MANIFEST_FILE_NAME,
-  assertIndexMatchesCommittedManifest,
+  readCommittedIndexBytes,
 } from '../core/config/artifactManifest';
 
 const MAX_INDEX_BYTES = 256 * 1024 * 1024;
@@ -191,8 +191,7 @@ export class ProjectService {
         | کرده باشد، ایندکس هرگز parse و تحویل نمی‌شود. قاعدهٔ مشترک با
         | مسیر MCP است (core/config/artifactManifest.ts).
         */
-        const indexBytes = fs.readFileSync(actualIndexPath);
-        assertIndexMatchesCommittedManifest(actualIndexPath, indexBytes);
+        const indexBytes = readCommittedIndexBytes(actualIndexPath);
 
         index = JSON.parse(indexBytes.toString('utf8')) as ProjectIndex;
         reader = new ProjectIndexReader(index);

@@ -114,6 +114,19 @@ describe('OutputWriter', () => {
     expect(fs.existsSync(path.join(dir, BLUEPRINT_FILE_NAME))).toBe(true);
   });
 
+  it('keeps the previous committed index readable under generations/ (D-0014)', async () => {
+    const writer = new OutputWriter({ outputDir: dir });
+    await writer.write(makeIndex());
+    const firstBytes = fs.readFileSync(path.join(dir, INDEX_FILE_NAME));
+    const firstSha = JSON.parse(fs.readFileSync(path.join(dir, 'project-artifacts.manifest.json'), 'utf8')).artifacts.index.sha256;
+
+    await writer.write(makeIndex({ files: [] }));
+
+    const preserved = path.join(dir, 'generations', `${firstSha}.json`);
+    expect(fs.readFileSync(preserved).equals(firstBytes)).toBe(true);
+    expect(fs.readdirSync(path.join(dir, 'generations'))).toHaveLength(1);
+  });
+
   it('creates the output directory when it is missing', async () => {
     const nested = path.join(dir, 'a', '.semantic-engine');
 

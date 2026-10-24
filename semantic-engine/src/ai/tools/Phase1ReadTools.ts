@@ -158,11 +158,15 @@ export class GainsReportTool implements AiTool {
 export class CodeOutlineTool implements AiTool {
   readonly name = 'code_outline';
   readonly description = 'Return indexed symbols as a deterministic structural outline.';
-  readonly inputSchema = { type: 'object', properties: { path: { type: 'string' }, fileId: { type: 'string' }, includeRanges: { type: 'boolean' } }, anyOf: [{ required: ['path'] }, { required: ['fileId'] }] };
+  readonly inputSchema = { type: 'object', properties: { path: { type: 'string' }, fileId: { type: 'string' }, includeRanges: { type: 'boolean' }, compact: { type: 'boolean', description: 'Return only name, kind, lines and signature per symbol (about a third of the tokens).' } }, anyOf: [{ required: ['path'] }, { required: ['fileId'] }] };
   constructor(private readonly reader: ProjectIndexReader) {}
   async execute(input: AiToolInput): Promise<AiToolOutput> {
     const file = fileOf(this.reader, input); if (!file) return fail('NOT_FOUND: source file');
     const symbols = [...this.reader.getSymbolsForFile(file.id)].sort((a, b) => a.line - b.line || a.endLine - b.endLine || a.name.localeCompare(b.name));
+    if (input.compact === true) {
+      const items = symbols.map(s => ({ id: s.id, name: s.name, kind: s.kind, path: file.path, line: s.line, source: 'compact', excerpt: s.signature ?? s.name, metadata: { endLine: s.endLine } }));
+      return { success: true, items, metadata: { returnedTokens: symbols.reduce((n, s) => n + tokens(s.signature ?? s.name), 0), truncated: false, compact: true } };
+    }
     return { success: true, items: symbols.map((s, ordinal) => ({ id: s.id, name: s.name, kind: s.kind, path: file.path, line: s.line, source: s.source, excerpt: s.signature ?? s.name, metadata: { symbolKey: `${file.path}::${sanitizeKeyPart(s.fullyQualifiedName ?? s.name)}::${sanitizeKeyPart(s.kind)}${symbols.filter(x => x.name === s.name && x.kind === s.kind).length > 1 ? `#${ordinal}` : ''}`, endLine: s.endLine, ...(input.includeRanges === false ? {} : { range: { startLine: s.line, endLine: s.endLine } }), partial: false, confidence: s.confidence } })), metadata: { returnedTokens: symbols.reduce((n, s) => n + tokens(s.signature ?? s.name), 0), truncated: false } };
   }
 }

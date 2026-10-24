@@ -125,3 +125,30 @@ describe('Phase 3 persisted snapshot lifecycle over MCP (D-0021 criterion 7)', (
     }
   });
 });
+
+describe('code_read freshness handles over MCP', () => {
+  it('returns a handle, serves it while the bytes are unchanged, and answers STALE_HANDLE (without source) once they change', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'code-read-mcp-'));
+    try {
+      await writeWorkspace(root, FILES_V1);
+      const server = new SemanticEngineMcpServer({ projectIndex: indexFor(FILES_V1), workspaceRoot: root });
+
+      const first = await server.callTool('code_read', { path: 'src/math.ts', start: 0, end: 20 });
+      expect(first.isError).toBe(false);
+      const handle = payload(first).items[0].metadata.handle as string;
+
+      const again = await server.callTool('code_read', { handle });
+      expect(again.isError).toBe(false);
+      expect(payload(again).items[0].excerpt).toBe(payload(first).items[0].excerpt);
+
+      await fs.appendFile(path.join(root, 'src/math.ts'), '// edited\n');
+      const stale = await server.callTool('code_read', { handle });
+      expect(stale.isError).toBe(true);
+      expect(payload(stale).error).toContain('STALE_HANDLE');
+      expect(JSON.stringify(payload(stale))).not.toContain('return a + b');
+      await server.close?.();
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+});

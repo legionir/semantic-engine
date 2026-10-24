@@ -40,9 +40,10 @@ Still open after this stage (updated 2026-09-21, continuation):
    different is now a documented contract, not a divergence.
 3. Wire `ConfinedFileProvider` (or a single shared confinement helper) into the MCP/HTTP read
    paths, and the guard now shares its confinement (D-0007, done). Wiring still open.
-4. A handle issuer and a snapshot store: the reference `InMemorySnapshotStore` exists and is
-   LOCALLY tested; wiring to the permanent store and exposing `STALE_HANDLE`/`STALE_SNAPSHOT`
-   on the MCP runtime path remains open (matrix row 13).
+4. ~~A handle issuer and a snapshot store~~ **DELIVERED:** `code_read` issues freshness-bound
+   handles and answers `STALE_HANDLE` on the MCP path (the registry no longer caches disk-reading
+   tools); Phase 3 uses the persisted `GraphSnapshotStore`; `InMemorySnapshotStore` is the
+   reference implementation of the contract.
 5. ~~Compatibility/traceability/adopt-vs-build~~ **DELIVERED:**
    (removed phase 0 matrices; see git history at `0d8d4cf`).
 

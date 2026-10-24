@@ -1,3 +1,4 @@
+import { networkFilesystemOf, networkFilesystemWarning } from '../../host/networkFilesystem';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ProjectIndex } from '../../core/types/project-index.types';
@@ -225,6 +226,13 @@ export async function runStart(
     ?? `http://${host}:${uiPort}/`;
   const mcpUrl = /MCP server on\s+(http:\/\/\S+)/.exec(mcp.output())?.[1]
     ?? `http://${host}:${mcpPort}/mcp`;
+
+  const dataRootDir = resolveDataRoot({
+    ...(stringOption(args.options, 'dataDir') ? { dataDir: stringOption(args.options, 'dataDir')! } : {}),
+    env: process.env,
+  });
+  const networkFs = networkFilesystemOf(dataRootDir);
+  if (networkFs) process.stderr.write(`⚠ ${networkFilesystemWarning(dataRootDir, networkFs)}\n`);
 
   process.stderr.write(
     `\n🚀 Semantic Engine UI + MCP\n` +

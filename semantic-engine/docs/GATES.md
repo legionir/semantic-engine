@@ -60,11 +60,11 @@ What remains is, by the definitions above, **owned and dated, non-blocking**:
 
 1. `check:audit` — unsatisfiable in-repo; its three input documents have never been committed
    here and must come from the owner (D-0015);
-2. true set-atomic publication — a generation-directory layout migration deferred by decision
-   (D-0014); the crash window is meanwhile fail-closed at every serve path, and that is
-   executed, not claimed;
-3. snapshot/handle runtime wiring — the reference `InMemorySnapshotStore` is LOCALLY tested;
-   permanent-store + MCP exposure stays a named gap (matrix row 13);
+2. ~~true set-atomic publication~~ **CLOSED 2026-10-24** (D-0014): manifest commit point plus
+   digest-addressed `generations/` copies; readers never see a torn pair;
+3. ~~snapshot/handle runtime wiring~~ **CLOSED 2026-10-24**: `code_read` freshness handles answer
+   `STALE_HANDLE` over MCP (`GraphSnapshotMcp.test.ts`), Phase 3 handles use `GraphSnapshotStore`;
+   `InMemorySnapshotStore` stays the reference implementation of the contract;
 4. apply→undo fuzz — NOT APPLICABLE until the feature exists (D-0015).
 
 Evidence now exists (see `phase0-executed-evidence-2026-09-21.md`):
