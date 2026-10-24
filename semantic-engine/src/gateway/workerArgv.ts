@@ -16,6 +16,7 @@
  */
 
 import { ProjectWorkerConfig } from './types';
+import { createWorkerConfig } from './WorkerConfigSchema';
 import { assertPathSafeProjectId } from '../core/config/ProjectIdentity';
 
 export interface WorkerArgvOptions {
@@ -53,6 +54,22 @@ export function workerArgv(config: ProjectWorkerConfig): string[] {
   booleanFlag(argv, 'git', indexing.git);
   booleanFlag(argv, 'tree-sitter', indexing.treeSitter);
   booleanFlag(argv, 'pretty', indexing.pretty);
+
+  optionalValue(argv, 'artifact-location', config.artifactLocation);
+
+  /* Scan flags are sent only when they differ from the default, so a value in the
+     data directory's config.json is not overridden by an untouched form. */
+  /* A config persisted before these sections existed has none of them. */
+  const { scan, diagnostics, cache } = createWorkerConfig(config);
+  if (!scan.useGitignore) argv.push('--no-gitignore');
+  if (!scan.skipHiddenDirectories) argv.push('--no-skip-hidden');
+  if (scan.maxDepth > 0) optionalValue(argv, 'max-depth', scan.maxDepth);
+  if (scan.maxFileSizeMb !== 5) optionalValue(argv, 'max-file-size-mb', scan.maxFileSizeMb);
+  optionalValue(argv, 'ignore', scan.ignore);
+  if (diagnostics.lsp) argv.push('--lsp-diagnostics');
+  optionalValue(argv, 'diagnostics-budget', diagnostics.budgetMs);
+  if (cache.mode === 'full') argv.push('--full');
+  if (cache.mode === 'off') argv.push('--no-cache');
 
   if (!config.watch) argv.push('--no-watch');
   optionalValue(argv, 'debounce', config.watchOptions.debounceMs);

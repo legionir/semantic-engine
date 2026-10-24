@@ -84,6 +84,11 @@ index options:
   --no-tree-sitter      heuristic extractors only
   --full                ignore the per-file extraction cache and rebuild it
   --no-cache            do not read or write the extraction cache
+  --max-depth <n>       directory depth limit      (0 = unlimited)
+  --max-file-size-mb <n>  partial-read threshold   (default: 5)
+  --ignore <a,b,c>      extra ignore patterns
+  --no-gitignore        do not honour .gitignore
+  --no-skip-hidden      descend into dot-directories
 
 watch options:
   --root <dir>          project to watch           (default: cwd)
@@ -98,6 +103,7 @@ watch options:
   --no-blueprint        skip blueprint.json updates
   --blueprint-mode <m>  always (default) or threshold
   --skip-initial-index  internal: watch an existing index without rebuilding it
+  (also accepts the scan flags listed under index options)
 
 query options:
   --index <file>        path to project-index.json (default: <root>/.semantic-engine/…)

@@ -70,6 +70,18 @@ const GatewayUi = (function () {
         { name: "embeddingNormalize", section: "embedding", type: "checkbox", configPath: "embedding.normalize", label: "Normalize vectors" },
         { name: "embeddingUseDefaultModel", section: "embedding", type: "checkbox", configPath: "embedding.useDefaultModel", label: "Use the provider's default model" },
 
+        { name: "useGitignore", section: "scan", type: "checkbox", configPath: "scan.useGitignore", label: "Respect .gitignore" },
+        { name: "skipHiddenDirectories", section: "scan", type: "checkbox", configPath: "scan.skipHiddenDirectories", label: "Skip hidden directories" },
+        { name: "maxDepth", section: "scan", type: "number", configPath: "scan.maxDepth", label: "Max depth (0 = unlimited)" },
+        { name: "maxFileSizeMb", section: "scan", type: "number", configPath: "scan.maxFileSizeMb", label: "Max file size (MB)" },
+        { name: "ignore", section: "scan", type: "text", configPath: "scan.ignore", label: "Extra ignore patterns (comma separated)" },
+
+        { name: "lspDiagnostics", section: "diagnostics", type: "checkbox", configPath: "diagnostics.lsp", label: "Collect language-server diagnostics" },
+        { name: "diagnosticsBudgetMs", section: "diagnostics", type: "number", configPath: "diagnostics.budgetMs", label: "Diagnostics budget (ms, optional)" },
+
+        { name: "cacheMode", section: "cache", type: "select", configPath: "cache.mode", label: "Extraction cache", options: ["use", "full", "off"] },
+        { name: "artifactLocation", section: "cache", type: "select", configPath: "artifactLocation", label: "Artifact location", options: ["", "external", "in-root"] },
+
         { name: "outOverride", section: "advanced", type: "text", configPath: "outOverride", label: "--out override (compat)" }
     ];
 
@@ -94,6 +106,12 @@ const GatewayUi = (function () {
     */
     const DEFAULT_FORM_VALUES = {
         watch: true,
+        useGitignore: true,
+        skipHiddenDirectories: true,
+        maxDepth: 0,
+        maxFileSizeMb: 5,
+        lspDiagnostics: false,
+        cacheMode: "use",
         blueprint: true,
         git: true,
         treeSitter: true,
@@ -216,6 +234,28 @@ const GatewayUi = (function () {
             }
         }
 
+        const depthRaw = values.maxDepth;
+        if (depthRaw !== "" && depthRaw !== undefined && depthRaw !== null) {
+            const depth = Number(depthRaw);
+            if (!Number.isInteger(depth) || depth < 0 || depth > 1000) {
+                errors.push({ field: "maxDepth", message: "must be an integer between 0 and 1000" });
+            }
+        }
+        const sizeRaw = values.maxFileSizeMb;
+        if (sizeRaw !== "" && sizeRaw !== undefined && sizeRaw !== null) {
+            const size = Number(sizeRaw);
+            if (!Number.isFinite(size) || size <= 0 || size > 10240) {
+                errors.push({ field: "maxFileSizeMb", message: "must be greater than 0 and at most 10240" });
+            }
+        }
+        const budgetRaw = values.diagnosticsBudgetMs;
+        if (budgetRaw !== "" && budgetRaw !== undefined && budgetRaw !== null) {
+            const budget = Number(budgetRaw);
+            if (!Number.isInteger(budget) || budget < 0) {
+                errors.push({ field: "diagnosticsBudgetMs", message: "must be a non-negative integer" });
+            }
+        }
+
         for (const key of ["port", "uiPort", "mcpPort"]) {
             const raw = values[key];
             if (raw === "" || raw === undefined) continue;
@@ -261,9 +301,13 @@ const GatewayUi = (function () {
     */
     function commandPreview(config) {
         const argv = ["semantic-engine", "worker"];
+        // Display-only quoting, identical to commandPreview() in workerArgv.ts.
+        const quote = function (value) {
+            return /^[A-Za-z0-9_@%+=:,./-]+$/.test(value) ? value : "'" + value.replace(/'/g, "'\\''") + "'";
+        };
         const push = function (flag, value) {
             if (value === undefined || value === null || value === "") return;
-            argv.push("--" + flag, String(value));
+            argv.push("--" + flag, quote(String(value)));
         };
         const bool = function (flag, value) {
             argv.push(value ? "--" + flag : "--no-" + flag);
@@ -281,6 +325,20 @@ const GatewayUi = (function () {
         bool("git", indexing.git !== false);
         bool("tree-sitter", indexing.treeSitter !== false);
         bool("pretty", indexing.pretty !== false);
+
+        push("artifact-location", config.artifactLocation);
+        const scan = config.scan || {};
+        if (scan.useGitignore === false) argv.push("--no-gitignore");
+        if (scan.skipHiddenDirectories === false) argv.push("--no-skip-hidden");
+        if (Number(scan.maxDepth) > 0) push("max-depth", scan.maxDepth);
+        if (scan.maxFileSizeMb !== undefined && Number(scan.maxFileSizeMb) !== 5) push("max-file-size-mb", scan.maxFileSizeMb);
+        push("ignore", scan.ignore);
+        const diagnostics = config.diagnostics || {};
+        if (diagnostics.lsp) argv.push("--lsp-diagnostics");
+        push("diagnostics-budget", diagnostics.budgetMs);
+        const cacheMode = (config.cache || {}).mode;
+        if (cacheMode === "full") argv.push("--full");
+        if (cacheMode === "off") argv.push("--no-cache");
 
         const watchOptions = config.watchOptions || {};
         if (config.watch === false) argv.push("--no-watch");
@@ -482,7 +540,8 @@ const GatewayUi = (function () {
     | default) instead of vanishing and silently keeping the old value.
     */
     const OPTIONAL_SCALARS = [
-        "dataDir", "outOverride",
+        "dataDir", "outOverride", "artifactLocation",
+        ["scan", "ignore"], ["diagnostics", "budgetMs"],
         ["service", "port"], ["service", "uiPort"], ["service", "mcpPort"],
         ["service", "socketPath"],
         ["security", "tokenEnvVar"],
@@ -685,7 +744,12 @@ if (typeof document !== "undefined") {
 
         async function act(action, projectId) {
             try {
-                if (action === "open") { location.href = GatewayUi.projectDashboardUrl(projectId); return; }
+                if (action === "open") {
+                    // The dashboard is a different page with its own token key; the gateway proxies it with the same token.
+                    if (token) localStorage.setItem("se.token", token);
+                    location.href = GatewayUi.projectDashboardUrl(projectId);
+                    return;
+                }
                 if (action === "mcp") { location.href = GatewayUi.mcpEndpointUrl(projectId); return; }
                 if (action === "edit") { openForm(projectId); return; }
                 if (action === "health") {

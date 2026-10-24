@@ -44,6 +44,32 @@ export interface WorkerIndexingConfig {
   readonly pretty: boolean;
 }
 
+/** Same switches as the scan flags of `index`/`watch` (`--max-depth`, `--ignore`, …). */
+export interface WorkerScanConfig {
+  readonly useGitignore: boolean;
+  readonly skipHiddenDirectories: boolean;
+  /** 0 = unlimited. */
+  readonly maxDepth: number;
+  readonly maxFileSizeMb: number;
+  /** Extra ignore patterns, comma separated (`--ignore`). */
+  readonly ignore?: string;
+}
+
+/** `--lsp-diagnostics` and `--diagnostics-budget <ms>`. */
+export interface WorkerDiagnosticsConfig {
+  readonly lsp: boolean;
+  readonly budgetMs?: number;
+}
+
+/** use = per-file extraction cache; full = ignore and rebuild it (`--full`); off = bypass (`--no-cache`). */
+export type CacheMode = 'use' | 'full' | 'off';
+
+export const CACHE_MODES: readonly CacheMode[] = ['use', 'full', 'off'];
+
+export type ArtifactLocationChoice = 'external' | 'in-root';
+
+export const ARTIFACT_LOCATIONS: readonly ArtifactLocationChoice[] = ['external', 'in-root'];
+
 export interface WorkerWatchConfig {
   readonly debounceMs: number;
   readonly blueprintMode: BlueprintMode;
@@ -90,9 +116,14 @@ export interface ProjectWorkerConfig {
   readonly dataDir?: string;
   /** `--out`؛ فقط برای سازگاری با گذشته (D10). */
   readonly outOverride?: string;
+  /** `--artifact-location`; unset = the platform default. */
+  readonly artifactLocation?: ArtifactLocationChoice;
   readonly autoStart: boolean;
   readonly watch: boolean;
   readonly indexing: WorkerIndexingConfig;
+  readonly scan: WorkerScanConfig;
+  readonly diagnostics: WorkerDiagnosticsConfig;
+  readonly cache: { readonly mode: CacheMode };
   readonly watchOptions: WorkerWatchConfig;
   readonly service: WorkerServiceConfig;
   readonly security: WorkerSecurityConfig;

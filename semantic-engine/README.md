@@ -338,6 +338,28 @@ semantic-engine worker --project-id prj-app-12345678 --root /path/to/app
 #   http://127.0.0.1:4000/gateway
 ```
 
+### کنسول Gateway (`/gateway`)
+
+کنسول مرکزی همهٔ instanceها (workerها) را نشان می‌دهد: جدول با پروژه، شناسه، مسیر،
+PID، وضعیت worker و وضعیت ایندکس، کارت‌های جمع، و برای هر ردیف اکشن‌های Open dashboard
+(Visualizer همان پروژه)، Start/Stop/Restart/Reindex، Edit configuration، Health detail،
+Open MCP endpoint و Remove. دکمهٔ **New worker** فرمی دارد که گزینه‌های `worker` را پوشش
+می‌دهد و دستور نهایی را پیش‌نمایش می‌کند:
+
+| بخش فرم | گزینه‌ها (پرچم CLI) |
+|---|---|
+| project | `--project-id`، نام، `--root`، `--data-dir`، شروع خودکار |
+| scan | `--max-depth`، `--max-file-size-mb`، `--ignore`، `--no-gitignore`، `--no-skip-hidden` |
+| diagnostics | `--lsp-diagnostics`، `--diagnostics-budget` |
+| cache | `--full` / `--no-cache` (کش استخراج)، `--artifact-location` |
+| indexing / watch | `--vectors`، `--no-blueprint`، `--no-git`، `--no-tree-sitter`، `--debounce`، `--blueprint-mode`، `--skip-initial-index` |
+| service / security | پورت‌ها و transport، `--http`، `--stdio`، `--web`، `--gateway-managed`، `--allow-remote`، متغیر توکن |
+| embedding | provider، مدل، base URL، متغیر کلید API، normalize |
+
+پرچم‌های scan فقط وقتی به worker می‌رسند که با پیش‌فرض فرق کنند، تا مقدارِ `config.json`
+دایرکتوری داده با یک فرم دست‌نخورده بازنویسی نشود. همهٔ گزینه‌های ایندکس به پروسهٔ watch
+همان worker هم منتقل می‌شوند. `npm run test:e2e` این کنسول را با مرورگر واقعی تست می‌کند.
+
 ### داده‌های تولیدشده کجا می‌نشینند
 
 از این نسخه، خروجی‌ها **بیرون از checkout** نوشته می‌شوند تا مخزن به‌خاطر ایندکس dirty نشود:

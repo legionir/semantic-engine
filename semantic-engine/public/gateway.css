@@ -147,7 +147,7 @@ tr.state-degraded td:first-child { border-left: 3px solid var(--degraded); }
 tr.state-crashed td:first-child { border-left: 3px solid var(--crashed); }
 tr.state-stopped td:first-child { border-left: 3px solid var(--line); }
 
-td.actions { white-space: normal; }
+table.workers td.actions { white-space: normal; max-width: none; min-width: 320px; overflow: visible; text-overflow: clip; }
 
 button {
   background: var(--panel-2);

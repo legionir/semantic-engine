@@ -64,4 +64,7 @@
 | مورد | وضعیت و جزئیات |
 |---|---|
 | visualizer | گره‌های هم‌پوشان روی fixture؛ چیدمان اولیهٔ گراف خوانا نیست (باگ عملکردی نیست) |
-| پوشش e2e | یک سناریوی دودی (توکن، تنظیمات، دانلود ناموفق، ایندکس، visualizer، `ui --port`)؛ جریان‌های Gateway console و Chat/LLM پوشش ندارند |
+| پوشش e2e | پنل (`e2e-panel.js`) و کنسول Gateway (`e2e-gateway.js`) پوشش دارند؛ جریان‌های Chat/LLM و آپلود/sync منبع پوشش ندارند |
+| گزینهٔ «Write SQLite index» در فرم Gateway | مرده است: artifact SQLite حذف شده ولی `indexing.sqlite` هنوز در config، فرم و `--sqlite` هست و اثری ندارد |
+| Gateway: ساخت instance از `start`/`ui` | این دو سرور تک‌پروژه‌ای خودشان در Gateway ثبت نمی‌شوند |
+| پرچم‌های scan در watch افزایشی | فقط روی ایندکس اولیه اثر دارند؛ `IncrementalEngine` برای فایل‌های تغییرکرده هنوز scanner پیش‌فرض را می‌سازد |

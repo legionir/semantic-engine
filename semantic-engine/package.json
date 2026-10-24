@@ -52,7 +52,7 @@
     "bench:check": "node scripts/bench.js --check",
     "eval": "npm run build && node scripts/eval-retrieval.js",
     "eval:check": "node scripts/eval-retrieval.js --check",
-    "test:e2e": "node scripts/e2e-panel.js"
+    "test:e2e": "node scripts/e2e-panel.js && node scripts/e2e-gateway.js"
   },
   "dependencies": {
     "@ast-grep/napi": "0.45.3",

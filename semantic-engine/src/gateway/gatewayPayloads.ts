@@ -71,6 +71,11 @@ export function projectEntry(
 
   return {
     id,
+    /* The console renders rows by these names (WorkerSummary vocabulary); `id`/`workerState` stay for API consumers. */
+    projectId: id,
+    pid: worker?.pid ?? null,
+    state: worker?.state ?? 'stopped',
+    indexState: snapshot?.indexState ?? '',
     name: registered?.name ?? id,
     rootPath: registered?.rootPath ?? '',
     status: running ? 'ready' : worker ? 'indexing' : 'missing',
