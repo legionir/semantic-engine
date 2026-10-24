@@ -90,7 +90,7 @@ jobs:
           cache-dependency-path: semantic-engine/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run build
-      # bench/baseline.json was recorded on this runner type (run 39054351297). A metric
+      # bench/baseline.json was recorded on this runner type (run 40106453907). A metric
       # more than 35% (+50 ms for timings) above its baseline fails the job. Re-record
       # with `node scripts/bench.js --write` on a runner when an intended change moves it.
       - run: node scripts/bench.js --check | tee bench-result.json
