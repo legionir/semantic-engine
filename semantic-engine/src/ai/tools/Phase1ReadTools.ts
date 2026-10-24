@@ -4,6 +4,7 @@ import { AiTool, AiToolInput, AiToolOutput } from './types';
 import { ProjectIndexReader } from '../ProjectIndexReader';
 import { FileEntry, SymbolEntry } from '../../core/types/project-index.types';
 import { makeHandle, parseHandle, sanitizeKeyPart } from '../../core/contracts/codeintel';
+import { isDeniedPath } from '../../core/contracts/fileProvider';
 import { SourceSecurityGuard } from '../../services/source/SourceSecurityGuard';
 import { Phase1IndexPlatform } from '../../core/codeintel/Phase1Platform';
 
@@ -24,6 +25,7 @@ abstract class SourceTool {
   constructor(protected readonly reader: ProjectIndexReader, protected readonly workspaceRoot?: string) {}
   protected resolve(file: FileEntry): { path: string } | { error: string } {
     if (!this.workspaceRoot) return { error: 'Source reading is disabled: workspaceRoot is not configured' };
+    if (isDeniedPath(file.path)) return { error: `DENIED: ${file.path} is on the secret/.git denylist` };
     const checked = this.guard.validateRelativePath(this.workspaceRoot, file.path);
     if (!checked.ok || !checked.resolvedPath) return { error: checked.reason ?? 'Source path denied' };
     return { path: checked.resolvedPath };

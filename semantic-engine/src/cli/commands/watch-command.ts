@@ -216,6 +216,7 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
       dependencyExtractorManager: extractors.dependencies,
       vectorIndexer,
       logger: context.logger,
+      ...(Object.keys(scanOverrides).length > 0 ? { scannerConfig: scanOverrides } : {}),
     });
     engine.load(projectIndex);
 
@@ -223,6 +224,7 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
       workspaceRoot: root,
       outputDir,
       engine,
+      ...(Object.keys(scanOverrides).length > 0 ? { scannerConfig: scanOverrides } : {}),
       logger: context.logger,
       pretty,
       blueprint: wantsBlueprint,

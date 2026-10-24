@@ -1,0 +1,75 @@
+name: Audit fix
+
+# Production advisories appear without any change in this repository and turn the blocking
+# "Dependency audit" job red on unrelated PRs. This job looks for them weekly and opens a
+# lockfile-only PR with `npm audit fix`, so the fix does not wait for a red PR.
+#
+# PRs opened with the default GITHUB_TOKEN do not trigger other workflows. To have CI run on the
+# PR automatically, add a fine-grained token with contents + pull-requests write as the
+# AUDIT_FIX_TOKEN secret; without it the PR is opened and a maintainer re-runs CI (push or close/reopen).
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: audit-fix
+  cancel-in-progress: false
+
+jobs:
+  audit-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: semantic-engine
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.AUDIT_FIX_TOKEN || github.token }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: semantic-engine/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Is the production tree clean?
+        id: audit
+        run: |
+          if npm audit --omit=dev --audit-level=high; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fix (lockfile only)
+        if: steps.audit.outputs.clean == 'false'
+        run: npm audit fix --omit=dev --no-fund
+      - name: Verify the fix
+        if: steps.audit.outputs.clean == 'false'
+        run: |
+          npm audit --omit=dev --audit-level=high
+          npm run build
+      - name: Open the PR
+        if: steps.audit.outputs.clean == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.AUDIT_FIX_TOKEN || github.token }}
+        working-directory: .
+        run: |
+          if git diff --quiet -- semantic-engine/package-lock.json; then
+            echo "npm audit fix changed nothing; a manual upgrade is needed"; exit 1
+          fi
+          branch="chore/audit-fix-$(date +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add semantic-engine/package-lock.json
+          git commit -m "chore(deps): npm audit fix (production)"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "chore(deps): npm audit fix (production)" \
+            --body "Weekly lockfile-only \`npm audit fix --omit=dev\`. \`npm audit --omit=dev --audit-level=high\` and \`npm run build\` pass with this change."

@@ -2,7 +2,7 @@
 
 > **Note (2026-10-23):** the phase status reports, evidence directories, regate scripts/fixtures and plan/prompt documents cited below were removed from the tree as completed. They are recoverable from git history at commit `0d8d4cf`. Still-open work is tracked only in `docs/OPEN-ITEMS.md`.
 
-**Status:** 🟡 PARTIAL / BLOCKED — evidence baseline started; repository checkout and executable dependency environment are not available to this agent.
+**Status (2026-10-24):** Phases 1–4 gates are closed (D-0018, D-0026, D-0027); Phase 0 stays 🟡 CONDITIONAL on two owned, non-blocking gaps — set-atomic artifact publication (D-0014) and wiring the confined read boundary into MCP/HTTP. The environment blocker recorded in D-0003 no longer applies: the full suite runs locally and in CI.
 
 ## D-0001 — Existing repository is the source of truth
 
@@ -523,3 +523,17 @@
 - **Owner sign-off:** accepted under the standing remediation delegation; the
   bypass is now a **guarded** behaviour, not an undocumented hole.
 - **Status:** DECIDED (accepted risk, guarded).
+
+## D-0029 — SQLite removed entirely
+
+- **Date:** 2026-10-24
+- **Decision:** `project-index.json` is the only index artifact. The SQLite exporter, graph query, driver, schema, the unwired `query_index` tool, `indexing.sqlite` in the worker config, the `sqlite3` dependency and the legacy `.sqlite` migration are deleted.
+- **Reason:** SQLite had been dropped as an artifact earlier; what remained was dead code with its own dependency and a misleading option in the gateway console.
+- **Status:** DECIDED, implemented (PR #4).
+
+## D-0030 — Performance targets restated
+
+- **Date:** 2026-10-24
+- **Decision:** the measured, gated targets are cold index ≤ 8 s and re-index ≤ 5 s on this repository (GitHub runner: 7.65 s / 4.93 s). The earlier aspiration of 6 s / 2 s is not a gate; reaching it needs parallel parsing or a full incremental index and is only worth the risk if a real workload demands it. Output quality outranks speed.
+- **Status:** DECIDED. `bench/baseline.json` is the runner baseline (±35 % gate).
+

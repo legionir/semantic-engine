@@ -27,8 +27,8 @@ jobs:
       run:
         working-directory: semantic-engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
@@ -40,7 +40,7 @@ jobs:
       - name: Checkout consumer (structured-ai)
         id: consumer
         continue-on-error: true
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: legionir/semantic-engine-structured-ai
           path: consumer
@@ -62,8 +62,8 @@ jobs:
       run:
         working-directory: semantic-engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -82,21 +82,21 @@ jobs:
       run:
         working-directory: semantic-engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: semantic-engine/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run build
-      # bench/baseline.json was recorded on this runner type (run 39054351297). A metric
+      # bench/baseline.json was recorded on this runner type (run 40106453907). A metric
       # more than 35% (+50 ms for timings) above its baseline fails the job. Re-record
       # with `node scripts/bench.js --write` on a runner when an intended change moves it.
       - run: node scripts/bench.js --check | tee bench-result.json
       # Retrieval quality (eval/queries.json): recall@k / MRR must not drop more than 0.03.
       - run: node scripts/eval-retrieval.js --check
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: bench-result
@@ -110,8 +110,8 @@ jobs:
       run:
         working-directory: semantic-engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
