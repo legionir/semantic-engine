@@ -31,6 +31,10 @@ const ui = require(path.join(__dirname, '..', '..', 'public', 'gateway.js')) as 
   DEFAULT_FORM_VALUES: Record<string, unknown>;
   projectDashboardUrl(projectId: string): string;
   mcpEndpointUrl(projectId: string): string;
+  withToken(url: string, token: string): string;
+  connectSnippets(options: { origin: string; token: string; projectId?: string }): { id: string; code: string }[];
+  renderLogLines(lines: string[]): string;
+  renderEvents(events: Record<string, unknown>[]): string;
 };
 
 /** همهٔ کلیدهای schema، به‌شکل نقطه‌دار (`indexing.vectors`). */
@@ -436,5 +440,37 @@ describe('gateway console — DEFAULT_FORM_VALUES mirrors the WorkerConfig schem
         `${field.configPath} covered? true`
       );
     }
+  });
+});
+
+describe('gateway console — connection guide', () => {
+
+  it('puts the token on every address as ?token=', () => {
+    expect(ui.withToken('http://h:4000/mcp', 'abc')).toBe('http://h:4000/mcp?token=abc');
+    expect(ui.withToken('http://h/x?a=1', 'a b')).toBe('http://h/x?a=1&token=a%20b');
+    expect(ui.withToken('http://h/x', '')).toBe('http://h/x');
+  });
+
+  it('builds a snippet for every client, pointing at the all-projects endpoint', () => {
+    const snippets = ui.connectSnippets({ origin: 'http://127.0.0.1:4000', token: 'TKN' });
+    expect(snippets.map(s => s.id)).toEqual(
+      expect.arrayContaining(['claude-code', 'mcp-json', 'claude-desktop', 'cursor', 'vscode', 'codex', 'typescript', 'python', 'curl'])
+    );
+    for (const snippet of snippets) expect(snippet.code).toContain('http://127.0.0.1:4000/mcp');
+    expect(snippets.find(s => s.id === 'claude-code')!.code).toContain('--scope user');
+    expect(snippets.find(s => s.id === 'python')!.code).toContain('list_projects');
+  });
+
+  it('points at one project when asked, and never calls list_projects there', () => {
+    const snippets = ui.connectSnippets({ origin: 'http://h', token: 'T', projectId: 'prj-a' });
+    for (const snippet of snippets) expect(snippet.code).toContain('/mcp/prj-a');
+    expect(snippets.find(s => s.id === 'typescript')!.code).not.toContain('list_projects');
+  });
+
+  it('renders logs and events, escaped', () => {
+    expect(ui.renderLogLines(['<b>x</b>'])).toContain('&lt;b&gt;');
+    expect(ui.renderLogLines([])).toContain('empty');
+    expect(ui.renderEvents([{ kind: 'crash', at: 't', detail: '<x>' }])).toContain('&lt;x&gt;');
+    expect(ui.renderEvents([])).toContain('No events');
   });
 });

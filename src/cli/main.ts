@@ -7,9 +7,8 @@
  * می‌شوند.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
 import { EXIT, ParsedArgs, boolOption, parseArgs } from './args';
+import { packageVersion } from '../host/version';
 import { CommandResult } from './commands/types';
 import { runIndex } from './commands/index-command';
 import { runQuery } from './commands/query-command';
@@ -153,7 +152,9 @@ worker options:
 gateway options:
   --port <n>            public port                (default: 4000)
   --host <addr>         bind address               (default: 127.0.0.1)
-  --token <secret>      gateway token              (default: $SEMANTIC_ENGINE_GATEWAY_TOKEN or generated)
+  --token <secret>      gateway token              (default: $SEMANTIC_ENGINE_GATEWAY_TOKEN, else the stored one)
+  --rotate-token        replace the stored token with a new one
+                        (the token is kept in <data-dir>/gateway/token and survives restarts)
   --data-dir <dir>      data directory             (default: platform data dir)
   --project <dir>       register one project at startup (others via the API)
   --project-id <id>     id for --project
@@ -165,7 +166,8 @@ gateway options:
     POST     /api/v1/gateway/projects/:id/start|stop|restart|reindex
     GET      /api/v1/gateway/health|ready|metrics|events
     ANY      /api/v1/projects/:id/...        proxied to that project's worker
-    POST     /mcp/:id                        MCP for that project
+    POST     /mcp                            MCP for ALL projects: configure once, the AI passes "project"
+    POST     /mcp/<id or name>               MCP for one project
 
 global options:
   --json                machine-readable output on stdout
@@ -178,15 +180,6 @@ exit codes:
   2  the command line was wrong
   3  doctor found a broken requirement
 `;
-
-function packageVersion(): string {
-  try {
-    const raw = fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8');
-    return (JSON.parse(raw) as { version?: string }).version ?? '0.0.0';
-  } catch {
-    return '0.0.0';
-  }
-}
 
 export async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -215,8 +208,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   }
 
   if (boolOption(args.options, 'version', false) || args.command === 'version') {
-    process.stdout.write(`${packageVersion()}\n`);
-    return EXIT.ok;
+    process.stdout.write(`${packageVersion()}\n`);    return EXIT.ok;
   }
 
   if (!args.command) {

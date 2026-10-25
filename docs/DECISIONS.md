@@ -566,3 +566,10 @@
 - **Compatibility:** `resolveGrammarDir` still checks `semantic-engine/` and `packages/semantic-engine/` layouts for consumers that embed the package in a subfolder, and finds `tree-sitter-grammars` next to `package.json` when it is the root. The sibling repository `semantic-engine-structured-ai` was not touched; anything there that refers to `../semantic-engine/…` (for example a docker-compose build context) needs its own update.
 - **Status:** DECIDED, implemented.
 
+## D-0033 — One all-projects MCP endpoint, a stable gateway token, tokenised links
+
+- **Date:** 2026-10-26
+- **Decision:** (1) `POST /mcp` on the Gateway is a single MCP entry for every project: it answers `initialize`/`tools/list` itself, adds `list_projects` and a `project` argument (id, name or folder name) to each worker tool, and forwards `tools/call` to that project's stateless worker. `/mcp/<id>` also accepts a name. (2) Unless pinned, the gateway token is generated once and kept in `<dataRoot>/gateway/token` (`--rotate-token` replaces it), so client configs stay valid across restarts. (3) Start banners print every link as `ADDRESS?token=TOKEN`; the standalone MCP `HttpGuard` therefore accepts `?token=` as a fallback to the Bearer header. (4) The version comes from `package.json` through `src/host/version.ts` and appears in every banner and in MCP `serverInfo`.
+- **Also:** the Gateway serves `/open.html` and proxies the global settings/providers/models/chat/fs routes to a ready worker (`project:read` for GET, `project:admin` otherwise); `/api/v1/gateway/projects/:id/logs|events` and `/api/v1/gateway/info` were added; `start`/`ui`/`serve` children run quiet and `start` prints one banner.
+- **Trade-off:** a token in a URL can leak through history or proxy logs; it was requested explicitly and the header form remains supported and preferred.
+- **Status:** DECIDED, implemented.

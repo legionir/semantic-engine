@@ -29,6 +29,9 @@ import { handleProjectHealth, proxyToProject, ProxyDeps } from './GatewayProxyRo
 import { handleGatewayProjectRoute, handleRegisterProject, ProjectRouteDeps } from './GatewayProjectRoute';
 import { handleGatewayUpgrade } from './GatewayUpgrade';
 import { serveGatewayUi } from './GatewayUi';
+import { GatewayMcp, resolveProject } from './GatewayMcp';
+import { packageVersion } from '../host/version';
+import * as fs from 'fs';
 import { WorkerConfigStore } from './WorkerConfigStore';
 import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
@@ -46,6 +49,8 @@ export interface GatewayServerOptions {
   readonly host?: string;
   /** توکن bootstrap با دسترسی کامل؛ در نبودش ساخته می‌شود. */
   readonly token?: string;
+  /** Where the token came from; shown by the connection guide. */
+  readonly tokenSource?: string;
   readonly registry?: ProjectRegistry;
   /** Restore autoStart projects on `start()`. Default true. */
   readonly hydrateOnStart?: boolean;
@@ -77,6 +82,9 @@ export class GatewayServer {
   private readonly durations = new DurationSummary();
   private readonly configs: WorkerConfigStore;
   private readonly startedAt: number;
+  private readonly mcp: GatewayMcp;
+  /** The last gateway events, so the dashboard can show history it did not witness. */
+  private readonly recentEvents: Record<string, unknown>[] = [];
 
   constructor(private readonly options: GatewayServerOptions) {
     this.bootstrapToken = options.token ?? generateToken();
@@ -89,6 +97,7 @@ export class GatewayServer {
         onEvent: event => this.broadcast({ type: 'worker', ...event }),
       });
     this.configs = new WorkerConfigStore(this.registry);
+    this.mcp = new GatewayMcp({ registry: this.registry, supervisor: this.supervisor, auth: this.auth });
     this.startedAt = Date.now();
   }
 
@@ -174,7 +183,10 @@ export class GatewayServer {
 
   private broadcast(event: Record<string, unknown>): void {
     const now = this.options.now ?? (() => new Date());
-    const payload = `event: gateway\ndata: ${JSON.stringify({ ...event, at: now().toISOString() })}\n\n`;
+    const stamped = { ...event, at: now().toISOString() };
+    this.recentEvents.push(stamped);
+    if (this.recentEvents.length > 300) this.recentEvents.splice(0, this.recentEvents.length - 300);
+    const payload = `event: gateway\ndata: ${JSON.stringify(stamped)}\n\n`;
     for (const client of [...this.sseClients]) {
       if (!client.res.writableEnded) client.res.write(payload);
     }
@@ -248,13 +260,92 @@ export class GatewayServer {
     | از لحظهٔ ایجاد به همان پروژه bound است، چون هر پروژه socket خودش را
     | دارد و مسیر هرگز بازنویسی نمی‌شود.
     */
+    if (pathname === '/mcp') {
+      if (method !== 'POST') {
+        this.send(res, 405, { error: 'the gateway MCP endpoint accepts POST (Streamable HTTP)' });
+        return;
+      }
+      if (!this.auth.hasPermission(record, 'semantic:query')) {
+        this.send(res, 403, { error: 'token lacks permission semantic:query' });
+        return;
+      }
+      let body: unknown;
+      try {
+        body = await readBody(req);
+      } catch (error) {
+        this.send(res, 400, { error: error instanceof Error ? error.message : String(error) });
+        return;
+      }
+      await this.mcp.handle(req, res, body, record);
+      return;
+    }
+
+    /* `/mcp/<id>` also accepts a project name or its folder name. */
     const mcp = /^\/mcp\/([^/]+)$/.exec(pathname);
     if (mcp) {
       if (!this.auth.hasPermission(record, 'semantic:query')) {
         this.send(res, 403, { error: 'token lacks permission semantic:query' });
         return;
       }
-      await proxyToProject(this.proxyDeps(), req, res, mcp[1]!, record, { targetPath: '/mcp' });
+      const resolved = resolveProject(this.registry.list(), decodeURIComponent(mcp[1]!));
+      if ('error' in resolved) {
+        this.send(res, 404, { error: resolved.error });
+        return;
+      }
+      await proxyToProject(this.proxyDeps(), req, res, resolved.id, record, { targetPath: '/mcp' });
+      return;
+    }
+
+    if (pathname === '/api/v1/gateway/info' && method === 'GET') {
+      this.send(res, 200, this.infoPayload(req));
+      return;
+    }
+
+    /*
+    | Settings, providers, local models, the chat LLM and the folder picker are
+    | global (one config.json under the data root), not per project. Every
+    | worker runs the same platform server, so the first ready one answers.
+    */
+    if (/^\/api\/v1\/(settings|config|providers|models|chat|fs)(\/|$)/.test(pathname)) {
+      const needed: PermissionScope = method === 'GET' ? 'project:read' : 'project:admin';
+      if (!this.auth.hasPermission(record, needed)) {
+        this.send(res, 403, { error: `token lacks permission ${needed}` });
+        return;
+      }
+      const ready = this.supervisor.list().find(worker => worker.state === 'ready');
+      if (!ready) {
+        this.send(res, 503, {
+          error: 'no project worker is ready; start a project to use settings, models and providers',
+        });
+        return;
+      }
+      await proxyToProject(this.proxyDeps(), req, res, ready.projectId, record);
+      return;
+    }
+
+    const logsRoute = /^\/api\/v1\/gateway\/projects\/([^/]+)\/(logs|events)$/.exec(pathname);
+    if (logsRoute && method === 'GET') {
+      if (!this.auth.hasPermission(record, 'project:read')) {
+        this.send(res, 403, { error: 'token lacks permission project:read' });
+        return;
+      }
+      const projectId = decodeURIComponent(logsRoute[1]!);
+      if (!this.registry.get(projectId)) {
+        this.send(res, 404, { error: `unknown project: ${projectId}` });
+        return;
+      }
+      if (!this.auth.canAccessProject(record, projectId)) {
+        this.send(res, 403, { error: `token cannot access project ${projectId}` });
+        return;
+      }
+      if (logsRoute[2] === 'logs') {
+        this.send(res, 200, this.logsPayload(projectId, Number(url.searchParams.get('lines') ?? 200)));
+      } else {
+        this.send(res, 200, {
+          projectId,
+          events: this.recentEvents.filter(event => event['projectId'] === projectId),
+        });
+      }
       return;
     }
 
@@ -305,6 +396,46 @@ export class GatewayServer {
     }
 
     this.send(res, 404, { error: `route not found: ${method} ${pathname}` });
+  }
+
+  /** What a client needs to wire an AI to this gateway. Holds no secret. */
+  private infoPayload(req: http.IncomingMessage): Record<string, unknown> {
+    const host = typeof req.headers['host'] === 'string' ? req.headers['host'] : 'gateway';
+    const base = `http://${host}`;
+    return {
+      name: 'semantic-gateway',
+      version: packageVersion(),
+      url: base,
+      tokenSource: this.options.tokenSource ?? 'unknown',
+      mcp: { url: `${base}/mcp`, perProjectUrl: `${base}/mcp/{project}`, transport: 'streamable-http' },
+      dashboard: `${base}/`,
+      settings: `${base}/open.html`,
+      projects: this.registry.list().map(entry => ({ id: entry.id, name: entry.name, rootPath: entry.rootPath })),
+    };
+  }
+
+  /** The tail of a worker's log file; the file holds the worker's whole stdout and stderr. */
+  private logsPayload(projectId: string, lines: number): Record<string, unknown> {
+    const wanted = Number.isInteger(lines) && lines > 0 ? Math.min(lines, 2000) : 200;
+    const file = this.supervisor.logFileFor(projectId);
+    try {
+      const size = fs.statSync(file).size;
+      const length = Math.min(size, 512 * 1024);
+      const fd = fs.openSync(file, 'r');
+      try {
+        const buffer = Buffer.alloc(length);
+        fs.readSync(fd, buffer, 0, length, size - length);
+        const tail = buffer
+          .toString('utf8')
+          .split(/\r?\n/)
+          .filter(line => line !== '');
+        return { projectId, file, sizeBytes: size, lines: tail.slice(-wanted) };
+      } finally {
+        fs.closeSync(fd);
+      }
+    } catch {
+      return { projectId, file, sizeBytes: 0, lines: [], note: 'no log yet: this worker has not been started' };
+    }
   }
 
   private get uiDir(): string {

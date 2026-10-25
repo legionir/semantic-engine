@@ -18,6 +18,7 @@ import {
   workspaceRootFromIndex,
 } from '../../core/config/ProjectPaths';
 import { spawnService, stopChild, waitForShutdown } from './serviceSupervisor';
+import { renderBanner, withToken } from '../banner';
 import { loadBlueprintBeside } from '../../ai/discovery/loadBlueprint';
 import { migrateLegacyArtifacts } from '../../core/config/migrateLegacyArtifacts';
 import { resolveDataRoot } from '../../core/config/DataRootResolver';
@@ -231,7 +232,8 @@ async function runPlatform(
     ? spawnService(
         ['watch', '--root', workspaceRoot, '--out', path.dirname(indexPath), '--skip-initial-index'],
         /press Ctrl\+C to stop/,
-        workspaceRoot
+        workspaceRoot,
+        { quiet: true }
       )
     : null;
   try {
@@ -245,7 +247,7 @@ async function runPlatform(
     };
   }
 
-  context.logger.info('platform http server listening', {
+  context.logger.debug('platform http server listening', {
     url: started.url,
     tokenSource: provided ? 'provided' : 'generated',
     indexPresent: Boolean(projectIndex) || current.status === 'ready',
@@ -257,21 +259,41 @@ async function runPlatform(
     if (watcher) await stopChild(watcher.child);
   });
 
-  const indexHint =
+  const indexValue =
     current.status === 'ready'
-      ? `   • Loaded index:       ${current.stats.filesCount} files, ${current.stats.symbolsCount} symbols\n`
-      : `   • No index yet:       open a project and run indexing from the UI\n`;
+      ? `${current.stats.filesCount} files, ${current.stats.symbolsCount} symbols`
+      : 'none yet: open a project and run indexing from the UI';
 
   process.stderr.write(
-    `\n🚀 Semantic Engine Standalone Web & Platform Server\n` +
-      `   • Web Visualizer UI:  ${started.url}/\n` +
-      `   • Open / Configure:   ${started.url}/open.html\n` +
-      `   • REST & LoD APIs:    ${started.url}/api/v1/...\n` +
-      `   • V2 Enterprise APIs: ${started.url}/api/v2/...\n` +
-      `   • Health & Metrics:   ${started.url}/health, ${started.url}/metrics\n` +
-      indexHint +
-      `   • Active Token:       ${token}\n` +
-      (provided ? '' : '     (pass --token or SEMANTIC_ENGINE_TOKEN to configure static token)\n\n')
+    renderBanner({
+      mode: 'web UI',
+      sections: [
+        {
+          title: 'Open',
+          rows: [
+            { label: 'Dashboard', value: withToken(`${started.url}/`, token) },
+            { label: 'Settings', value: withToken(`${started.url}/open.html`, token) },
+          ],
+        },
+        {
+          title: 'API',
+          rows: [
+            { label: 'REST v1', value: `${started.url}/api/v1/`},
+            { label: 'REST v2', value: `${started.url}/api/v2/` },
+            { label: 'Health', value: `${started.url}/health   metrics ${started.url}/metrics` },
+          ],
+        },
+        {
+          title: 'Status',
+          rows: [
+            { label: 'Root', value: workspaceRoot },
+            { label: 'Index', value: indexValue },
+            { label: 'Token', value: provided ? `${token}   [provided]` : `${token}   [generated; pass --token to pin it]` },
+          ],
+        },
+      ],
+      footer: ['Press Ctrl+C to stop.'],
+    })
   );
 
   await shutdown;
@@ -313,7 +335,8 @@ async function runStdio(
     ? spawnService(
         ['watch', '--root', workspaceRoot, '--out', path.dirname(indexPath), '--skip-initial-index'],
         /press Ctrl\+C to stop/,
-        workspaceRoot
+        workspaceRoot,
+        { quiet: true }
       )
     : null;
 
@@ -384,7 +407,8 @@ async function runHttp(
     ? spawnService(
         ['watch', '--root', workspaceRoot, '--out', path.dirname(indexPath), '--skip-initial-index'],
         /press Ctrl\+C to stop/,
-        workspaceRoot
+        workspaceRoot,
+        { quiet: true }
       )
     : null;
 
@@ -438,7 +462,7 @@ async function runHttp(
   | آدرس و توکن روی stderr می‌روند، نه stdout: در حالت `--json` هم
   | باید بشود این‌ها را دید بدون اینکه خروجی داده خراب شود.
   */
-  context.logger.info('mcp http server listening', {
+  context.logger.debug('mcp http server listening', {
     url: `http://${host}:${boundPort}/mcp`,
     tokenSource: provided ? 'provided' : 'generated',
   });
@@ -453,9 +477,23 @@ async function runHttp(
   });
 
   process.stderr.write(
-    `MCP server on http://${host}:${boundPort}/mcp\n` +
-      `token: ${token}\n` +
-      (provided ? '' : '(generated — pass --token or SEMANTIC_ENGINE_TOKEN to pin it)\n')
+    renderBanner({
+      mode: 'MCP server',
+      sections: [
+        {
+          title: 'Open',
+          rows: [{ label: 'MCP', value: withToken(`http://${host}:${boundPort}/mcp`, token) }],
+        },
+        {
+          title: 'Status',
+          rows: [
+            { label: 'Root', value: workspaceRoot },
+            { label: 'Token', value: provided ? `${token}   [provided]` : `${token}   [generated; pass --token to pin it]` },
+          ],
+        },
+      ],
+      footer: ['Clients may send the token as "Authorization: Bearer <token>" or as ?token=.', 'Press Ctrl+C to stop.'],
+    })
   );
 
   await shutdown;

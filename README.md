@@ -332,15 +332,32 @@ semantic-engine gateway --port 4000 --token <secret>
 semantic-engine worker --project-id prj-app-12345678 --root /path/to/app
 
 # کنسول Gateway
-#   http://127.0.0.1:4000/gateway
+#   http://127.0.0.1:4000/gateway?token=<secret>   (بنر شروع لینک‌ها را با ?token= چاپ می‌کند)
 ```
+
+**توکن پایدار:** اگر `--token` یا `SEMANTIC_ENGINE_GATEWAY_TOKEN` ندهید، توکن یک بار ساخته و در
+`<dataRoot>/gateway/token` ذخیره می‌شود و با ری‌استارت عوض نمی‌شود، پس تنظیم کلاینت‌های AI
+و بوکمارک‌ها باطل نمی‌شوند. `--rotate-token` توکن تازه می‌سازد. نسخهٔ برنامه در بنر همهٔ
+دستورها (`start`، `ui`، `serve --http`، `gateway`) و با `--version` نمایش داده می‌شود.
+
+### اتصال AI: یک بار برای همهٔ پروژه‌ها
+
+`POST /mcp` روی Gateway یک نقطهٔ واحد برای همهٔ پروژه‌هاست. کلاینت فقط یک‌بار تنظیم می‌شود؛
+ابزار `list_projects` پروژه‌ها را برمی‌گرداند و هر ابزار دیگر آرگومان `project` (شناسه، نام یا
+نام پوشه) می‌گیرد؛ با یک پروژه لازم نیست. اضافه یا حذف پروژه تنظیم کلاینت را عوض نمی‌کند.
+`/mcp/<id یا نام>` همان MCP یک پروژه است. توکن به‌صورت `Authorization: Bearer` یا `?token=`
+پذیرفته می‌شود. دکمهٔ **Connect AI** در کنسول، تنظیم آمادهٔ Claude Code
+(`claude mcp add --transport http --scope user …`)، `.mcp.json`، Claude Desktop، Cursor،
+VS Code، Codex، SDK تایپ‌اسکریپت/پایتون و curl را با توکن همین Gateway نشان می‌دهد و تست اتصال دارد.
 
 ### کنسول Gateway (`/gateway`)
 
 کنسول مرکزی همهٔ instanceها (workerها) را نشان می‌دهد: جدول با پروژه، شناسه، مسیر،
 PID، وضعیت worker و وضعیت ایندکس، کارت‌های جمع، و برای هر ردیف اکشن‌های Open dashboard
 (Visualizer همان پروژه)، Start/Stop/Restart/Reindex، Edit configuration، Health detail،
-Open MCP endpoint و Remove. دکمهٔ **New worker** فرمی دارد که گزینه‌های `worker` را پوشش
+Open MCP endpoint، View logs، View events و Remove. New worker، Edit configuration،
+Health detail، logs، events و MCP همگی مودال‌اند. صفحهٔ Settings (`/open.html`) هم از همین
+Gateway سرو می‌شود. دکمهٔ **New worker** فرمی دارد که گزینه‌های `worker` را پوشش
 می‌دهد و دستور نهایی را پیش‌نمایش می‌کند:
 
 | بخش فرم | گزینه‌ها (پرچم CLI) |
@@ -417,8 +434,12 @@ POST   /api/v1/gateway/projects                     ثبت پروژه (+ autoSta
 GET    /api/v1/gateway/projects/:id/health          جزئیات سلامت یک پروژه
 POST   /api/v1/gateway/projects/:id/start|stop|restart|reindex
 GET    /api/v1/gateway/events                       رویدادها (SSE)
+GET    /api/v1/gateway/info                         نسخه و آدرس‌ها (بدون راز)
+GET    /api/v1/gateway/projects/:id/logs?lines=N    انتهای لاگ worker
+GET    /api/v1/gateway/projects/:id/events          رویدادهای اخیر آن پروژه (حافظه، ۳۰۰ آخر)
 ANY    /api/v1/projects/:id/...                     proxy به worker همان پروژه
-POST   /mcp/:id                                     MCP همان پروژه
+POST   /mcp                                         MCP همهٔ پروژه‌ها (آرگومان project)
+POST   /mcp/:id                                     MCP همان پروژه (id یا نام)
 GET    /ws/projects/:id                             WebSocket همان پروژه
 GET    /projects/:id                                deep link به داشبورد پروژه
 ```

@@ -131,10 +131,6 @@ const GatewayUi = (function () {
         embeddingNormalize: true
     };
 
-    // No logs/events route is part of the Gateway route inventory. Keep these
-    // controls visibly disabled instead of issuing guaranteed 404 requests.
-    const UNSUPPORTED_ACTIONS = new Set(["logs", "events"]);
-
     const WORKER_ACTIONS = [
         { id: "open", label: "Open dashboard" },
         { id: "start", label: "Start" },
@@ -399,10 +395,8 @@ const GatewayUi = (function () {
         }).join("");
 
         const actions = WORKER_ACTIONS.map(function (action) {
-            const unavailable = UNSUPPORTED_ACTIONS.has(action.id);
             return '<button class="action" data-action="' + escape(action.id) +
-                '" data-project="' + escape(worker.projectId) + '"' +
-                (unavailable ? ' disabled title="Unavailable: no Gateway route"' : '') + '>' +
+                '" data-project="' + escape(worker.projectId) + '">' +
                 escape(action.label) + "</button>";
         }).join("");
 
@@ -527,6 +521,154 @@ const GatewayUi = (function () {
         return "/mcp/" + encodeURIComponent(projectId);
     }
 
+    /* ADDRESS -> ADDRESS?token=TOKEN (keeps an existing query string). */
+    function withToken(url, token) {
+        if (!token) return url;
+        return url + (url.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(token);
+    }
+
+    /*
+    | Ready-to-paste client configuration. Pure: the page passes its own origin
+    | and token, so a test can pin every snippet. `projectId` (optional) swaps
+    | the all-projects endpoint for that one project's.
+    */
+    function connectSnippets(options) {
+        const origin = options.origin;
+        const token = options.token || "<TOKEN>";
+        const project = options.projectId;
+        const url = origin + (project ? "/mcp/" + encodeURIComponent(project) : "/mcp");
+        const urlWithToken = withToken(url, token);
+        const name = project ? "semantic-" + project : "semantic-engine";
+        const header = "Bearer " + token;
+        const example = project
+            ? '{ name: "find_symbol", arguments: { name: "Router" } }'
+            : '{ name: "find_symbol", arguments: { project: "my-app", name: "Router" } }';
+
+        const json = function (value) { return JSON.stringify(value, null, 2); };
+        const envServers = {};
+        envServers[name] = { type: "http", url: url, headers: { Authorization: "Bearer ${SEMANTIC_ENGINE_TOKEN}" } };
+        const cursorServers = {};
+        cursorServers[name] = { url: url, headers: { Authorization: header } };
+        const desktopServers = {};
+        desktopServers[name] = { command: "npx", args: ["-y", "mcp-remote", urlWithToken, "--allow-http"] };
+        const vscodeServers = {};
+        vscodeServers[name] = { type: "http", url: url, headers: { Authorization: header } };
+
+        return [
+            {
+                id: "claude-code",
+                label: "Claude Code",
+                language: "bash",
+                note: "--scope user registers it once for every folder you open, so no per-project setup is needed.",
+                code: 'claude mcp add --transport http --scope user ' + name + ' ' + url +
+                    ' --header "Authorization: Bearer ' + token + '"\n\n' +
+                    "# check it\nclaude mcp list"
+            },
+            {
+                id: "mcp-json",
+                label: ".mcp.json",
+                language: "json",
+                note: "Project-level file for Claude Code. The token is read from the SEMANTIC_ENGINE_TOKEN environment variable, so the file is safe to commit.",
+                code: json({ mcpServers: envServers })
+            },
+            {
+                id: "claude-desktop",
+                label: "Claude Desktop",
+                language: "json",
+                note: "claude_desktop_config.json. Desktop speaks stdio, so mcp-remote bridges to this HTTP endpoint.",
+                code: json({ mcpServers: desktopServers })
+            },
+            {
+                id: "cursor",
+                label: "Cursor",
+                language: "json",
+                note: "~/.cursor/mcp.json (all projects) or .cursor/mcp.json (one project).",
+                code: json({ mcpServers: cursorServers })
+            },
+            {
+                id: "vscode",
+                label: "VS Code",
+                language: "json",
+                note: ".vscode/mcp.json, or the MCP: Add Server command.",
+                code: json({ servers: vscodeServers })
+            },
+            {
+                id: "codex",
+                label: "Codex CLI",
+                language: "toml",
+                note: "~/.codex/config.toml. The token is read from an environment variable.",
+                code: "[mcp_servers." + name + "]\nurl = \"" + url + "\"\nbearer_token_env_var = \"SEMANTIC_ENGINE_TOKEN\"\n\n" +
+                    "# then, in your shell profile:\n# export SEMANTIC_ENGINE_TOKEN=\"" + token + "\""
+            },
+            {
+                id: "typescript",
+                label: "TypeScript SDK",
+                language: "ts",
+                note: "npm i @modelcontextprotocol/sdk",
+                code: 'import { Client } from "@modelcontextprotocol/sdk/client/index.js";\n' +
+                    'import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";\n\n' +
+                    'const transport = new StreamableHTTPClientTransport(new URL("' + url + '"), {\n' +
+                    '  requestInit: { headers: { Authorization: "' + header + '" } },\n' +
+                    '});\n' +
+                    'const client = new Client({ name: "my-agent", version: "1.0.0" });\n' +
+                    'await client.connect(transport);\n\n' +
+                    (project ? "" : 'console.log(await client.callTool({ name: "list_projects", arguments: {} }));\n') +
+                    'console.log(await client.callTool(' + example + '));'
+            },
+            {
+                id: "python",
+                label: "Python SDK",
+                language: "python",
+                note: "pip install mcp",
+                code: "import asyncio\n" +
+                    "from mcp import ClientSession\n" +
+                    "from mcp.client.streamable_http import streamablehttp_client\n\n" +
+                    'URL = "' + url + '"\n' +
+                    'HEADERS = {"Authorization": "' + header + '"}\n\n' +
+                    "async def main():\n" +
+                    "    async with streamablehttp_client(URL, headers=HEADERS) as (read, write, _):\n" +
+                    "        async with ClientSession(read, write) as session:\n" +
+                    "            await session.initialize()\n" +
+                    "            print([tool.name for tool in (await session.list_tools()).tools])\n" +
+                    (project
+                        ? '            print(await session.call_tool("find_symbol", {"name": "Router"}))\n'
+                        : '            print(await session.call_tool("list_projects", {}))\n' +
+                          '            print(await session.call_tool("find_symbol", {"project": "my-app", "name": "Router"}))\n') +
+                    "\nasyncio.run(main())"
+            },
+            {
+                id: "curl",
+                label: "curl",
+                language: "bash",
+                note: "Raw JSON-RPC, handy to check the endpoint from a terminal.",
+                code: "curl -s " + url + " \\\n" +
+                    '  -H "Authorization: Bearer ' + token + '" \\\n' +
+                    '  -H "Content-Type: application/json" \\\n' +
+                    '  -H "Accept: application/json, text/event-stream" \\\n' +
+                    "  -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}'"
+            }
+        ];
+    }
+
+    function renderLogLines(lines) {
+        if (!lines || lines.length === 0) return '<p class="muted">The log is empty: this worker has not written anything yet.</p>';
+        return '<pre class="log">' + escape(lines.join("\n")) + "</pre>";
+    }
+
+    /* A worker/gateway event, newest last, one line each. */
+    function renderEvents(events) {
+        if (!events || events.length === 0) {
+            return '<p class="muted">No events recorded for this project since the Gateway started.</p>';
+        }
+        return '<ul class="events">' + events.map(function (event) {
+            const kind = event.kind || event.type || "event";
+            const detail = event.detail || event.error || "";
+            return '<li class="event event-' + escape(kind) + '"><time>' + escape(event.at) + "</time>" +
+                "<strong>" + escape(kind) + "</strong>" +
+                (detail ? "<span>" + escape(detail) + "</span>" : "") + "</li>";
+        }).join("") + "</ul>";
+    }
+
     /*
     | SE-F-057 — the save request shape, as a PURE function so it can be
     | tested outside the browser: create is POST on the collection with the
@@ -587,7 +729,6 @@ const GatewayUi = (function () {
         WORKER_FORM_FIELDS,
         WORKER_TABLE_COLUMNS,
         WORKER_ACTIONS,
-        UNSUPPORTED_ACTIONS,
         escape,
         getPath,
         setPath,
@@ -605,7 +746,11 @@ const GatewayUi = (function () {
         HEALTH_SECTIONS,
         renderHealthPanel,
         projectDashboardUrl,
-        mcpEndpointUrl
+        mcpEndpointUrl,
+        withToken,
+        connectSnippets,
+        renderLogLines,
+        renderEvents
     };
 })();
 
@@ -615,31 +760,46 @@ if (typeof module !== "undefined" && module.exports) {
 }
 
 
-/* ── bootstrap مرورگر ─────────────────────────────────────────────────── */
+/* ── browser bootstrap ───────────────────────────────────────────────── */
 if (typeof document !== "undefined") {
     (function () {
         const params = new URLSearchParams(location.search);
         const token = params.get("token") || localStorage.getItem("se.gateway.token") || "";
-        if (token) localStorage.setItem("se.gateway.token", token);
+        if (token) {
+            localStorage.setItem("se.gateway.token", token);
+            /* the project dashboard and the settings page read this key */
+            localStorage.setItem("se.token", token);
+        }
 
         const headers = function () {
             return token ? { Authorization: "Bearer " + token } : {};
         };
 
+        const $ = function (id) { return document.getElementById(id); };
         const els = {
-            cards: document.getElementById("cards"),
-            rows: document.getElementById("worker-rows"),
-            status: document.getElementById("status"),
-            form: document.getElementById("worker-form"),
-            formFields: document.getElementById("form-fields"),
-            preview: document.getElementById("command-preview"),
-            formErrors: document.getElementById("form-errors"),
-            formTitle: document.getElementById("form-title")
+            cards: $("cards"),
+            rows: $("worker-rows"),
+            status: $("status"),
+            form: $("worker-form"),
+            formFields: $("form-fields"),
+            preview: $("command-preview"),
+            formErrors: $("form-errors"),
+            formTitle: $("form-title"),
+            health: $("health-panel"),
+            healthBody: $("health-body"),
+            info: $("info-modal"),
+            infoTitle: $("info-title"),
+            infoSub: $("info-sub"),
+            infoBody: $("info-body"),
+            infoFoot: $("info-foot")
         };
 
         let workers = [];
         let editing = null;
         let formBlocked = false;
+        /* what the info modal shows, so a live event can refresh it */
+        let infoState = null;
+        let followTimer = null;
 
         async function api(path, options) {
             const res = await fetch(path, Object.assign({ headers: headers() }, options || {}));
@@ -650,24 +810,142 @@ if (typeof document !== "undefined") {
             return body;
         }
 
+        /* ── modal plumbing ─────────────────────────────────────────── */
+
+        function showModal(modal) {
+            modal.hidden = false;
+            document.body.classList.add("modal-open");
+            const first = modal.querySelector("input:not([type=hidden]), select, textarea");
+            const target = first || modal.querySelector(".modal");
+            if (target && target.focus) target.focus({ preventScroll: true });
+        }
+
+        function hideModal(modal) {
+            modal.hidden = true;
+            if (modal === els.info) {
+                infoState = null;
+                if (followTimer) { clearInterval(followTimer); followTimer = null; }
+            }
+            if (modal === els.form) editing = null;
+            if (!document.querySelector(".modal-backdrop:not([hidden])")) {
+                document.body.classList.remove("modal-open");
+            }
+        }
+
+        document.addEventListener("click", function (event) {
+            const closer = event.target.closest("[data-close]");
+            if (closer) { hideModal(closer.closest(".modal-backdrop")); return; }
+            if (event.target.classList && event.target.classList.contains("modal-backdrop")) {
+                hideModal(event.target);
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key !== "Escape") return;
+            const open = Array.prototype.filter.call(
+                document.querySelectorAll(".modal-backdrop"), function (m) { return !m.hidden; });
+            if (open.length > 0) hideModal(open[open.length - 1]);
+        });
+
+        function copyText(text, button) {
+            const done = function () {
+                if (!button) return;
+                const label = button.textContent;
+                button.textContent = "Copied";
+                setTimeout(function () { button.textContent = label; }, 1200);
+            };
+            if (navigator.clipboard && window.isSecureContext !== false) {
+                navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); });
+            } else {
+                legacyCopy(text);
+                done();
+            }
+        }
+
+        function legacyCopy(text) {
+            const area = document.createElement("textarea");
+            area.value = text;
+            area.style.position = "fixed";
+            area.style.opacity = "0";
+            document.body.appendChild(area);
+            area.select();
+            try { document.execCommand("copy"); } catch (e) { /* the text stays selectable in the page */ }
+            area.remove();
+        }
+
+        document.addEventListener("click", function (event) {
+            const button = event.target.closest("[data-copy]");
+            if (!button) return;
+            const source = document.getElementById(button.getAttribute("data-copy"));
+            if (source) copyText(source.value !== undefined && source.tagName !== "PRE" ? source.value : source.textContent, button);
+        });
+
+        /*
+        | One generic dialog for everything that only shows information: logs,
+        | events, the MCP endpoint and the connection guide. `actions` become
+        | footer buttons; `reload` (optional) re-fetches and re-renders.
+        */
+        function openInfo(config) {
+            els.infoTitle.textContent = config.title;
+            els.infoSub.textContent = config.sub || "";
+            els.infoBody.innerHTML = config.body;
+            els.infoFoot.innerHTML = (config.actions || []).map(function (action) {
+                return '<button type="button"' + (action.primary ? ' class="primary"' : "") +
+                    ' data-info-action="' + GatewayUi.escape(action.id) + '">' + GatewayUi.escape(action.label) + "</button>";
+            }).join("") + '<button type="button" data-close>Close</button>';
+            infoState = config;
+            els.infoBody.onclick = null;
+            els.infoBody.onchange = null;
+            els.info.querySelector(".modal").classList.toggle("modal-lg", Boolean(config.wide));
+            if (followTimer) { clearInterval(followTimer); followTimer = null; }
+            showModal(els.info);
+        }
+
+        els.infoFoot.addEventListener("click", function (event) {
+            const button = event.target.closest("[data-info-action]");
+            if (!button || !infoState || !infoState.onAction) return;
+            infoState.onAction(button.getAttribute("data-info-action"), button);
+        });
+
+        function paintInfoBody(html) {
+            els.infoBody.innerHTML = html;
+        }
+
+        /* ── data ───────────────────────────────────────────────────── */
+
         function render() {
             const stats = GatewayUi.summarize(workers);
             els.cards.innerHTML = GatewayUi.renderSummaryCards(stats);
             els.rows.innerHTML = workers.map(GatewayUi.renderWorkerRow).join("");
+            $("empty-hint").hidden = workers.length > 0;
         }
+
+        async function refresh() {
+            try {
+                const list = await api("/api/v1/gateway/projects");
+                workers = list.projects || [];
+                els.status.textContent = "connected";
+                $("status-dot").className = "dot dot-ok";
+                render();
+            } catch (error) {
+                els.status.textContent = "error: " + error.message;
+                $("status-dot").className = "dot dot-bad";
+            }
+        }
+
+        /* ── worker form (new / edit) ───────────────────────────────── */
 
         function openForm(projectId) {
             const worker = workers.find(function (w) { return w.projectId === projectId; });
             editing = projectId;
             formBlocked = false;
+            els.formErrors.textContent = "";
 
             /*
             | SE-F-057 — hydrate EVERY field from the project's real, effective
-            | worker config, not the three the old save path could send. The
-            | list row is enough for the title, but the full config comes from
-            | the detail route; if that fetch fails we fall back to the row's
-            | identity fields rather than silently showing a blank config that
-            | a save would then reset.
+            | worker config. If that fetch fails the form must not be saved
+            | blind: a submit would write the visible fields over the real
+            | config. Only identity is trusted then.
             */
             const identity = worker
                 ? { projectId: worker.projectId, name: worker.name, rootPath: worker.rootPath }
@@ -676,7 +954,7 @@ if (typeof document !== "undefined") {
             function paintValues(values) {
                 els.formTitle.textContent = worker ? "Edit " + worker.name : "New worker";
                 els.formFields.innerHTML = GatewayUi.renderFormFields(values);
-                els.form.hidden = false;
+                showModal(els.form);
                 updatePreview();
             }
 
@@ -685,8 +963,6 @@ if (typeof document !== "undefined") {
             }
 
             if (!worker) {
-                /* a NEW worker starts from the schema defaults — an empty form
-                | would now submit explicit falses and flip them. */
                 paintValues(Object.assign({}, GatewayUi.DEFAULT_FORM_VALUES));
                 return;
             }
@@ -694,14 +970,11 @@ if (typeof document !== "undefined") {
             api("/api/v1/gateway/projects/" + encodeURIComponent(projectId))
                 .then(function (detail) { paint(detail && detail.config ? detail.config : identity); })
                 .catch(function (error) {
-                    /* an edit whose effective config cannot be read must not
-                    | be saved blind — a submit would now write the visible
-                    | fields over the real config. Only identity is trusted. */
                     formBlocked = true;
+                    paint(identity);
                     els.formErrors.textContent =
                         "config load failed: " + error.message +
                         " — fix the connection before saving this worker";
-                    paint(identity);
                 });
         }
 
@@ -715,8 +988,6 @@ if (typeof document !== "undefined") {
 
         function updatePreview() {
             const values = formValues();
-            /* a blocked edit keeps its reason visible — clearing it on every
-            | keystroke would make the failure look like it healed */
             if (!formBlocked) els.formErrors.textContent = "";
             const errors = GatewayUi.validateForm(values);
             if (errors.length > 0) {
@@ -727,35 +998,308 @@ if (typeof document !== "undefined") {
             els.preview.textContent = GatewayUi.commandPreview(GatewayUi.formToConfig(values));
         }
 
-        async function refresh() {
+        async function save(start) {
+            if (formBlocked) {
+                els.formErrors.textContent =
+                    "saving is blocked: this worker's config could not be loaded, and saving now would overwrite it";
+                return;
+            }
+            const values = formValues();
+            const errors = GatewayUi.validateForm(values);
+            if (errors.length > 0) {
+                els.formErrors.textContent = errors.map(function (e) { return e.field + ": " + e.message; }).join(" — ");
+                return;
+            }
+
+            const config = GatewayUi.formToConfig(values);
+            const request = GatewayUi.buildSaveRequest(config, editing, start);
             try {
-                const list = await api("/api/v1/gateway/projects");
-                workers = list.projects || [];
-                els.status.textContent = "connected";
-                render();
+                await api(request.url, {
+                    method: request.method,
+                    headers: Object.assign({ "Content-Type": "application/json" }, headers()),
+                    body: JSON.stringify(request.body)
+                });
+                els.formErrors.textContent = "";
+                hideModal(els.form);
+                await refresh();
             } catch (error) {
-                els.status.textContent = "error: " + error.message;
+                els.formErrors.textContent = error.message;
             }
         }
+
+        els.formFields.addEventListener("input", updatePreview);
+        $("new-worker").addEventListener("click", function () {
+            editing = null;
+            formBlocked = false;
+            els.formErrors.textContent = "";
+            els.formTitle.textContent = "New worker";
+            els.formFields.innerHTML = GatewayUi.renderFormFields(GatewayUi.DEFAULT_FORM_VALUES);
+            showModal(els.form);
+            updatePreview();
+        });
+        $("save-start").addEventListener("click", function () { save(true); });
+        $("save-only").addEventListener("click", function () { save(false); });
+
+        /* ── logs & events ──────────────────────────────────────────── */
+
+        async function showLogs(projectId) {
+            const worker = workers.find(function (w) { return w.projectId === projectId; });
+            const load = async function () {
+                const data = await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId) + "/logs?lines=400");
+                return { data: data, html: GatewayUi.renderLogLines(data.lines) };
+            };
+            const first = await load();
+            const note = first.data.note ? " — " + first.data.note : "";
+            openInfo({
+                title: "Logs — " + (worker ? worker.name : projectId),
+                sub: first.data.file + " · " + first.data.sizeBytes + " bytes" + note,
+                body: '<div class="log-wrap" id="log-wrap">' + first.html + "</div>",
+                actions: [
+                    { id: "refresh", label: "Refresh" },
+                    { id: "follow", label: "Follow: off" },
+                    { id: "copy", label: "Copy" }
+                ],
+                onAction: async function (id, button) {
+                    if (id === "copy") {
+                        const pre = els.infoBody.querySelector("pre");
+                        copyText(pre ? pre.textContent : "", button);
+                        return;
+                    }
+                    if (id === "follow") {
+                        if (followTimer) {
+                            clearInterval(followTimer); followTimer = null;
+                            button.textContent = "Follow: off";
+                        } else {
+                            button.textContent = "Follow: on";
+                            followTimer = setInterval(reload, 3000);
+                        }
+                        return;
+                    }
+                    reload();
+                }
+            });
+            scrollLog();
+
+            async function reload() {
+                try {
+                    const next = await load();
+                    paintInfoBody('<div class="log-wrap" id="log-wrap">' + next.html + "</div>");
+                    scrollLog();
+                } catch (error) {
+                    paintInfoBody('<p class="error">' + GatewayUi.escape(error.message) + "</p>");
+                }
+            }
+            function scrollLog() {
+                const wrap = $("log-wrap");
+                if (wrap) wrap.scrollTop = wrap.scrollHeight;
+            }
+        }
+
+        async function showEvents(projectId) {
+            const worker = workers.find(function (w) { return w.projectId === projectId; });
+            const load = async function () {
+                const data = await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId) + "/events");
+                return GatewayUi.renderEvents(data.events);
+            };
+            const html = await load();
+            openInfo({
+                title: "Events — " + (worker ? worker.name : projectId),
+                sub: "Starts, stops, crashes and restarts seen since the Gateway started. Updates live.",
+                body: html,
+                kind: "events",
+                projectId: projectId,
+                reload: async function () { paintInfoBody(await load()); },
+                actions: [{ id: "refresh", label: "Refresh" }],
+                onAction: function () { infoState.reload(); }
+            });
+        }
+
+        /* ── health ─────────────────────────────────────────────────── */
+
+        async function showHealth(projectId) {
+            const detail = await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId) + "/health");
+            els.healthBody.innerHTML = GatewayUi.renderHealthPanel(detail);
+            showModal(els.health);
+        }
+
+        /* ── MCP ────────────────────────────────────────────────────── */
+
+        async function rpc(path, method, params) {
+            const res = await fetch(path, {
+                method: "POST",
+                headers: Object.assign({
+                    "Content-Type": "application/json",
+                    Accept: "application/json, text/event-stream"
+                }, headers()),
+                body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: method, params: params || {} })
+            });
+            const text = await res.text();
+            if (!res.ok) {
+                let message = text;
+                try { message = JSON.parse(text).error || text; } catch (e) { /* keep the raw text */ }
+                throw new Error(res.status + " " + message);
+            }
+            const trimmed = text.trim();
+            if (trimmed.charAt(0) === "{") return JSON.parse(trimmed);
+            const data = trimmed.split(/\r?\n/).filter(function (l) { return l.indexOf("data:") === 0; }).pop();
+            if (!data) throw new Error("empty answer");
+            return JSON.parse(data.slice(5));
+        }
+
+        async function testEndpoint(path) {
+            const started = Date.now();
+            const reply = await rpc(path, "tools/list");
+            if (reply.error) throw new Error(reply.error.message);
+            const tools = (reply.result && reply.result.tools) || [];
+            return tools.length + " tools available (" + (Date.now() - started) + " ms)";
+        }
+
+        function endpointRow(label, url) {
+            const id = "ep-" + Math.random().toString(36).slice(2, 8);
+            return '<div class="endpoint"><span class="endpoint-label">' + GatewayUi.escape(label) + "</span>" +
+                '<input id="' + id + '" type="text" readonly value="' + GatewayUi.escape(url) + '">' +
+                '<button type="button" data-copy="' + id + '">Copy</button></div>';
+        }
+
+        function showMcp(projectId) {
+            const worker = workers.find(function (w) { return w.projectId === projectId; });
+            const own = location.origin + GatewayUi.mcpEndpointUrl(projectId);
+            const all = location.origin + "/mcp";
+            const body =
+                '<p class="lead">This address is for AI clients, not for a browser tab: MCP talks JSON-RPC over POST, ' +
+                "so opening it as a page can only answer \"method not allowed\".</p>" +
+                endpointRow("This project", GatewayUi.withToken(own, token)) +
+                endpointRow("All projects", GatewayUi.withToken(all, token)) +
+                '<p class="muted">The all-projects address is the one to give your AI: it is configured once, and the AI ' +
+                "picks the project per call by name or id (tool <code>list_projects</code>).</p>" +
+                '<p id="mcp-test-result" class="test-result" role="status"></p>';
+            openInfo({
+                title: "MCP — " + (worker ? worker.name : projectId),
+                sub: "Project id: " + projectId,
+                body: body,
+                actions: [
+                    { id: "test", label: "Test this project", primary: true },
+                    { id: "guide", label: "Connection guide" }
+                ],
+                onAction: async function (id, button) {
+                    if (id === "guide") { showConnect(projectId); return; }
+                    const out = $("mcp-test-result");
+                    out.className = "test-result"; out.textContent = "testing…";
+                    button.disabled = true;
+                    try {
+                        out.textContent = "OK — " + await testEndpoint(GatewayUi.mcpEndpointUrl(projectId));
+                        out.className = "test-result ok";
+                    } catch (error) {
+                        out.textContent = "Failed — " + error.message;
+                        out.className = "test-result bad";
+                    } finally {
+                        button.disabled = false;
+                    }
+                }
+            });
+        }
+
+        /* ── "Connect AI" guide ─────────────────────────────────────── */
+
+        function showConnect(preselected) {
+            const state = { scope: preselected ? "project" : "all", projectId: preselected || (workers[0] && workers[0].projectId) || "", tab: "claude-code" };
+
+            function snippetsHtml() {
+                const snippets = GatewayUi.connectSnippets({
+                    origin: location.origin,
+                    token: token,
+                    projectId: state.scope === "project" ? state.projectId : undefined
+                });
+                const current = snippets.find(function (s) { return s.id === state.tab; }) || snippets[0];
+                const tabs = snippets.map(function (s) {
+                    return '<button type="button" role="tab" class="tab' + (s.id === current.id ? " active" : "") +
+                        '" data-tab="' + s.id + '" aria-selected="' + (s.id === current.id) + '">' + GatewayUi.escape(s.label) + "</button>";
+                }).join("");
+                return '<div class="tabs" role="tablist">' + tabs + "</div>" +
+                    '<p class="muted">' + GatewayUi.escape(current.note) + "</p>" +
+                    '<div class="code-block"><button type="button" class="copy-code" data-copy="snippet-code">Copy</button>' +
+                    '<pre id="snippet-code" data-lang="' + current.language + '">' + GatewayUi.escape(current.code) + "</pre></div>";
+            }
+
+            function bodyHtml() {
+                const options = workers.map(function (w) {
+                    return '<option value="' + GatewayUi.escape(w.projectId) + '"' + (w.projectId === state.projectId ? " selected" : "") + ">" +
+                        GatewayUi.escape(w.name + " (" + w.projectId + ")") + "</option>";
+                }).join("");
+                return '<div class="steps">' +
+                    "<div><b>1</b><span>Pick a mode</span></div>" +
+                    "<div><b>2</b><span>Paste the config into your client</span></div>" +
+                    "<div><b>3</b><span>Press Test</span></div></div>" +
+                    '<div class="scope">' +
+                    '<label><input type="radio" name="scope" value="all"' + (state.scope === "all" ? " checked" : "") + "> " +
+                    "<span><b>All projects</b> (recommended) — one entry; the AI chooses the project with the <code>project</code> argument.</span></label>" +
+                    '<label><input type="radio" name="scope" value="project"' + (state.scope === "project" ? " checked" : "") + "> " +
+                    "<span><b>One project</b> — a fixed address for a single project. " +
+                    '<select id="scope-project"' + (state.scope === "project" ? "" : " disabled") + ">" + options + "</select></span></label></div>" +
+                    '<div id="snippets">' + snippetsHtml() + "</div>" +
+                    '<p class="muted">The token above is this Gateway\'s own and does not change between restarts unless you start it with ' +
+                    "<code>--rotate-token</code> or pin another with <code>--token</code>. Treat these snippets like a password.</p>" +
+                    '<details class="how"><summary>How the AI finds a project</summary>' +
+                    "<ol><li>The AI calls <code>list_projects</code> and gets every project's <code>id</code>, <code>name</code> and state.</li>" +
+                    "<li>It passes <code>project</code> (an id, a name or the folder name) to any other tool. With a single project the argument can be left out.</li>" +
+                    "<li>The Gateway sends the call to that project's worker. Adding or removing projects never changes your client's configuration.</li></ol></details>" +
+                    '<p id="connect-test-result" class="test-result" role="status"></p>';
+            }
+
+            openInfo({
+                title: "Connect an AI",
+                sub: "Gateway " + location.origin,
+                body: bodyHtml(),
+                wide: true,
+                actions: [{ id: "test", label: "Test all-projects endpoint", primary: true }],
+                onAction: async function (id, button) {
+                    const out = $("connect-test-result");
+                    out.className = "test-result"; out.textContent = "testing…";
+                    button.disabled = true;
+                    try {
+                        out.textContent = "OK — " + await testEndpoint("/mcp");
+                        out.className = "test-result ok";
+                    } catch (error) {
+                        out.textContent = "Failed — " + error.message;
+                        out.className = "test-result bad";
+                    } finally {
+                        button.disabled = false;
+                    }
+                }
+            });
+
+            els.infoBody.onclick = function (event) {
+                const tab = event.target.closest("[data-tab]");
+                if (!tab) return;
+                state.tab = tab.getAttribute("data-tab");
+                $("snippets").innerHTML = snippetsHtml();
+            };
+            els.infoBody.onchange = function (event) {
+                if (event.target.name === "scope") {
+                    state.scope = event.target.value;
+                    $("scope-project").disabled = state.scope !== "project";
+                } else if (event.target.id === "scope-project") {
+                    state.projectId = event.target.value;
+                }
+                $("snippets").innerHTML = snippetsHtml();
+            };
+        }
+
+        /* ── row actions ────────────────────────────────────────────── */
 
         async function act(action, projectId) {
             try {
                 if (action === "open") {
-                    // The dashboard is a different page with its own token key; the gateway proxies it with the same token.
-                    if (token) localStorage.setItem("se.token", token);
-                    location.href = GatewayUi.projectDashboardUrl(projectId);
+                    location.href = GatewayUi.withToken(GatewayUi.projectDashboardUrl(projectId), token);
                     return;
                 }
-                if (action === "mcp") { location.href = GatewayUi.mcpEndpointUrl(projectId); return; }
+                if (action === "mcp") { showMcp(projectId); return; }
                 if (action === "edit") { openForm(projectId); return; }
-                if (action === "health") {
-                    const detail = await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId) + "/health");
-                    const panel = document.getElementById("health-panel");
-                    panel.innerHTML = GatewayUi.renderHealthPanel(detail);
-                    panel.hidden = false;
-                    return;
-                }
+                if (action === "health") { await showHealth(projectId); return; }
+                if (action === "logs") { await showLogs(projectId); return; }
+                if (action === "events") { await showEvents(projectId); return; }
                 if (action === "remove") {
+                    if (!window.confirm("Remove project " + projectId + " from the Gateway? Its source files are not touched.")) return;
                     await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId), { method: "DELETE" });
                 } else {
                     await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId) + "/" + action, { method: "POST" });
@@ -772,66 +1316,32 @@ if (typeof document !== "undefined") {
             act(button.dataset.action, button.dataset.project);
         });
 
-        els.formFields.addEventListener("input", updatePreview);
+        $("connect-ai").addEventListener("click", function () { showConnect(); });
+        $("refresh").addEventListener("click", function () { refresh(); });
+        $("settings-link").setAttribute("href", GatewayUi.withToken("/open.html", token));
 
-        document.getElementById("new-worker").addEventListener("click", function () {
-            editing = null;
-            formBlocked = false;
-            els.formErrors.textContent = "";
-            els.formTitle.textContent = "New worker";
-            els.formFields.innerHTML = GatewayUi.renderFormFields(GatewayUi.DEFAULT_FORM_VALUES);
-            els.form.hidden = false;
-            updatePreview();
-        });
-
-        async function save(start) {
-            if (formBlocked) {
-                els.formErrors.textContent =
-                    "saving is blocked: this worker's config could not be loaded, and saving now would overwrite it";
-                return;
-            }
-            const values = formValues();
-            const errors = GatewayUi.validateForm(values);
-            if (errors.length > 0) {
-                els.formErrors.textContent = errors.map(function (e) { return e.field + ": " + e.message; }).join(" — ");
-                return;
-            }
-
-            /*
-            | SE-F-057 — the complete config the form models is sent, and an
-            | EDIT uses PATCH on the project's own resource instead of always
-            | POSTing to the collection (the old code could never update an
-            | existing worker). The request shape is the pure, tested
-            | buildSaveRequest contract.
-            */
-            const config = GatewayUi.formToConfig(values);
-            const request = GatewayUi.buildSaveRequest(config, editing, start);
-            try {
-                await api(request.url, {
-                    method: request.method,
-                    headers: Object.assign({ "Content-Type": "application/json" }, headers()),
-                    body: JSON.stringify(request.body)
-                });
-                els.form.hidden = true;
-                els.formErrors.textContent = "";
-                editing = null;
-                await refresh();
-            } catch (error) {
-                els.formErrors.textContent = error.message;
-            }
-        }
-
-        document.getElementById("save-start").addEventListener("click", function () { save(true); });
-        document.getElementById("save-only").addEventListener("click", function () { save(false); });
+        /* the version and the stable facts about this Gateway */
+        api("/api/v1/gateway/info").then(function (info) {
+            $("version").textContent = "v" + info.version;
+            $("version").hidden = false;
+        }).catch(function () { /* the dashboard works without it */ });
 
         /*
-        | زنده‌سازی با SSE؛ polling فقط fallback است، چون یک Gateway شلوغ
-        | نباید هر چند ثانیه کل لیست را دوباره بخواند.
+        | Live updates over SSE; polling is only the fallback, because a busy
+        | Gateway should not re-read the whole list every few seconds.
         */
         function connectEvents() {
             const url = "/api/v1/gateway/events" + (token ? "?token=" + encodeURIComponent(token) : "");
             const source = new EventSource(url);
-            source.addEventListener("gateway", function () { refresh(); });
+            source.addEventListener("gateway", function (message) {
+                refresh();
+                if (infoState && infoState.kind === "events") {
+                    try {
+                        const event = JSON.parse(message.data);
+                        if (event.projectId === infoState.projectId) infoState.reload();
+                    } catch (e) { /* a malformed event is ignored */ }
+                }
+            });
             source.onerror = function () {
                 source.close();
                 setTimeout(connectEvents, 5000);
