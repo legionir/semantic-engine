@@ -480,7 +480,7 @@ docker compose up --build
 
 ## 11. Validation فعلی
 
-آخرین validation ثبت‌شده روی branch:
+آخرین validation ثبت‌شده روی `main`:
 
 ```bash
 npm ci
@@ -496,10 +496,11 @@ npm audit --omit=dev
 
 - build: **PASS**
 - lint: **PASS — ۰ warning / ۰ error**
-- test gate: **169/169 suites، 2478/2478 tests passed**
+- test gate: **279 suite (۱ skip در بودجه)، ۳۴۴۶ تست passed**
 - snapshot: **PASS**
 - dependency audit: **۰ vulnerability**
-- workspace benchmark: **457 files، 26912 symbols، 1885 dependency edges، حدود 14.6s زیر سقف 120s**
+- بنچمارک (`node scripts/bench.js --check`، baseline روی runner گیت‌هاب): **۶۳۳ فایل، ≈۱۷ هزار symbol؛ index سرد ≈۸ s، index مجدد ≈۵٫۲ s، RSS ≈۵۴۰ MB**
+- کیفیت بازیابی (`node scripts/eval-retrieval.js --check`): ۴۲ پرسش؛ مدل واقعی MiniLM روی CI: search MRR 0.826 (هشینگ 0.699)
 
 پکیج در ریشهٔ همین مخزن است و CI آن (`.github/workflows/ci.yml`) همین gate را اجرا می‌کند؛ مصرف‌کنندهٔ `semantic-engine-structured-ai` در مخزن دیگری است و فقط خوانده می‌شود.
 

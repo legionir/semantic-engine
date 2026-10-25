@@ -559,3 +559,10 @@
   4. Python structural search is available through the optional `@ast-grep/lang-python` (prebuilt, no network at install). PHP stays unavailable: the PHP grammar uses `$` as its own sigil, so ast-grep metavariable patterns do not match (verified: every metavariable pattern returned 0).
 - **Status:** DECIDED, implemented.
 
+## D-0032 — Package moved to the repository root
+
+- **Date:** 2026-10-25
+- **Decision:** the contents of `semantic-engine/` were moved to the repository root with `git mv` (history preserved per file). Workflows no longer set a working directory or use the `semantic-engine/` path prefix; documentation paths follow. Earlier entries in this file keep their original wording (`semantic-engine/…` meant the package directory).
+- **Compatibility:** `resolveGrammarDir` still checks `semantic-engine/` and `packages/semantic-engine/` layouts for consumers that embed the package in a subfolder, and finds `tree-sitter-grammars` next to `package.json` when it is the root. The sibling repository `semantic-engine-structured-ai` was not touched; anything there that refers to `../semantic-engine/…` (for example a docker-compose build context) needs its own update.
+- **Status:** DECIDED, implemented.
+
