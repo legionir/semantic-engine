@@ -1,11 +1,11 @@
 # Semantic Engine — Handoff
 
-**تاریخ:** ۲۰۲۶-۰۸-۲۲  
-**Repository:** `legionir/structured-ai`  
-**Branch:** `arena/01a02456-structured-ai`  
+**تاریخ:** ۲۰۲۶-۱۰-۲۵  
+**Repository:** `legionir/semantic-engine`  
+**Branch:** `main`  
 **Package:** `@aicoder/semantic-engine` نسخه `0.1.0`  
 **Node requirement:** `>=20`  
-**مسیر:** `semantic-engine/`
+**مسیر:** ریشهٔ مخزن (`legionir/semantic-engine`)
 
 این سند handoff مخصوص Semantic Engine است و باید همراه با کد، تست‌ها و قراردادهای همین package خوانده شود.
 
@@ -40,19 +40,18 @@ Semantic Engine یک code-intelligence engine مستقل است که از یک w
 
 | مسیر | کاربرد |
 |---|---|
-| `semantic-engine/bin/semantic-engine.js` | launcher اجرایی package |
-| `semantic-engine/src/cli/main.ts` | parse command، dispatch و خروجی text/JSON |
-| `semantic-engine/src/cli/args.ts` | parsing flags و exit codes |
-| `semantic-engine/src/cli/commands/index-command.ts` | full index |
-| `semantic-engine/src/cli/commands/query-command.ts` | اجرای AI tool روی index موجود |
-| `semantic-engine/src/cli/commands/serve-command.ts` | UI، REST platform، MCP HTTP/stdio و start یکپارچه |
-| `semantic-engine/src/cli/commands/watch-command.ts` | indexing اولیه و watch تغییرات |
-| `semantic-engine/src/cli/commands/doctor-command.ts` | بررسی محیط |
+| `bin/semantic-engine.js` | launcher اجرایی package |
+| `src/cli/main.ts` | parse command، dispatch و خروجی text/JSON |
+| `src/cli/args.ts` | parsing flags و exit codes |
+| `src/cli/commands/index-command.ts` | full index |
+| `src/cli/commands/query-command.ts` | اجرای AI tool روی index موجود |
+| `src/cli/commands/serve-command.ts` | UI، REST platform، MCP HTTP/stdio و start یکپارچه |
+| `src/cli/commands/watch-command.ts` | indexing اولیه و watch تغییرات |
+| `src/cli/commands/doctor-command.ts` | بررسی محیط |
 
 ### Commandهای اصلی
 
 ```bash
-cd semantic-engine
 npm ci
 npm run build
 
@@ -143,7 +142,7 @@ checkout در اولین اجرا **کپی** می‌شود و فایل اصلی 
 
 ### Exit codeها
 
-تعریف اصلی در `semantic-engine/src/cli/args.ts` و مصرف در `src/cli/main.ts` است:
+تعریف اصلی در `src/cli/args.ts` و مصرف در `src/cli/main.ts` است:
 
 - `0`: success
 - `1`: command failure
@@ -154,7 +153,7 @@ checkout در اولین اجرا **کپی** می‌شود و فایل اصلی 
 
 ## 3. Package scripts
 
-تعریف در `semantic-engine/package.json`:
+تعریف در `package.json`:
 
 ```bash
 npm ci
@@ -266,9 +265,9 @@ MCP stdio و هر دو HTTP entry point هنگام تغییر `project-index.jso
 
 ساختار اصلی توسط typeها و schema کنترل می‌شود:
 
-- `semantic-engine/src/core/types/project-index.types.ts`
-- `semantic-engine/contracts/project-index.schema.json`
-- `semantic-engine/src/export/schemaValidation.ts`
+- `src/core/types/project-index.types.ts`
+- `contracts/project-index.schema.json`
+- `src/export/schemaValidation.ts`
 
 اطلاعات کلیدی:
 
@@ -291,8 +290,8 @@ MCP stdio و هر دو HTTP entry point هنگام تغییر `project-index.jso
 
 ساخت توسط:
 
-- `semantic-engine/src/blueprint/BlueprintGenerator.ts`
-- `semantic-engine/src/export/BlueprintExporter.ts`
+- `src/blueprint/BlueprintGenerator.ts`
+- `src/export/BlueprintExporter.ts`
 
 شامل module/file/symbol/API/entity maps و responsibility metadata است.
 
@@ -448,8 +447,8 @@ Registry و handlerهای AI در `src/ai/` قرار دارند. MCP server پر
 
 فایل‌ها:
 
-- `semantic-engine/Dockerfile`
-- `semantic-engine/.dockerignore`
+- `Dockerfile`
+- `.dockerignore`
 - repository root `Dockerfile`
 - repository root `.dockerignore`
 - `docker-compose.yml`
@@ -484,7 +483,6 @@ docker compose up --build
 آخرین validation ثبت‌شده روی branch:
 
 ```bash
-cd semantic-engine
 npm ci
 npm run build
 npm run lint
@@ -503,7 +501,7 @@ npm audit --omit=dev
 - dependency audit: **۰ vulnerability**
 - workspace benchmark: **457 files، 26912 symbols، 1885 dependency edges، حدود 14.6s زیر سقف 120s**
 
-Root runtime نیز با `npm test` پاس می‌شود؛ Semantic Engine فقط به‌صورت مستقل در CI خودش gate می‌شود.
+پکیج در ریشهٔ همین مخزن است و CI آن (`.github/workflows/ci.yml`) همین gate را اجرا می‌کند؛ مصرف‌کنندهٔ `semantic-engine-structured-ai` در مخزن دیگری است و فقط خوانده می‌شود.
 
 ---
 
@@ -569,21 +567,21 @@ Testهای project-index و golden را فقط بعد از review تغییر د�
 
 ## 15. ترتیب پیشنهادی مطالعه برای نفر بعد
 
-1. `semantic-engine/package.json`
-2. `semantic-engine/tsconfig.json`
-3. `semantic-engine/src/cli/main.ts`
-4. `semantic-engine/src/cli/commands/serve-command.ts`
-5. `semantic-engine/src/server/HttpServer.ts`
-6. `semantic-engine/src/server/SecurityPipeline.ts`
-7. `semantic-engine/src/runtime/JobManager.ts`
-8. `semantic-engine/src/server/routes/jobRoutes.ts`
-9. `semantic-engine/src/pipeline/IndexPipeline.ts`
-10. `semantic-engine/src/pipeline/OutputWriter.ts`
-11. `semantic-engine/src/services/ProjectService.ts`
-12. `semantic-engine/src/services/source/SourceSyncService.ts`
-13. `semantic-engine/src/services/providers/EmbeddingProviderService.ts`
+1. `package.json`
+2. `tsconfig.json`
+3. `src/cli/main.ts`
+4. `src/cli/commands/serve-command.ts`
+5. `src/server/HttpServer.ts`
+6. `src/server/SecurityPipeline.ts`
+7. `src/runtime/JobManager.ts`
+8. `src/server/routes/jobRoutes.ts`
+9. `src/pipeline/IndexPipeline.ts`
+10. `src/pipeline/OutputWriter.ts`
+11. `src/services/ProjectService.ts`
+12. `src/services/source/SourceSyncService.ts`
+13. `src/services/providers/EmbeddingProviderService.ts`
 14. تست‌های `src/server`, `src/runtime`, `src/pipeline` و `src/services/source`
-15. `semantic-engine/contracts/*.json`
+15. `contracts/*.json`
 16. `ci/github-actions-semantic-engine.yml`
 
 برای تغییرات جدید از همین branch استفاده کنید:
@@ -591,5 +589,5 @@ Testهای project-index و golden را فقط بعد از review تغییر د�
 ```bash
 git status --short
 git diff --check
-cd semantic-engine && npm run build && npm run lint && npm run test:gate && npm run snapshot
+npm run build && npm run lint && npm run test:gate && npm run snapshot
 ```

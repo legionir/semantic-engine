@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'semantic-engine/src/vector/**'
-      - 'semantic-engine/scripts/e2e-embedding.js'
-      - 'semantic-engine/package.json'
+      - 'src/vector/**'
+      - 'scripts/e2e-embedding.js'
+      - 'package.json'
       - '.github/workflows/embedding.yml'
 
 permissions:
@@ -24,16 +24,13 @@ jobs:
     name: Real embedding model
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: semantic-engine
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: semantic-engine/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run build
       - run: npm run fixture

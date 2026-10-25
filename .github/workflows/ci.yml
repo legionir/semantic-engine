@@ -23,16 +23,13 @@ jobs:
       matrix:
         # 20.x is the engines floor; 22.x is the current LTS the app is run on.
         node-version: [20, 22]
-    defaults:
-      run:
-        working-directory: semantic-engine
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-          cache-dependency-path: semantic-engine/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci --no-audit --no-fund
       # Optional: the consumer package used by the cross-repo contract test
       # (src/ai/mcp/mcpIndexGeneration.test.ts). Read-only checkout; when the repository
@@ -58,16 +55,13 @@ jobs:
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: semantic-engine
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: semantic-engine/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci --no-audit --no-fund
       # Production dependencies (including optional ones) must carry no high or
       # critical advisory. Dev-tooling advisories (jest chain) are reported only.
@@ -78,16 +72,13 @@ jobs:
     name: Performance regression gate
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: semantic-engine
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: semantic-engine/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run build
       # bench/baseline.json was recorded on this runner type (run 40106453907). A metric
@@ -100,22 +91,19 @@ jobs:
         if: always()
         with:
           name: bench-result
-          path: semantic-engine/bench-result.json
+          path: bench-result.json
 
   e2e:
     name: Panel e2e
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: semantic-engine
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: semantic-engine/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run build
       - run: npm run fixture
