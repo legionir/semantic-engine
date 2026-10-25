@@ -111,7 +111,8 @@
 
 ### نصب و بیلد پروژه
 ```bash
-# رفتن به دایرکتوری موتور معنایی
+# کلون مخزن و رفتن به ریشهٔ آن (پکیج در ریشهٔ مخزن است)
+git clone https://github.com/legionir/semantic-engine.git
 cd semantic-engine
 
 # نصب وابستگی‌ها

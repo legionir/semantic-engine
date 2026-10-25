@@ -685,7 +685,7 @@ The one acceptance criterion still 🟡 is LSP isolation: it is guaranteed
 structurally (one process per worker) but has no dedicated test, because
 exercising it needs language servers installed in CI.
 
-`cd semantic-engine && npm run build && npm run lint && npm test` →
+`npm run build && npm run lint && npm test` (from the package directory; now the repository root) →
 `tsc -p ./` exit 0, `eslint src` silent, `Test Suites: 170 passed / 170 total`,
 `Tests: 2483 passed / 2483 total`.
 
