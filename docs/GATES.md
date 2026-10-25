@@ -2,6 +2,8 @@
 
 > **Note (2026-10-23):** the phase status reports, evidence directories, regate scripts/fixtures and plan/prompt documents cited below were removed from the tree as completed. They are recoverable from git history at commit `0d8d4cf`. Still-open work is tracked only in `docs/OPEN-ITEMS.md`.
 
+> **Current state (2026-10-25):** `npm run test:gate` — 279 suites (1 skipped within budget), 3446 tests green; CI runs 5 blocking jobs (Node 20/22, dependency audit, performance + retrieval gate, panel/gateway e2e) plus the weekly/on-demand real-embedding job. The package lives at the repository root.
+
 **Revision:** `d1289aec99987065657c6ad824c900c7a7b36dc5` plan baseline
 **Date locked:** 2026-09-21
 **Owner:** Pouya Rahimi / project owner

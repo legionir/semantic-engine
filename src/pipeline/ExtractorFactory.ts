@@ -101,8 +101,10 @@ export function resolveGrammarDir(
 
   /*
   | SE-EXT-02: نسخهٔ قبلی فقط `packages/semantic-engine/…` را نگاه
-  | می‌کرد، که با چیدمان واقعی همین مخزن (`semantic-engine/…`) نمی‌خورد
-  | و همیشه رد می‌شد. هر دو بررسی می‌شوند.
+  | می‌کرد. اکنون پکیج در ریشهٔ همین مخزن است (`tree-sitter-grammars`
+  | کنار `package.json`)، و چیدمان‌های مونوریپو (`semantic-engine/…`،
+  | `packages/semantic-engine/…`) هم برای مصرف‌کننده‌هایی که پکیج را
+  | زیرپوشه می‌گذارند بررسی می‌شوند.
   */
   const candidates = [
     path.join(workspaceRoot, 'packages', 'semantic-engine', 'tree-sitter-grammars'),

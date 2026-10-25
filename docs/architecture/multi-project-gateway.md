@@ -356,11 +356,11 @@ setting there. Three tests hold the two packages together:
 | test | what it pins |
 |---|---|
 | `structured-ai/test/mcp/engine-paths.test.js` | data home per platform, id derivation, read order, `checkStaleness` on both locations |
-| `semantic-engine/src/core/config/structuredAiContract.test.ts` | the engine and the consumer compute identical data homes, slugs and ids |
-| `semantic-engine/src/cli/commands/artifactLocationExternal.test.ts` | the real CLI writes only under the data root |
+| `src/core/config/structuredAiContract.test.ts` | the engine and the consumer compute identical data homes, slugs and ids |
+| `src/cli/commands/artifactLocationExternal.test.ts` | the real CLI writes only under the data root |
 
 Container: `SEMANTIC_ENGINE_DATA_DIR=/data` in
-`semantic-engine/Dockerfile` and `structured-ai/docker-compose.yml`, with a
+`Dockerfile` and `structured-ai/docker-compose.yml`, with a
 named volume mounted at `/data` — the compose service runs `read_only: true`,
 so without the volume the default data directory would not be writable.
 
@@ -685,7 +685,7 @@ The one acceptance criterion still 🟡 is LSP isolation: it is guaranteed
 structurally (one process per worker) but has no dedicated test, because
 exercising it needs language servers installed in CI.
 
-`cd semantic-engine && npm run build && npm run lint && npm test` →
+`npm run build && npm run lint && npm test` (from the package directory; now the repository root) →
 `tsc -p ./` exit 0, `eslint src` silent, `Test Suites: 170 passed / 170 total`,
 `Tests: 2483 passed / 2483 total`.
 

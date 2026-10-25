@@ -125,7 +125,7 @@ module.exports = {
 سمت structured-ai این قرارداد در `agent/mcp/enginePaths.js` پیاده شده و
 `agent/mcp/semantic.js` همان `projectId` را می‌سازد؛ تست دوطرفه
 (`structured-ai/test/mcp/engine-paths.test.js` و
-`semantic-engine/src/core/config/structuredAiContract.test.ts`) هم‌خوانی دو طرف
+`src/core/config/structuredAiContract.test.ts`) هم‌خوانی دو طرف
 را نگه می‌دارد.
 
 مسیرهای قدیمی `<workspace>/.semantic-engine/`، `<workspace>/.agent/semantic/` و

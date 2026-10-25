@@ -29,3 +29,4 @@ tmp-schema-test-phase-c/
 test-fixture/
 tmp-phase4-test/
 tmp-snapshot/
+/consumer/

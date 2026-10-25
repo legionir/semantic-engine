@@ -25,9 +25,6 @@ jobs:
   audit-fix:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: semantic-engine
     steps:
       - uses: actions/checkout@v5
         with:
@@ -36,7 +33,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: semantic-engine/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci --no-audit --no-fund
       - name: Is the production tree clean?
         id: audit
@@ -58,16 +55,15 @@ jobs:
         if: steps.audit.outputs.clean == 'false'
         env:
           GH_TOKEN: ${{ secrets.AUDIT_FIX_TOKEN || github.token }}
-        working-directory: .
         run: |
-          if git diff --quiet -- semantic-engine/package-lock.json; then
+          if git diff --quiet -- package-lock.json; then
             echo "npm audit fix changed nothing; a manual upgrade is needed"; exit 1
           fi
           branch="chore/audit-fix-$(date +%Y%m%d)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add semantic-engine/package-lock.json
+          git add package-lock.json
           git commit -m "chore(deps): npm audit fix (production)"
           git push origin "$branch"
           gh pr create --base main --head "$branch" \
