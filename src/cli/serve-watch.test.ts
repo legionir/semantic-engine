@@ -219,11 +219,11 @@ describeIfBuilt('MIG-54 / SE-SEC-03 — پذیرش serve --http', () => {
         '--token',
         'test-token-value',
       ],
-      /MCP server on http:\/\/[^\s]+/
+      /MCP\s+http:\/\/[^\s]+/
     );
     child = started.child;
 
-    serverUrl = /MCP server on (http:\/\/\S+)/.exec(started.stderr)![1]!;
+    serverUrl = /MCP\s+(http:\/\/[^\s?]+)/.exec(started.stderr)![1]!;
     port = Number(/http:\/\/[^:]+:(\d+)\/mcp/.exec(started.stderr)![1]);
     token = 'test-token-value';
   }, 180_000);
@@ -342,7 +342,7 @@ describeIfBuilt('SE-UI-01 — دستور ui بدون ایندکس هم بالا 
     const port = 4137;
     const started = await spawnUntil(
       ['ui', '--root', workspace, '--host', '127.0.0.1', '--port', String(port), '--token', 'test-token'],
-      /Semantic Engine Standalone/
+      /Semantic Engine v\S+ · web UI/
     );
 
     try {

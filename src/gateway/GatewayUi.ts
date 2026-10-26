@@ -18,6 +18,11 @@ const ALIASES: Readonly<Record<string, string>> = {
   '/visualizer.js': 'visualizer.js',
   '/visualizer.css': 'visualizer.css',
   '/app.css': 'app.css',
+  /* the settings page, reached from a project dashboard's "Settings" link */
+  '/open': 'open.html',
+  '/open.html': 'open.html',
+  '/open.js': 'open.js',
+  '/open.css': 'open.css',
 };
 
 function sendJson(res: http.ServerResponse, status: number, body: unknown): void {

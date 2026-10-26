@@ -13,6 +13,8 @@ import { indexLookupFromArgs } from '../projectPathsFromArgs';
 import { generateToken, DEFAULT_HOST } from '../HttpGuard';
 import { loadIndex, validateHttpOptions } from './serve-command';
 import { spawnService, stopChild, waitForShutdown } from './serviceSupervisor';
+import { renderBanner, withToken } from '../banner';
+import { Logger } from '../../host/Logger';
 
 /** Resolve the output selected by `index --out`, without guessing another root. */
 function startIndexPath(args: ParsedArgs, root: string): string {
@@ -104,8 +106,16 @@ export async function runStart(
       };
     }
 
-    const indexed = await runIndex(args, context);
+    /* One progress line instead of the pipeline's own log; failures still surface. */
+    process.stderr.write(`Indexing ${root} …\n`);
+    const indexed = await runIndex(args, { ...context, logger: new Logger({ level: 'warn', stdio: true }) });
     if (indexed.code !== EXIT.ok) return indexed;
+    const stats = indexed.json as { files?: number; symbols?: number; durationMs?: number } | undefined;
+    if (stats?.files !== undefined) {
+      process.stderr.write(
+        `Indexed ${stats.files} files, ${stats.symbols ?? '?'} symbols in ${((stats.durationMs ?? 0) / 1000).toFixed(1)}s\n`
+      );
+    }
     indexPath = startIndexPath(args, root);
   }
 
@@ -152,15 +162,18 @@ export async function runStart(
     if (value !== undefined) common.push(flag, value);
   }
 
+  /* The children are quiet: `start` prints the one banner below. */
   const ui = spawnService(
     ['ui', ...common, '--port', uiPort],
-    /Semantic Engine Standalone Web & Platform Server/,
-    root
+    /Semantic Engine v\S+ · web UI/,
+    root,
+    { quiet: true }
   );
   const mcp = spawnService(
     ['serve', '--http', ...common, '--port', mcpPort],
-    /MCP server on http:\/\/[^\s]+/,
-    root
+    /Semantic Engine v\S+ · MCP server/,
+    root,
+    { quiet: true }
   );
 
   /*
@@ -194,7 +207,7 @@ export async function runStart(
   if (requestedBlueprintMode) watchArgs.push('--blueprint-mode', requestedBlueprintMode);
 
   const watcher = boolOption(args.options, 'watch', true)
-    ? spawnService(watchArgs, /press Ctrl\+C to stop/, root)
+    ? spawnService(watchArgs, /press Ctrl\+C to stop/, root, { quiet: true })
     : null;
   const children = [ui.child, mcp.child, ...(watcher ? [watcher.child] : [])];
   let stopping = false;
@@ -222,10 +235,14 @@ export async function runStart(
     };
   }
 
-  const uiUrl = /Web Visualizer UI:\s+(http:\/\/\S+)/.exec(ui.output())?.[1]
-    ?? `http://${host}:${uiPort}/`;
-  const mcpUrl = /MCP server on\s+(http:\/\/\S+)/.exec(mcp.output())?.[1]
-    ?? `http://${host}:${mcpPort}/mcp`;
+  /* The children report where they actually bound; their links carry ?token= already, so cut it off. */
+  const boundUrl = (output: string, label: string, fallback: string): string => {
+    const found = new RegExp(`${label}\\s+(http://[^\\s?]+)`).exec(output)?.[1];
+    return found ?? fallback;
+  };
+  const uiUrl = boundUrl(ui.output(), 'Dashboard', `http://${host}:${uiPort}/`);
+  const mcpUrl = boundUrl(mcp.output(), 'MCP', `http://${host}:${mcpPort}/mcp`);
+  const indexLine = /Index\s+(\d+ files, \d+ symbols)/.exec(ui.output())?.[1];
 
   const dataRootDir = resolveDataRoot({
     ...(stringOption(args.options, 'dataDir') ? { dataDir: stringOption(args.options, 'dataDir')! } : {}),
@@ -234,21 +251,41 @@ export async function runStart(
   const networkFs = networkFilesystemOf(dataRootDir);
   if (networkFs) process.stderr.write(`⚠ ${networkFilesystemWarning(dataRootDir, networkFs)}\n`);
 
+  const onOff = (value: boolean): string => (value ? 'on' : 'off');
   process.stderr.write(
-    `\n🚀 Semantic Engine UI + MCP\n` +
-      `   • UI:  ${uiUrl}\n` +
-      `   • MCP: ${mcpUrl}\n` +
-      `   • Root: ${root}\n` +
-      `   • Index: ${indexPath}\n` +
-      `   • Watcher: ${watcher ? 'enabled' : 'disabled'}\n` +
-      `   • Deep scan: vectors ${wantsVectors ? 'on' : 'off'}, LSP diagnostics ${
-        boolOption(args.options, 'lspDiagnostics', true) ? 'on' : 'off'
-      }\n` +
-      `   • Config: ${globalConfigPath(resolveDataRoot({
-        ...(stringOption(args.options, 'dataDir') ? { dataDir: stringOption(args.options, 'dataDir')! } : {}),
-        env: process.env,
-      }))}\n` +
-      `   • Token: ${token}\n`
+    renderBanner({
+      mode: 'UI + MCP',
+      sections: [
+        {
+          title: 'Open',
+          rows: [
+            { label: 'Dashboard', value: withToken(uiUrl, token) },
+            { label: 'Settings', value: withToken(new URL('open.html', uiUrl).toString(), token) },
+            { label: 'MCP', value: withToken(mcpUrl, token) },
+          ],
+        },
+        {
+          title: 'Project',
+          rows: [
+            { label: 'Root', value: root },
+            ...(indexLine ? [{ label: 'Index', value: indexLine }] : []),
+            { label: 'Index file', value: indexPath },
+            {
+              label: 'Scan',
+              value:
+                `watcher ${onOff(watcher !== null)}, vectors ${onOff(wantsVectors)}, ` +
+                `LSP diagnostics ${onOff(boolOption(args.options, 'lspDiagnostics', true))}`,
+            },
+            { label: 'Config', value: globalConfigPath(dataRootDir) },
+          ],
+        },
+        {
+          title: 'Security',
+          rows: [{ label: 'Token', value: provided ? `${token}   [provided]` : `${token}   [generated; pass --token to pin it]` }],
+        },
+      ],
+      footer: ['Serving many projects? Use "semantic-engine gateway": one dashboard, one MCP entry.', 'Press Ctrl+C to stop.'],
+    })
   );
 
   await shutdown;

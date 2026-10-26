@@ -13,11 +13,22 @@ export interface StartedChild {
   readonly output: () => string;
 }
 
+export interface SpawnServiceOptions {
+  /**
+   * Keep the child's startup chatter (banners, "listening" lines) off the
+   * terminal. Once the child is ready only its warnings and errors are
+   * mirrored. The full output stays available through `output()` and is
+   * quoted when the child fails to start.
+   */
+  readonly quiet?: boolean;
+}
+
 /** Start one child and mirror its stderr so both services remain observable. */
 export function spawnService(
   args: readonly string[],
   marker: RegExp,
-  root: string
+  root: string,
+  options: SpawnServiceOptions = {}
 ): StartedChild {
   const cli = path.resolve(__dirname, '../../..', 'bin', 'semantic-engine.js');
   const child = spawn(process.execPath, [cli, ...args], {
@@ -38,7 +49,12 @@ export function spawnService(
   child.stderr?.on('data', chunk => {
     const text = String(chunk);
     output += text;
-    process.stderr.write(text);
+    if (!options.quiet) {
+      process.stderr.write(text);
+    } else if (settled) {
+      const important = text.split('\n').filter(line => /\b(warn|error)\b/i.test(line));
+      if (important.length > 0) process.stderr.write(`${important.join('\n')}\n`);
+    }
     if (!settled && marker.test(output)) {
       settled = true;
       resolveReady();

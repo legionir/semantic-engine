@@ -1,6 +1,6 @@
 # Semantic Engine — Handoff
 
-**تاریخ:** ۲۰۲۶-۱۰-۲۵  
+**تاریخ:** ۲۰۲۶-۱۰-۲۶  
 **Repository:** `legionir/semantic-engine`  
 **Branch:** `main`  
 **Package:** `@aicoder/semantic-engine` نسخه `0.1.0`  
@@ -110,6 +110,8 @@ node bin/semantic-engine.js doctor
 # Gateway: یک پورت عمومی، چند worker تک‌پروژه‌ای
 #   کنسول: http://127.0.0.1:4000/gateway
 node bin/semantic-engine.js gateway --port 4000 --token "$SEMANTIC_ENGINE_GATEWAY_TOKEN"
+#   بدون --token: توکن یک بار در <dataRoot>/gateway/token ذخیره و بین ری‌استارت‌ها ثابت می‌ماند (--rotate-token برای تعویض)
+#   MCP همهٔ پروژه‌ها: POST /mcp (list_projects + آرگومان project)؛ راهنمای اتصال: دکمهٔ Connect AI در کنسول
 
 # یک worker مستقل (بدون Gateway)؛ روی Unix socket یا loopback
 node bin/semantic-engine.js worker \
@@ -540,7 +542,8 @@ Testهای project-index و golden را فقط بعد از review تغییر د�
 6. **Audit persistence:** persistence failure در برخی مسیرهای audit عمدی swallow می‌شود تا indexing متوقف نشود؛ disk monitoring لازم است.
 7. **Project path trust:** route ثبت project باید پشت authn/authz و policy صحیح بماند؛ token به‌تنهایی tenant isolation نیست.
 8. **Raw config secrets:** API keys فقط از secret manager/environment inject شوند و در config file commit نشوند.
-9. **LSP availability:** LSP integration بر اساس language serverهای نصب‌شده optional است؛ tree-sitter/heuristic fallback باید در deployment مشخص باشد.
+9. **Gateway console / all-projects MCP (D-0033):** e2e مرورگر روی این تغییر اجرا نشده و تاریخچهٔ events فقط در حافظه است؛ جزئیات در `docs/OPEN-ITEMS.md` §۶ و §۷.
+10. **LSP availability:** LSP integration بر اساس language serverهای نصب‌شده optional است؛ tree-sitter/heuristic fallback باید در deployment مشخص باشد.
 
 ---
 

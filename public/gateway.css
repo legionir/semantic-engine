@@ -251,3 +251,121 @@ button.has-icon { display: inline-flex; align-items: center; gap: 7px; }
   .bar-actions button.has-icon > span { display: none; }
   .bar-actions button.has-icon { padding-inline: 10px; }
 }
+
+/* ═══ Modals (new worker, edit, health, logs, events, MCP, connect guide) ═══ */
+
+body.modal-open { overflow: hidden; }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 5vh 16px 16px;
+  background: rgba(5, 8, 14, .72);
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+.modal-backdrop[hidden] { display: none; }
+
+.modal {
+  width: min(720px, 100%);
+  max-height: 90vh;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .55);
+  outline: none;
+}
+.modal.modal-lg { width: min(980px, 100%); }
+
+.modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 16px 20px 12px; border-bottom: 1px solid var(--line);
+}
+.modal-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
+.modal-subtitle { margin: 3px 0 0; color: var(--muted); font-size: 12px; word-break: break-all; }
+.modal-subtitle:empty { display: none; }
+
+.icon-btn {
+  width: 30px; height: 30px; padding: 0; line-height: 1;
+  font-size: 20px; border-radius: var(--r-sm);
+  background: transparent; border-color: transparent; color: var(--muted);
+}
+.icon-btn:hover { color: var(--text); background: var(--panel-3); }
+
+.modal-body { padding: 16px 20px; overflow-y: auto; flex: 1 1 auto; }
+.modal-foot {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px;
+  padding: 12px 20px; border-top: 1px solid var(--line);
+}
+.modal-foot:empty { display: none; }
+.modal-sub { margin: 16px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+/* panels inside a modal are flat: the modal is already the card */
+.modal .panel { background: none; border: 0; box-shadow: none; padding: 0; }
+.modal .panel > h2 { display: none; }
+
+a.button {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--panel-2); color: var(--text); text-decoration: none;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 7px 12px; font-size: 12px; font-weight: 500;
+  transition: border-color var(--t), background var(--t);
+}
+a.button:hover { border-color: var(--accent); background: var(--panel-3); }
+
+.version {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  border: 1px solid var(--line); border-radius: var(--r-pill); padding: 1px 8px;
+}
+.dot-ok { background: var(--ready); }
+.dot-bad { background: var(--crashed); }
+
+.table-scroll { overflow-x: auto; }
+
+/* logs */
+.log-wrap { max-height: 56vh; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg-2); }
+pre.log { margin: 0; padding: 12px; font: 12px/1.55 var(--mono); color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+
+/* events */
+ul.events { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+li.event { display: grid; grid-template-columns: 190px 90px 1fr; gap: 10px; font-size: 12px; padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel-2); }
+li.event time { color: var(--muted); font-family: var(--mono); }
+li.event-crash strong, li.event-degraded strong { color: var(--crashed); }
+li.event-restart strong { color: var(--indexing); }
+li.event-ready strong, li.event-started strong { color: var(--ready); }
+
+/* MCP + connect guide */
+.lead { margin: 0 0 14px; color: var(--text); }
+.endpoint { display: grid; grid-template-columns: 110px 1fr auto; gap: 8px; align-items: center; margin: 8px 0; }
+.endpoint-label { color: var(--muted); font-size: 12px; }
+.endpoint input { background: var(--bg-2); color: var(--text); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 7px 10px; font: 12px var(--mono); width: 100%; }
+.test-result { min-height: 1.4em; margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+.test-result.ok { color: var(--ready); }
+.test-result.bad { color: var(--crashed); }
+code { font-family: var(--mono); font-size: 12px; background: var(--panel-3); border-radius: 4px; padding: 1px 5px; }
+
+.steps { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-bottom: 14px; font-size: 12px; color: var(--muted); }
+.steps div { display: flex; align-items: center; gap: 8px; }
+.steps b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 11px; }
+
+.scope { display: grid; gap: 8px; margin-bottom: 14px; }
+.scope label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel-2); cursor: pointer; font-size: 13px; }
+.scope select { margin-left: 8px; background: var(--bg-2); color: var(--text); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 3px 8px; font: inherit; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.tab { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--muted); }
+.tab:hover { background: none; color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+.code-block { position: relative; }
+.code-block pre { margin: 0; padding: 14px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-sm); overflow-x: auto; font: 12px/1.6 var(--mono); color: var(--text); }
+.copy-code { position: absolute; top: 8px; right: 8px; }
+details.how { margin-top: 12px; font-size: 12px; color: var(--muted); }
+details.how summary { cursor: pointer; color: var(--text); }
+details.how ol { padding-left: 18px; line-height: 1.7; }
+
+@media (max-width: 640px) {
+  li.event { grid-template-columns: 1fr; }
+  .endpoint { grid-template-columns: 1fr; }
+}

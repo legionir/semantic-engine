@@ -126,7 +126,12 @@ export class HttpGuard {
 
     const authorization = header(request, 'authorization') ?? '';
     const bearer = /^Bearer\s+(.+)$/i.exec(authorization)?.[1];
-    if (!this.acceptsToken(bearer)) {
+    /*
+    | `?token=` is the fallback for clients that can only be given a URL (the
+    | link the start banner prints). The header still wins when both are sent.
+    */
+    const queryToken = new URL(request.url ?? '/', 'http://local').searchParams.get('token') ?? undefined;
+    if (!this.acceptsToken(bearer ?? queryToken)) {
       /*
       | پیام عمداً بی‌محتواست: نه می‌گوید توکن لازم است، نه اینکه
       | توکنِ داده‌شده نزدیک بود.
