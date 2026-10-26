@@ -76,6 +76,35 @@ describe('applyGlobalConfig — flag > env > config.json > default', () => {
     expect(notices).toEqual([]);
   });
 
+  it('a gateway worker with vectors uses the model chosen in Settings', () => {
+    saveGlobalConfig(dataRoot, { embedding: { model: 'Xenova/bge-small-en-v1.5', useDefaultModel: false } });
+    const modelDir = path.join(dataRoot, 'models', 'Xenova', 'bge-small-en-v1.5');
+    fs.mkdirSync(path.join(modelDir, 'onnx'), { recursive: true });
+    const files: Record<string, number> = { 'config.json': 2, 'tokenizer.json': 2, 'tokenizer_config.json': 2, 'onnx/model_quantized.onnx': 2 };
+    for (const name of Object.keys(files)) fs.writeFileSync(path.join(modelDir, name), 'xx');
+    fs.writeFileSync(path.join(modelDir, '.complete.json'), JSON.stringify({ files }));
+
+    const { args, notices } = applyGlobalConfig(parseArgs(['worker', '--vectors']), env)!;
+    expect(args.options['embeddingModel']).toBe('Xenova/bge-small-en-v1.5');
+    expect(args.options['embeddingProvider']).toBe('local');
+    expect(notices).toEqual([]);
+  });
+
+  it('a worker keeps its own embedding flags and ignores Settings without --vectors', () => {
+    saveGlobalConfig(dataRoot, { embedding: { model: 'Xenova/bge-small-en-v1.5', useDefaultModel: false } });
+    const own = applyGlobalConfig(parseArgs(['worker', '--vectors', '--embedding-model', 'custom']), env)!;
+    expect(own.args.options['embeddingModel']).toBe('custom');
+    const without = applyGlobalConfig(parseArgs(['worker']), env)!;
+    expect(without.args.options['embeddingModel']).toBeUndefined();
+  });
+
+  it('a worker falls back to hashing, with a notice, when the chosen model is missing', () => {
+    saveGlobalConfig(dataRoot, { embedding: { model: 'Xenova/bge-small-en-v1.5', useDefaultModel: false } });
+    const { args, notices } = applyGlobalConfig(parseArgs(['worker', '--vectors']), env)!;
+    expect(args.options['embeddingModel']).toBe('hashing-256');
+    expect(notices.join(' ')).toMatch(/not downloaded/);
+  });
+
   it('the artifact location env var outranks the file', () => {
     saveGlobalConfig(dataRoot, { artifacts: { location: 'in-root' } });
     env['SEMANTIC_ENGINE_ARTIFACT_LOCATION'] = 'external';
