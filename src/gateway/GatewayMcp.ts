@@ -162,12 +162,24 @@ export class GatewayMcp {
     if (this.toolCache && Date.now() - this.toolCache.at < 60_000) return this.toolCache.tools;
 
     const projects = this.visibleProjects(record);
+    let tried = 0;
+    let lastError = '';
     for (const project of projects) {
-      const reply = await this.workerRpc(project.id, { jsonrpc: '2.0', id: 'tools', method: 'tools/list', params: {} }).catch(
-        () => undefined
-      );
+      const worker = this.deps.supervisor.get(project.id);
+      if (!worker || worker.pid === null || worker.exitCode !== null) continue;
+      tried += 1;
+      let reply: JsonObject | undefined;
+      try {
+        reply = await this.workerRpc(project.id, { jsonrpc: '2.0', id: 'tools', method: 'tools/list', params: {} });
+      } catch (error) {
+        lastError = `${project.id}: ${error instanceof Error ? error.message : String(error)}`;
+        continue;
+      }
       const tools = (reply?.['result'] as JsonObject | undefined)?.['tools'];
-      if (!Array.isArray(tools)) continue;
+      if (!Array.isArray(tools)) {
+        lastError = `${project.id}: no tools in the answer`;
+        continue;
+      }
 
       const decorated = (tools as ToolDefinition[]).map(tool => {
         const schema = (tool.inputSchema ?? { type: 'object', properties: {} }) as JsonObject;
@@ -190,6 +202,13 @@ export class GatewayMcp {
       });
       this.toolCache = { at: Date.now(), tools: decorated };
       return decorated;
+    }
+    /*
+    | Workers are running but none could list its tools: say so. Returning only
+    | list_projects would look like a healthy gateway with a tiny tool set.
+    */
+    if (tried > 0) {
+      throw new Error(`no running project could list its tools (${lastError}). Reindex or restart that project from the dashboard.`);
     }
     return [];
   }
