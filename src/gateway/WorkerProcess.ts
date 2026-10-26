@@ -38,6 +38,15 @@ export interface WorkerHealthSnapshot {
   readonly memoryMb?: number;
   readonly queueSize?: number;
   readonly lastIndexedAt?: string;
+  readonly lsp?: {
+    readonly enabled: boolean;
+    readonly run?: {
+      readonly filesWithFindings: number;
+      readonly filesSkippedByBudget: number;
+      readonly budgetMs: number;
+      readonly completedAt?: string;
+    };
+  };
 }
 
 export type WorkerEventKind =

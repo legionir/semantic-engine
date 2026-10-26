@@ -474,8 +474,24 @@ const GatewayUi = (function () {
         { key: "watcher", label: "Watcher", from: function (h) { return h && h.watcher === "running" ? "ok" : "warn"; } },
         { key: "blueprint", label: "Blueprint", from: function (h) { return h && h.blueprint === true ? "ok" : "off"; } },
         { key: "vectors", label: "Vectors", from: function (h) { return h && h.vectorChunks > 0 ? "ok" : "off"; } },
-        { key: "lsp", label: "LSP", from: function (h) { return h && h.lsp === false ? "warn" : "unknown"; } }
+        { key: "lsp", label: "LSP", from: function (h) {
+            const lsp = h && h.lsp;
+            if (!lsp) return "unknown";
+            if (!lsp.enabled) return "off";
+            if (!lsp.run) return "warn";
+            return lsp.run.filesSkippedByBudget > 0 ? "warn" : "ok";
+        } }
     ];
+
+    /* One line for the LSP row: switched off, never run, or what the last run found. */
+    function lspSummary(lsp) {
+        if (!lsp) return "not reported by this worker (restart it to update)";
+        if (!lsp.enabled) return "off (enable it in Edit configuration, then reindex)";
+        if (!lsp.run) return "on, but no run recorded yet: reindex";
+        return lsp.run.filesWithFindings + " files with findings" +
+            (lsp.run.filesSkippedByBudget > 0 ? ", " + lsp.run.filesSkippedByBudget + " skipped (budget " + lsp.run.budgetMs + " ms)" : "") +
+            (lsp.run.completedAt ? ", last run " + lsp.run.completedAt : "");
+    }
 
     function renderHealthPanel(detail) {
         const health = (detail && detail.health) || null;
@@ -504,6 +520,7 @@ const GatewayUi = (function () {
             "<li>vector chunks: " + escape(health && health.vectorChunks) + "</li>" +
             "<li>memory: " + escape(health && health.memoryMb) + " MB</li>" +
             "<li>queue: " + escape(health && health.queueSize) + "</li>" +
+            "<li>LSP diagnostics: " + escape(lspSummary(health && health.lsp)) + "</li>" +
             "<li>last indexed: " + escape(health && health.lastIndexedAt) + "</li>" +
             "<li>restarts: " + escape(detail && detail.restartCount) + "</li>" +
             "</ul>" +

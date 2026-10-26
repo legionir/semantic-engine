@@ -474,3 +474,20 @@ describe('gateway console — connection guide', () => {
     expect(ui.renderEvents([])).toContain('No events');
   });
 });
+
+describe('gateway console — LSP health row', () => {
+  const lspState = (lsp: unknown): string =>
+    (ui as unknown as { HEALTH_SECTIONS: { key: string; from(h: unknown): string }[] }).HEALTH_SECTIONS
+      .find(section => section.key === 'lsp')!.from({ pid: 1, lsp });
+
+  it('is ok after a clean run, warn when files were skipped or no run exists, off when disabled', () => {
+    expect(lspState({ enabled: true, run: { filesWithFindings: 30, filesSkippedByBudget: 0, budgetMs: 60000 } })).toBe('ok');
+    expect(lspState({ enabled: true, run: { filesWithFindings: 3, filesSkippedByBudget: 5, budgetMs: 1 } })).toBe('warn');
+    expect(lspState({ enabled: true })).toBe('warn');
+    expect(lspState({ enabled: false })).toBe('off');
+  });
+
+  it('stays unknown only for a worker that does not report LSP at all', () => {
+    expect(lspState(undefined)).toBe('unknown');
+  });
+});

@@ -47,6 +47,15 @@ interface WorkerStatus {
   readonly memoryMb: number;
   readonly queueSize: number;
   readonly lastIndexedAt?: string;
+  /**
+   * Language-server diagnostics: whether the pass is switched on for this
+   * worker, and what the last run found. `run` is absent when the index has
+   * never been through the pass.
+   */
+  readonly lsp: {
+    readonly enabled: boolean;
+    readonly run?: { filesWithFindings: number; filesSkippedByBudget: number; budgetMs: number; completedAt?: string };
+  };
 }
 
 /*
@@ -184,6 +193,7 @@ export async function runWorker(
   let indexFailures = 0;
   const restartCount = Number(process.env['SEMANTIC_ENGINE_WORKER_RESTART_COUNT'] ?? 0);
 
+  const lspEnabled = boolOption(args.options, 'lspDiagnostics', false);
   const status = (): WorkerStatus => {
     const current = server.projects.getProject(paths.projectId);
     const stats = current?.stats;
@@ -207,6 +217,10 @@ export async function runWorker(
       blueprint: Boolean(current?.blueprint),
       memoryMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       queueSize: reindexing ? 1 : 0,
+      lsp: {
+        enabled: lspEnabled,
+        ...(current?.index?.diagnosticsRun ? { run: { ...current.index.diagnosticsRun } } : {}),
+      },
       ...(stats?.lastIndexedAt !== undefined ? { lastIndexedAt: stats.lastIndexedAt } : {}),
     };
   };
