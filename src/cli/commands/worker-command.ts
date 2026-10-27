@@ -47,6 +47,8 @@ interface WorkerStatus {
   readonly memoryMb: number;
   readonly queueSize: number;
   readonly lastIndexedAt?: string;
+  /** Why the index is `stale`: the real load error, so a 503 is never unexplained. */
+  readonly indexError?: string;
   /**
    * Language-server diagnostics: whether the pass is switched on for this
    * worker, and what the last run found. `run` is absent when the index has
@@ -222,6 +224,7 @@ export async function runWorker(
         ...(current?.index?.diagnosticsRun ? { run: { ...current.index.diagnosticsRun } } : {}),
       },
       ...(stats?.lastIndexedAt !== undefined ? { lastIndexedAt: stats.lastIndexedAt } : {}),
+      ...(current?.loadError !== undefined ? { indexError: current.loadError } : {}),
     };
   };
 

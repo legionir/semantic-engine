@@ -43,6 +43,8 @@ export interface ManagedProject {
   readonly indexPath: string;
   readonly blueprintPath?: string;
   readonly status: 'ready' | 'indexing' | 'stale' | 'missing';
+  /** Why an existing index could not be loaded (status `stale`). Never a silent state. */
+  readonly loadError?: string;
   readonly index?: ProjectIndex;
   readonly blueprint?: BlueprintIndex;
   readonly reader?: ProjectIndexReader;
@@ -169,6 +171,7 @@ export class ProjectService {
     let symbolsCount = 0;
     let dependenciesCount = 0;
     let lastIndexedAt: string | undefined;
+    let loadError: string | undefined;
 
     if (fs.existsSync(actualIndexPath)) {
       try {
@@ -226,8 +229,9 @@ export class ProjectService {
         dependenciesCount = index.graphs?.dependencyGraph ? index.graphs.dependencyGraph.length : 0;
         lastIndexedAt = index.generatedAt;
         status = 'ready';
-      } catch {
+      } catch (error) {
         status = 'stale';
+        loadError = error instanceof Error ? error.message : String(error);
       }
     }
 
@@ -242,6 +246,7 @@ export class ProjectService {
       indexPath: canonicalPath,
       blueprintPath: blueprint ? path.join(path.dirname(actualIndexPath), 'blueprint.json') : undefined,
       status,
+      ...(loadError !== undefined ? { loadError } : {}),
       index,
       blueprint,
       reader,

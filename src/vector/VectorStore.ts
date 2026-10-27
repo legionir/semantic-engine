@@ -182,6 +182,22 @@ class UsearchBackend implements VectorStoreBackend {
   }
 }
 
+/** The chunks that share the most common embedding size, order kept. */
+export function dominantDimension(chunks: readonly VectorChunk[]): VectorChunk[] {
+  const counts = new Map<number, number>();
+  for (const chunk of chunks) counts.set(chunk.embedding!.length, (counts.get(chunk.embedding!.length) ?? 0) + 1);
+  if (counts.size <= 1) return [...chunks];
+  let winner = 0;
+  let best = -1;
+  for (const [size, count] of counts) {
+    if (count > best) {
+      best = count;
+      winner = size;
+    }
+  }
+  return chunks.filter(chunk => chunk.embedding!.length === winner);
+}
+
 export class VectorStore {
   readonly backend: VectorStoreBackend;
 
@@ -193,7 +209,16 @@ export class VectorStore {
     const backendName = this.selectBackend(validChunks.length, options);
 
     if (backendName === 'usearch') {
-      this.backend = new UsearchBackend(validChunks);
+      /*
+      | One usearch index, one vector space. An index can hold chunks of two
+      | models for a while (a model was changed in Settings and only the files
+      | touched since were re-embedded). usearch takes its dimension from the
+      | first chunk and threw "length of keys must match the number of vectors"
+      | on the rest, which made the whole project fail to load. Keep the dominant
+      | size; the others cannot be compared with the query anyway, which is what
+      | the brute-force backend already expresses as a score of 0.
+      */
+      this.backend = new UsearchBackend(dominantDimension(validChunks));
     } else {
       this.backend = new BruteForceBackend(validChunks);
     }
