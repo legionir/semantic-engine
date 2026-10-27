@@ -14,6 +14,8 @@ import { ProjectWorkerConfig } from './types';
 const ui = require(path.join(__dirname, '..', '..', 'public', 'gateway.js')) as {
   WORKER_FORM_FIELDS: { name: string; section: string; type: string; configPath: string }[];
   WORKER_ACTIONS: { id: string }[];
+  actionsFor(phase: string): { id: string; label: string }[];
+  phaseOf(worker: Record<string, unknown>): string;
   formToConfig(values: Record<string, unknown>): Record<string, unknown>;
   configToForm(config: unknown): Record<string, unknown>;
   validateForm(values: Record<string, unknown>): { field: string; message: string }[];
@@ -208,9 +210,39 @@ describe('gateway console — preview and rendering', () => {
     expect(rows).toContain('state-indexing');
     expect(rows).toContain('state-degraded');
 
-    for (const action of ui.WORKER_ACTIONS) {
-      expect(rows).toContain(`data-action="${action.id}"`);
+    /* every action exists for some phase */
+    const phases = ['ready', 'degraded', 'indexing', 'starting', 'restarting', 'stopping', 'stopped', 'crashed'];
+    const offered = new Set(phases.flatMap(phase => ui.actionsFor(phase).map(action => action.id)));
+    for (const action of ui.WORKER_ACTIONS) expect(offered.has(action.id)).toBe(true);
+  });
+
+  /*
+  | Start is offered only when nothing runs; Stop, Restart and Reindex only when a
+  | worker is up and idle; while work is in progress only the read-only views and
+  | "Show progress". An indexing project shows as Indexing.
+  */
+  it('offers the lifecycle buttons that fit the phase', () => {
+    const ids = (phase: string) => ui.actionsFor(phase).map(action => action.id);
+
+    expect(ids('ready')).toEqual(expect.arrayContaining(['stop', 'restart', 'reindex']));
+    expect(ids('ready')).not.toContain('start');
+    expect(ids('stopped')).toContain('start');
+    for (const hidden of ['stop', 'restart', 'reindex']) expect(ids('stopped')).not.toContain(hidden);
+    expect(ids('crashed')).toContain('start');
+    for (const busy of ['starting', 'indexing', 'restarting', 'stopping']) {
+      expect(ids(busy)).toContain('progress');
+      for (const hidden of ['start', 'stop', 'restart', 'reindex']) expect(ids(busy)).not.toContain(hidden);
     }
+
+    const stoppedRow = ui.renderWorkerRow({ projectId: 'p', name: 'P', state: 'stopped', phase: 'stopped' });
+    expect(stoppedRow).toContain('data-action="start"');
+    expect(stoppedRow).not.toContain('data-action="stop"');
+
+    const indexingRow = ui.renderWorkerRow({ projectId: 'p', name: 'P', state: 'ready', phase: 'indexing' });
+    expect(indexingRow).toContain('>indexing<');
+    expect(indexingRow).toContain('class="spin"');
+    expect(indexingRow).not.toContain('data-action="reindex"');
+    expect(ui.summarize([{ state: 'ready', phase: 'indexing' }])['indexing']).toBe(1);
   });
 
   it('escapes what it renders', () => {

@@ -6,6 +6,7 @@
 import { DurationSummary } from './metrics';
 import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { WorkerSupervisor, WorkerSummary } from './WorkerSupervisor';
+import { OperationSnapshot, projectPhase } from './OperationTracker';
 
 export function healthPayload(
   supervisor: WorkerSupervisor,
@@ -52,7 +53,8 @@ export function projectEntry(
   supervisor: WorkerSupervisor,
   registry: ProjectRegistry,
   summarize: (id: string) => WorkerSummary | undefined,
-  id: string
+  id: string,
+  operation: OperationSnapshot | null = null
 ): Record<string, unknown> {
   const registered = registry.get(id);
   const worker = summarize(id);
@@ -68,6 +70,12 @@ export function projectEntry(
   */
   const snapshot = worker?.lastHealthSnapshot;
   const observedAt = supervisor.lastStatsObservedAt(id);
+  const phase = projectPhase({
+    operation,
+    workerState: worker?.state,
+    queueSize: snapshot?.queueSize,
+    degraded: worker?.degraded ?? false,
+  });
 
   return {
     id,
@@ -75,6 +83,10 @@ export function projectEntry(
     projectId: id,
     pid: worker?.pid ?? null,
     state: worker?.state ?? 'stopped',
+    /* what to show: stopped / starting / indexing / ready / degraded / crashed / stopping / restarting */
+    phase,
+    indexing: phase === 'indexing',
+    operation,
     indexState: snapshot?.indexState ?? '',
     name: registered?.name ?? id,
     rootPath: registered?.rootPath ?? '',

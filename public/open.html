@@ -51,6 +51,9 @@
 <main class="open-main">
   <div class="wizard">
 
+    <!-- Worker · shown only when this server is a Gateway; see worker-console.js -->
+    <section class="card" id="cardWorker" hidden></section>
+
     <!-- 1 · Project -->
     <section class="card" id="cardProject">
       <div class="card-head">
@@ -288,6 +291,8 @@
   </div>
 </main>
 
+<script src="/gateway.js"></script>
+<script src="/worker-console.js"></script>
 <script src="/open.js"></script>
 </body>
 </html>

@@ -11,12 +11,14 @@ import { GatewayAuth } from './GatewayAuth';
 import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { WorkerSupervisor } from './WorkerSupervisor';
 import { WorkerConfigStore } from './WorkerConfigStore';
+import { OperationTracker } from './OperationTracker';
 
 export interface ProjectRouteDeps {
   readonly registry: ProjectRegistry;
   readonly supervisor: WorkerSupervisor;
   readonly auth: GatewayAuth;
   readonly configs: WorkerConfigStore;
+  readonly operations: OperationTracker;
   send(res: http.ServerResponse, status: number, body: unknown): void;
   broadcast(event: Record<string, unknown>): void;
   readBody(req: http.IncomingMessage): Promise<Record<string, unknown>>;
@@ -171,35 +173,126 @@ export async function handleGatewayProjectRoute(
     return;
   }
 
-  try {
+  if (action !== 'start' && action !== 'stop' && action !== 'restart' && action !== 'reindex') {
+    deps.send(res, 404, { error: `unknown action: ${action}` });
+    return;
+  }
+
+  /*
+  | Lifecycle actions are tracked operations. `?async=1` answers 202 at once and
+  | leaves the work to the tracker (the dashboard polls it for a progress bar and
+  | the log tail); without it the request behaves as it always did and answers
+  | when the action is done (a reindex answers when the worker has accepted it).
+  */
+  const asyncMode = new URL(req.url ?? '/', 'http://gateway.local').searchParams.get('async') === '1';
+  const operationId = deps.operations.begin(projectId, action);
+  if (operationId === undefined) {
+    const running = deps.operations.running(projectId);
+    deps.send(res, 409, {
+      error: `${running?.action ?? 'an operation'} is already running for ${projectId}`,
+      operation: running,
+    });
+    return;
+  }
+
+  const perform = async (): Promise<{ status: number; json: unknown; done?: Promise<void> }> => {
     switch (action) {
-      case 'start': {
+      case 'start':
         await deps.startWorkerFor(projectId, registered.rootPath, registered.name);
-        deps.send(res, 200, deps.projectEntry(projectId));
-        return;
-      }
+        return { status: 200, json: deps.projectEntry(projectId) };
       case 'stop': {
         const stopped = await deps.supervisor.stop(projectId);
-        deps.send(res, 200, { ok: stopped, ...deps.projectEntry(projectId) });
-        return;
+        return { status: 200, json: { ok: stopped, ...deps.projectEntry(projectId) } };
       }
-      case 'restart': {
+      case 'restart':
         await deps.supervisor.restart(projectId);
-        deps.send(res, 200, deps.projectEntry(projectId));
-        return;
-      }
+        return { status: 200, json: deps.projectEntry(projectId) };
       case 'reindex': {
+        const worker = deps.supervisor.get(projectId);
+        const failuresBefore = await indexFailures(worker);
         const result = await deps.supervisor.reindex(projectId);
-        deps.send(res, result.status, result.json);
-        return;
+        if (result.status !== 202) {
+          throw Object.assign(
+            new Error(String(result.json['error'] ?? `the worker answered ${result.status}`)),
+            { reply: result }
+          );
+        }
+        return { status: result.status, json: result.json, done: waitForIndexJob(deps, projectId, failuresBefore) };
       }
-      default:
-        deps.send(res, 404, { error: `unknown action: ${action}` });
     }
+  };
+
+  const message = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+  const running = perform();
+
+  if (asyncMode) {
+    void running.then(
+      async result => {
+        try {
+          await result.done;
+          deps.operations.finish(projectId, operationId);
+        } catch (error) {
+          deps.operations.finish(projectId, operationId, message(error));
+        }
+        deps.broadcast({ type: 'operation', projectId, action });
+      },
+      error => {
+        deps.operations.finish(projectId, operationId, message(error));
+        deps.broadcast({ type: 'operation', projectId, action });
+      }
+    );
+    deps.broadcast({ type: 'operation', projectId, action });
+    deps.send(res, 202, { operation: deps.operations.get(projectId) });
+    return;
+  }
+
+  try {
+    const result = await running;
+    deps.send(res, result.status, result.json);
+    void (result.done ?? Promise.resolve()).then(
+      () => deps.operations.finish(projectId, operationId),
+      error => deps.operations.finish(projectId, operationId, message(error))
+    );
   } catch (error) {
-    deps.send(res, deps.errorStatus(error), {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    deps.operations.finish(projectId, operationId, message(error));
+    const reply = (error as { reply?: { status: number; json: unknown } }).reply;
+    if (reply) {
+      deps.send(res, reply.status, reply.json);
+      return;
+    }
+    deps.send(res, deps.errorStatus(error), { error: message(error) });
+  }
+}
+
+/** The worker's own count of failed index runs; used to tell a finished job from a failed one. */
+async function indexFailures(worker: ReturnType<WorkerSupervisor['get']>): Promise<number> {
+  if (!worker) return 0;
+  try {
+    const reply = await worker.request('GET', '/internal/metrics');
+    return Number(reply.json['worker_index_failures_total'] ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * A reindex runs in the worker's background (`queueSize` is 1 while it does). Wait
+ * for it to end, so the operation stays "running" for as long as the index is
+ * being built, and fail it when the worker's failure counter moved.
+ */
+async function waitForIndexJob(deps: ProjectRouteDeps, projectId: string, failuresBefore: number): Promise<void> {
+  const deadline = Date.now() + 60 * 60 * 1000;
+  for (;;) {
+    await new Promise<void>(resolve => setTimeout(resolve, 1000));
+    const worker = deps.supervisor.get(projectId);
+    if (!worker || worker.exitCode !== null) throw new Error('the worker stopped while it was indexing');
+    const health = await worker.health();
+    if (health && (health.queueSize ?? 0) === 0) break;
+    if (Date.now() > deadline) throw new Error('indexing did not finish within an hour');
+  }
+  const worker = deps.supervisor.get(projectId);
+  if ((await indexFailures(worker)) > failuresBefore) {
+    throw new Error('indexing failed; open the logs to see why');
   }
 }
 

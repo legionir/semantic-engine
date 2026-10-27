@@ -137,6 +137,7 @@ const GatewayUi = (function () {
         { id: "stop", label: "Stop" },
         { id: "restart", label: "Restart" },
         { id: "reindex", label: "Reindex" },
+        { id: "progress", label: "Show progress" },
         { id: "edit", label: "Edit configuration" },
         { id: "health", label: "Health detail" },
         { id: "logs", label: "View logs" },
@@ -144,6 +145,41 @@ const GatewayUi = (function () {
         { id: "mcp", label: "Open MCP endpoint" },
         { id: "remove", label: "Remove project" }
     ];
+
+    /*
+    | What a project is doing, as one word. The gateway computes it (`phase`);
+    | the fallback keeps an older gateway's rows readable.
+    */
+    const BUSY_PHASES = ["starting", "indexing", "restarting", "stopping"];
+
+    function phaseOf(worker) {
+        if (worker && worker.phase) return worker.phase;
+        if (!worker) return "stopped";
+        if (worker.state === "crashed") return "crashed";
+        if (worker.degraded) return "degraded";
+        return worker.state || "stopped";
+    }
+
+    /*
+    | Which buttons a project offers in each phase: Start only when nothing runs,
+    | Stop/Restart/Reindex only when a worker is up and idle, and while work is in
+    | progress only the read-only views plus "Show progress".
+    */
+    const ACTIONS_BY_PHASE = {
+        ready: ["open", "stop", "restart", "reindex", "edit", "health", "logs", "events", "mcp", "remove"],
+        degraded: ["open", "stop", "restart", "reindex", "edit", "health", "logs", "events", "mcp", "remove"],
+        indexing: ["progress", "open", "edit", "health", "logs", "events", "mcp"],
+        starting: ["progress", "edit", "logs", "events"],
+        restarting: ["progress", "edit", "logs", "events"],
+        stopping: ["progress", "edit", "logs", "events"],
+        stopped: ["start", "edit", "logs", "events", "remove"],
+        crashed: ["start", "edit", "health", "logs", "events", "remove"]
+    };
+
+    function actionsFor(phase) {
+        const allowed = ACTIONS_BY_PHASE[phase] || ACTIONS_BY_PHASE.stopped;
+        return WORKER_ACTIONS.filter(function (action) { return allowed.indexOf(action.id) !== -1; });
+    }
 
     function escape(value) {
         return String(value === undefined || value === null ? "" : value)
@@ -369,32 +405,39 @@ const GatewayUi = (function () {
         const list = workers || [];
         return {
             projects: list.length,
-            ready: list.filter(function (w) { return w.state === "ready"; }).length,
-            indexing: list.filter(function (w) { return w.state === "starting"; }).length,
+            ready: list.filter(function (w) { return phaseOf(w) === "ready"; }).length,
+            indexing: list.filter(function (w) { return BUSY_PHASES.indexOf(phaseOf(w)) !== -1; }).length,
             degraded: list.filter(function (w) { return w.degraded; }).length,
-            crashed: list.filter(function (w) { return w.state === "crashed"; }).length,
-            stopped: list.filter(function (w) { return w.state === "stopped"; }).length,
+            crashed: list.filter(function (w) { return phaseOf(w) === "crashed"; }).length,
+            stopped: list.filter(function (w) { return phaseOf(w) === "stopped"; }).length,
             restarts: list.reduce(function (sum, w) { return sum + (w.restartCount || 0); }, 0)
         };
     }
 
     function stateClass(worker) {
-        if (worker.degraded) return "state-degraded";
-        if (worker.state === "ready") return "state-ready";
-        if (worker.state === "crashed") return "state-crashed";
-        if (worker.state === "starting") return "state-indexing";
+        const phase = phaseOf(worker);
+        if (phase === "degraded") return "state-degraded";
+        if (phase === "ready") return "state-ready";
+        if (phase === "crashed") return "state-crashed";
+        if (BUSY_PHASES.indexOf(phase) !== -1) return "state-indexing";
         return "state-stopped";
     }
 
     function renderWorkerRow(worker) {
+        const phase = phaseOf(worker);
         const cells = WORKER_TABLE_COLUMNS.map(function (column) {
+            if (column.key === "state") {
+                return '<td data-key="state" data-phase="' + escape(phase) + '">' +
+                    (BUSY_PHASES.indexOf(phase) !== -1 ? '<span class="spin" aria-hidden="true"></span>' : "") +
+                    escape(phase) + "</td>";
+            }
             const value = worker[column.key];
             return '<td data-key="' + escape(column.key) + '">' +
                 escape(value === true ? "yes" : value === false ? "no" : value) +
                 "</td>";
         }).join("");
 
-        const actions = WORKER_ACTIONS.map(function (action) {
+        const actions = actionsFor(phase).map(function (action) {
             return '<button class="action" data-action="' + escape(action.id) +
                 '" data-project="' + escape(worker.projectId) + '">' +
                 escape(action.label) + "</button>";
@@ -746,6 +789,9 @@ const GatewayUi = (function () {
         WORKER_FORM_FIELDS,
         WORKER_TABLE_COLUMNS,
         WORKER_ACTIONS,
+        BUSY_PHASES,
+        phaseOf,
+        actionsFor,
         escape,
         getPath,
         setPath,
@@ -778,7 +824,7 @@ if (typeof module !== "undefined" && module.exports) {
 
 
 /* ── browser bootstrap ───────────────────────────────────────────────── */
-if (typeof document !== "undefined") {
+if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
     (function () {
         const params = new URLSearchParams(location.search);
         const token = params.get("token") || localStorage.getItem("se.gateway.token") || "";
@@ -950,50 +996,7 @@ if (typeof document !== "undefined") {
             }
         }
 
-        /* ── worker form (new / edit) ───────────────────────────────── */
-
-        function openForm(projectId) {
-            const worker = workers.find(function (w) { return w.projectId === projectId; });
-            editing = projectId;
-            formBlocked = false;
-            els.formErrors.textContent = "";
-
-            /*
-            | SE-F-057 — hydrate EVERY field from the project's real, effective
-            | worker config. If that fetch fails the form must not be saved
-            | blind: a submit would write the visible fields over the real
-            | config. Only identity is trusted then.
-            */
-            const identity = worker
-                ? { projectId: worker.projectId, name: worker.name, rootPath: worker.rootPath }
-                : {};
-
-            function paintValues(values) {
-                els.formTitle.textContent = worker ? "Edit " + worker.name : "New worker";
-                els.formFields.innerHTML = GatewayUi.renderFormFields(values);
-                showModal(els.form);
-                updatePreview();
-            }
-
-            function paint(config) {
-                paintValues(GatewayUi.configToForm(config || identity));
-            }
-
-            if (!worker) {
-                paintValues(Object.assign({}, GatewayUi.DEFAULT_FORM_VALUES));
-                return;
-            }
-
-            api("/api/v1/gateway/projects/" + encodeURIComponent(projectId))
-                .then(function (detail) { paint(detail && detail.config ? detail.config : identity); })
-                .catch(function (error) {
-                    formBlocked = true;
-                    paint(identity);
-                    els.formErrors.textContent =
-                        "config load failed: " + error.message +
-                        " — fix the connection before saving this worker";
-                });
-        }
+        /* ── worker form (new worker; editing lives on the settings page) ── */
 
         function formValues() {
             const values = {};
@@ -1311,17 +1314,28 @@ if (typeof document !== "undefined") {
                     return;
                 }
                 if (action === "mcp") { showMcp(projectId); return; }
-                if (action === "edit") { openForm(projectId); return; }
+                /* one place edits a worker: the settings page, which also holds the defaults it inherits */
+                if (action === "edit") {
+                    location.href = GatewayUi.withToken("/open.html?project=" + encodeURIComponent(projectId), token) + "#cardWorker";
+                    return;
+                }
                 if (action === "health") { await showHealth(projectId); return; }
                 if (action === "logs") { await showLogs(projectId); return; }
                 if (action === "events") { await showEvents(projectId); return; }
                 if (action === "remove") {
                     if (!window.confirm("Remove project " + projectId + " from the Gateway? Its source files are not touched.")) return;
                     await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId), { method: "DELETE" });
-                } else {
-                    await api("/api/v1/gateway/projects/" + encodeURIComponent(projectId) + "/" + action, { method: "POST" });
+                    await refresh();
+                    return;
                 }
-                await refresh();
+                /* start / stop / restart / reindex / progress: tracked, with a progress bar and the log tail */
+                const worker = workers.find(function (w) { return w.projectId === projectId; });
+                if (!worker) return;
+                const operation = action === "progress"
+                    ? ((worker.operation && worker.operation.action) || (GatewayUi.phaseOf(worker) === "indexing" ? "reindex" : "start"))
+                    : action;
+                WorkerConsole.runOperation({ api: api, token: token, onChange: refresh }, worker, operation);
+                refresh();
             } catch (error) {
                 els.status.textContent = "error: " + error.message;
             }

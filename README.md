@@ -355,7 +355,15 @@ VS Code، Codex، SDK تایپ‌اسکریپت/پایتون و curl را با �
 کنسول مرکزی همهٔ instanceها (workerها) را نشان می‌دهد: جدول با پروژه، شناسه، مسیر،
 PID، وضعیت worker و وضعیت ایندکس، کارت‌های جمع، و برای هر ردیف اکشن‌های Open dashboard
 (Visualizer همان پروژه)، Start/Stop/Restart/Reindex، Edit configuration، Health detail،
-Open MCP endpoint، View logs، View events و Remove. New worker، Edit configuration،
+Open MCP endpoint، View logs، View events و Remove. **دکمه‌ها به وضعیت می‌خوانند:** `Start` فقط وقتی
+پروژه stopped/crashed است؛ `Stop`/`Restart`/`Reindex` فقط وقتی ready است؛ در حال starting،
+indexing، restarting یا stopping فقط نمایش‌ها و «Show progress» هست. ستون State یکی از
+`stopped | starting | indexing | ready | degraded | crashed | stopping | restarting` را با چرخندهٔ
+کار نشان می‌دهد. هر Start/Stop/Restart/Reindex یک پنجرهٔ پیشرفت باز می‌کند (نوار پیشرفت،
+زمان سپری‌شده و دنبالهٔ لاگ worker)؛ بستنش کار را قطع نمی‌کند. **Edit configuration** به صفحهٔ
+Settings (`/open.html?project=<id>`) می‌رود که کارت «Worker configuration» دارد: دکمه‌های همان
+پروژه و فرم کامل گزینه‌های worker، با مقادیری که در Settings ذخیره شده برای هر چیزی که خود
+پروژه مقدار ندارد (مثلاً مدل embedding). New worker، Edit configuration،
 Health detail، logs، events و MCP همگی مودال‌اند. صفحهٔ Settings (`/open.html`) هم از همین
 Gateway سرو می‌شود. دکمهٔ **New worker** فرمی دارد که گزینه‌های `worker` را پوشش
 می‌دهد و دستور نهایی را پیش‌نمایش می‌کند:
@@ -432,11 +440,12 @@ GET    /health  /ready  /metrics                    سلامت خود Gateway
 GET    /api/v1/gateway/projects                     فهرست پروژه‌ها
 POST   /api/v1/gateway/projects                     ثبت پروژه (+ autoStart)
 GET    /api/v1/gateway/projects/:id/health          جزئیات سلامت یک پروژه
-POST   /api/v1/gateway/projects/:id/start|stop|restart|reindex
+POST   /api/v1/gateway/projects/:id/start|stop|restart|reindex   (`?async=1`: پاسخ 202 فوری؛ پیشرفت از /operation)
 GET    /api/v1/gateway/events                       رویدادها (SSE)
 GET    /api/v1/gateway/info                         نسخه و آدرس‌ها (بدون راز)
 GET    /api/v1/gateway/projects/:id/logs?lines=N    انتهای لاگ worker
 GET    /api/v1/gateway/projects/:id/events          رویدادهای اخیر آن پروژه (حافظه، ۳۰۰ آخر)
+GET    /api/v1/gateway/projects/:id/operation       عملیات جاری/آخر و phase پروژه (برای نوار پیشرفت)
 ANY    /api/v1/projects/:id/...                     proxy به worker همان پروژه
 POST   /mcp                                         MCP همهٔ پروژه‌ها (آرگومان project)
 POST   /mcp/:id                                     MCP همان پروژه (id یا نام)

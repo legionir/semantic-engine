@@ -57,14 +57,16 @@
 |---|---|
 | پوشش e2e | پنل (`e2e-panel.js`) و کنسول Gateway (`e2e-gateway.js`) پوشش دارند؛ جریان‌های Chat/LLM و آپلود/sync منبع پوشش ندارند |
 | `start`/`ui` در Gateway ثبت نمی‌شوند | تصمیم: بدون تغییر؛ Gateway مسیر مرکزی است و دو مسیر موازی اضافه‌کاری است. فقط در مستندات آمده |
-| کنسول Gateway: مودال‌ها و Connect AI | e2e مرورگر (`e2e-gateway.js`) اجرا نشد (playwright نصب نیست)؛ شناسه‌های `#worker-form`، `#health-panel`، `#form-errors` و … حفظ شده‌اند ولی اجرای واقعی لازم است. فقط تست واحد (`gatewayUi.test.ts`) و دود دستی API انجام شد |
+| کنسول Gateway: مودال‌ها، Connect AI، صفحهٔ ادغام‌شده | با Chrome واقعی دستی دیده شد (دکمه‌های وابسته به وضعیت، پنجرهٔ پیشرفت برای Start و Reindex، Edit configuration به /open.html). scripts/e2e-gateway.js برای جریان جدید (Edit در صفحهٔ Settings، پنجرهٔ پیشرفت) به‌روز شد ولی اجرا نشد (playwright نصب نیست) |
 | نمونه‌های اتصال AI | قالب Claude Desktop (`mcp-remote`)، Cursor، VS Code و Codex از روی مستندات آن ابزارها نوشته شد و با خود کلاینت‌ها امتحان نشد |
 | رویدادهای کنسول | تاریخچهٔ events فقط در حافظهٔ Gateway است (۳۰۰ آخر) و با ری‌استارت خالی می‌شود؛ logs از `<dataRoot>/gateway/logs/<id>.log` خوانده می‌شود (حداکثر ۵۱۲ KB آخر) |
 | `/mcp` سراسری | فهرست ابزارها از اولین worker آماده گرفته و ۶۰ ثانیه کش می‌شود؛ بدون worker آماده فقط `list_projects` برمی‌گردد. پاسخ‌ها JSON است، نه stream |
 | `?token=` در URL | به‌درخواست کاربر روی بنرها و MCP پذیرفته شد؛ توکن در URL ممکن است در تاریخچهٔ مرورگر یا لاگ proxy بماند. هدر Bearer همچنان ترجیحی است |
 
+| ایندکس ترکیبی دو مدل | رفع شد در `VectorIndexer.updateIncremental` و `VectorStore`؛ ولی ایندکسی که قبلاً ترکیبی شده تا reindex بعدی ترکیبی می‌ماند (با usearch فقط بردارهای هم‌بعد جست‌وجو می‌شوند). Reindex کامل مدل را یکدست می‌کند. اولین به‌روزرسانی watcher بعد از تغییر مدل کل پروژه را دوباره embed می‌کند (چند دقیقه روی CPU) |
+
 ## ۷. تست‌های ناپایدار روی ویندوز
 
 | مورد | وضعیت و جزئیات |
 |---|---|
-| `serve-watch.test.ts` (۴ تست) و `ai/mcp/cli.security.test.ts` | روی ویندوز پیش از این تغییرات هم می‌افتند: `child.kill('SIGINT'/'SIGTERM')` خاموشی تمیز نمی‌دهد و پاک‌سازی پوشهٔ موقت EPERM می‌دهد. ادعاهای خودِ تست‌ها پاس می‌شوند؛ شکست در helper خاموشی است |
+| `serve-watch.test.ts` (۴ تست)، `ai/mcp/cli.security.test.ts`، `gateway/lspIsolation.test.ts`، `host/networkFilesystem.test.ts` | روی ویندوز پیش از این تغییرات هم می‌افتند: `child.kill('SIGINT'/'SIGTERM')` خاموشی تمیز نمی‌دهد و پاک‌سازی پوشهٔ موقت EPERM می‌دهد. ادعاهای خودِ تست‌ها پاس می‌شوند؛ شکست در helper خاموشی است |
