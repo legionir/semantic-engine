@@ -272,17 +272,22 @@ export interface NodeFileSystemOptions {
    * قربانی نشود.
    */
   readonly staleTmpMs?: number;
+  /** Pauses between retries of a rename that Windows refuses while the target is open. */
+  readonly renamePausesMs?: readonly number[];
 }
 
 export class NodeFileSystem implements FileSystemPort {
   private readonly fs: typeof fs.promises;
   private readonly createWriteStream: typeof fs.createWriteStream;
   private readonly staleTmpMs: number;
+  private readonly renamePausesMs: readonly number[];
 
   constructor(options: NodeFileSystemOptions = {}) {
     this.fs = options.fsImpl ?? fs.promises;
     this.createWriteStream = options.createWriteStream ?? fs.createWriteStream;
     this.staleTmpMs = options.staleTmpMs ?? 60 * 60 * 1000;
+    /* ~30 s in total: a 100 MB index being parsed by a reader can hold the file that long. */
+    this.renamePausesMs = options.renamePausesMs ?? [20, 40, 80, 160, 320, 640, ...Array<number>(30).fill(1000)];
   }
 
   async readFile(filePath: string): Promise<string> {
@@ -332,7 +337,7 @@ export class NodeFileSystem implements FileSystemPort {
     try {
       await this.fs.writeFile(tmp, data);
       await this.flush(tmp);
-      await this.fs.rename(tmp, filePath);
+      await this.renameOver(tmp, filePath);
     } catch (error) {
       await this.discard(tmp);
       throw error;
@@ -372,10 +377,37 @@ export class NodeFileSystem implements FileSystemPort {
       if (writeError) throw writeError;
       if (streamFailure) throw streamFailure;
       await this.flush(tmp);
-      await this.fs.rename(tmp, filePath);
+      await this.renameOver(tmp, filePath);
     } catch (error) {
       await this.discard(tmp);
       throw error;
+    }
+  }
+
+  /**
+   * Replace `filePath` with `tmp`.
+   *
+   * On Windows, renaming over a file that another process holds open (the
+   * worker reading the index for a query, a watcher, an antivirus or search
+   * indexer scanning the fresh file) fails with EPERM/EBUSY/EACCES even
+   * though the same call would succeed a moment later. That used to fail a
+   * whole indexing job at 90% ("finalizing") after minutes of embedding work.
+   * The handle is short-lived, so retry with a growing pause, like graceful-fs.
+   * Any other error, and the last attempt, is thrown as before.
+   */
+  private async renameOver(tmp: string, filePath: string): Promise<void> {
+    const busy = new Set(['EPERM', 'EBUSY', 'EACCES']);
+    const pauses = this.renamePausesMs;
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        await this.fs.rename(tmp, filePath);
+        return;
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        const pause = pauses[attempt];
+        if (process.platform !== 'win32' || !code || !busy.has(code) || pause === undefined) throw error;
+        await new Promise<void>(resolve => setTimeout(resolve, pause));
+      }
     }
   }
 
