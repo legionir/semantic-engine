@@ -41,5 +41,15 @@ npm audit --omit=dev           # باید 0 باشد
 - build، lint، typecheck:test، test:gate، docs:ai-tools:check: بدون خطا
 - اجرا نشده: build ایمیج Docker، e2e مرورگر (`test:e2e`، نیازمند playwright)، ارزیابی ابزارها با مدل زبانی واقعی
 
-## ۵. فایل‌های مرتبط
+## ۵. اصلاحات پس از اولین اجرای CI روی PR
+| مورد | علت | اقدام |
+|---|---|---|
+| Performance gate (`eval-retrieval --check`) | corpus ارزیابی خود `src` است؛ افزودن `toolDocs.ts`/تست‌ها `recall@1` هشینگ را از 0.619 به 0.571 برد (مشابه مورد مستند در OPEN-ITEMS §4). کد رتبه‌بندی دست نخورده؛ روی `main` همان 0.619 بازتولید می‌شود | `eval/baseline.json` با اعداد همان runner CI دوباره ثبت شد |
+| Panel e2e: نصب مرورگر | `ubuntu-latest` به Ubuntu 26.04 رفته و Playwright 1.56.1 پشتیبانی نمی‌کند | job روی `ubuntu-24.04` قفل شد |
+| Panel e2e: `404 /api/v1/gateway/info` | probe عمدی صفحهٔ تنظیمات روی سرور تک‌پروژه‌ای (commit کنسول ادغام‌شده) | اسکریپت این یک مسیر را از «فراخوانی ناموفق» مستثنا می‌کند |
+| Gateway e2e | اسکریپت پس از مودال‌شدن پنل‌ها و تغییر بنر worker به‌روز نشده بود (روی `main` هم می‌شکست) | بستن مودال سلامت پیش از ادامه؛ انتظار برای لاگ؛ الگوی بنر جدید |
+
+اجرای محلی با Playwright نصب‌شده: `e2e-panel` و `e2e-gateway` هر دو «all checks passed».
+
+## ۶. فایل‌های مرتبط
 `01-FINDINGS.md` · `02-EXECUTION-PLAN.md` · `03-VERIFICATION.md` · `04-AI-TOOLS-AUDIT.md` · `../AI-TOOLS.md` · `../../skills/semantic-engine/SKILL.md`
