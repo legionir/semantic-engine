@@ -133,3 +133,33 @@ describe('MCP instructions', () => {
     expect(MCP_INSTRUCTIONS).toMatch(/indexGeneration/);
   });
 });
+
+describe('closing the remaining audit items', () => {
+  function reg(withEdits: boolean): AiToolRegistry {
+    return new AiToolRegistry({
+      reader: new ProjectIndexReader(index()),
+      workspaceRoot: os.tmpdir(),
+      ...(withEdits ? { enablePhase2Edits: true } : {}),
+    });
+  }
+
+  it('does not offer edit tools that would only answer DISABLED', async () => {
+    const off = reg(false);
+    expect(off.list().map(t => t.name).filter(n => n.startsWith('edit_'))).toEqual([]);
+    const direct = await off.execute('edit_status', {});
+    expect(direct.error).toMatch(/^DISABLED/);
+    expect(reg(true).list().map(t => t.name)).toEqual(expect.arrayContaining(['edit_plan', 'edit_approve', 'edit_apply', 'edit_rollback', 'edit_status']));
+  });
+
+  it('explain_symbol declares in its schema that an id or a name is needed', async () => {
+    const tool = reg(false).list().find(t => t.name === 'explain_symbol')!;
+    expect(tool.inputSchema['anyOf']).toEqual([{ required: ['id'] }, { required: ['name'] }]);
+    const result = await reg(false).execute('explain_symbol', {});
+    expect(result.success).toBe(false);
+  });
+
+  it('code_read errors say what was asked and how to correct it', async () => {
+    const missing = await reg(false).execute('code_read', { path: '../x.ts' });
+    expect(missing.error).toMatch(/^NOT_FOUND: source file '\.\.\/x\.ts' is not in the index.*project_list_files/);
+  });
+});

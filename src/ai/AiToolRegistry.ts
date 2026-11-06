@@ -222,7 +222,9 @@ export class AiToolRegistry {
    * returns, what every parameter means).
    */
   list(): { name: string; description: string; inputSchema: Record<string, unknown> }[] {
-    return Array.from(this.tools.values()).map(t => this.describe(t));
+    return Array.from(this.tools.values())
+      .filter(t => t.isAvailable?.() !== false)
+      .map(t => this.describe(t));
   }
 
   private describe(tool: AiTool): { name: string; description: string; inputSchema: Record<string, unknown> } {

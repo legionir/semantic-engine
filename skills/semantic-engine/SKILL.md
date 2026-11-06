@@ -112,7 +112,7 @@ Every answer is `{ success, items[], metadata, context? }` plus `projectId` and 
   - Parameters: `task`, `targetFiles?`, `targetSymbols?`, `maxTokens?`, `includeTests?`, `includeRecentChanges?`, `dependencyDepth?`, `explain?`
   - Returns: items[]: ranked files/symbols with metadata.section ("targetFiles", "relatedFiles", "tests"…) and graphHops. `context`: the assembled text within maxTokens. Targets and tests get a guaranteed share of the budget.
 - **`explain_symbol`** — Everything known about one symbol in a single call (signature, complexity, callers, callees, tests, git, diagnostics) with the confidence of each part.
-  - Parameters: `id?`, `name?`, `path?`, `limit?`, `minConfidence?`
+  - Parameters: `id*`, `name*`, `path?`, `limit?`, `minConfidence?`
   - Returns: items[0].metadata: signature, visibility, calls[], calledBy[], members[], complexity, referenceCount, plus per-part trust/basis; `truncated` lists which sections were cut. Diagnostics are empty unless the index was built with --lsp-diagnostics: check diagnosticsRun before reading an empty list as "clean".
 - **`symbol_inspect`** — Identity card of one symbol: stable symbolKey, range, signature hash, confidence. Lighter than explain_symbol.
   - Parameters: `id*`, `name*`, `path?`
@@ -153,7 +153,7 @@ Every answer is `{ success, items[], metadata, context? }` plus `projectId` and 
 
 ### Guarded edits (opt-in)
 
-- **`edit_plan`** — Step 1 of a guarded edit: describe text replacements and get a plan with a diff preview. Writes nothing. Requires the server to run with transactional edits enabled; otherwise returns DISABLED.
+- **`edit_plan`** — Step 1 of a guarded edit: describe text replacements and get a plan with a diff preview. Writes nothing. Listed only when the server runs with transactional edits enabled (a direct call otherwise answers DISABLED).
   - Parameters: `edits`, `source?`
   - Returns: metadata: planId, per-edit diff preview and validation. Next: edit_approve → edit_apply.
 - **`edit_approve`** — Step 2: approve a previewed plan. Approval alone changes no file.
@@ -195,7 +195,8 @@ Parameter marks: no mark = required, `?` = optional, `*` = give at least one of 
 
 ## 5. Troubleshooting
 
-- *"Tool not found" / `DISABLED`* — edit tools and the experimental group are off unless the server was started with transactional edits / those capabilities.
+- *No `edit_*` or experimental tools in the list* — they are listed only when the server was started with transactional edits / those capabilities. A direct call to a disabled tool answers `DISABLED`.
+- *Every result appears twice in context* — the server sends it as text and as `structuredContent`; start it with `SEMANTIC_ENGINE_MCP_STRUCTURED=off` to send the text only (it then also carries `projectId` and `indexGeneration`).
 - *Results look old* — the index predates your edits; rebuild it and compare `indexGeneration`.
 - *Wrong or missing project through the gateway* — `list_projects`; the project must be `ready`.
 - *Few or shallow results for a language* — check `project_info.languageSupport`; some languages have symbols but no call graph.

@@ -14,6 +14,12 @@ const DEFAULT_MAX_TOKENS = 4_000;
 function tokens(text: string): number { return Math.ceil(text.length / 4); }
 function hash8(text: string): string { return crypto.createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 8); }
 function fail(error: string): AiToolOutput { return { success: false, error, items: [] }; }
+/** Says what was looked up and how a valid path is written, so the caller can correct itself. */
+function notFoundSource(input: Record<string, unknown>, fromHandle?: string): string {
+  const asked = fromHandle ?? (typeof input.path === 'string' ? input.path : typeof input.fileId === 'string' ? input.fileId : undefined);
+  return `NOT_FOUND: source file${asked !== undefined ? ` '${asked}'` : ''} is not in the index; use a path relative to the project root with forward slashes, exactly as project_list_files prints it`;
+}
+
 function fileOf(reader: ProjectIndexReader, input: Record<string, unknown>): FileEntry | undefined {
   if (typeof input.fileId === 'string') return reader.getFileById(input.fileId);
   if (typeof input.path === 'string') return reader.getFileByPath(input.path);
@@ -58,12 +64,12 @@ export class CodeReadTool extends SourceTool implements AiTool<CodeReadInput> {
     const parsed = input.handle ? (() => { try { return parseHandle(input.handle); } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; } })() : undefined;
     if (parsed && 'error' in parsed) return fail(`INVALID_ARGUMENT: ${parsed.error}`);
     const file = parsed ? this.reader.getFileByPath(parsed.relativePath) : fileOf(this.reader, input);
-    if (!file) return fail('NOT_FOUND: source file');
+    if (!file) return fail(notFoundSource(input, parsed && !('error' in parsed) ? parsed.relativePath : undefined));
     const source = await this.read(file);
     if ('error' in source) return fail(`IO_ERROR: ${source.error}`);
     const range = parsed ? { start: parsed.start, end: parsed.end } : { start: input.start ?? 0, end: input.end ?? source.text.length };
     if (parsed && !source.hash.startsWith(parsed.hash8)) return fail('STALE_HANDLE: source content changed');
-    if (!Number.isInteger(range.start) || !Number.isInteger(range.end) || range.start < 0 || range.end < range.start || range.end > source.text.length) return fail('OUT_OF_RANGE: requested UTF-16 range');
+    if (!Number.isInteger(range.start) || !Number.isInteger(range.end) || range.start < 0 || range.end < range.start || range.end > source.text.length) return fail(`OUT_OF_RANGE: requested UTF-16 range ${range.start}..${range.end} but ${file.path} has ${source.text.length} code units (start must be >= 0 and <= end <= length)`);
     const text = source.text.slice(range.start, range.end);
     const maxBytes = input.maxResultBytes ?? DEFAULT_MAX_RESULT_BYTES;
     const out = Buffer.byteLength(text, 'utf8') > maxBytes ? text.slice(0, Math.max(0, Math.floor(maxBytes / 2))) : text;
@@ -79,7 +85,7 @@ export class CodeFoldTool extends SourceTool implements AiTool<CodeFoldInput> {
   readonly description = 'Return a deterministic structural fold of one source file with bounded tokens.';
   readonly inputSchema = { type: 'object', properties: { path: { type: 'string' }, fileId: { type: 'string' }, level: { type: 'integer', minimum: 0, maximum: 4 }, maxTokens: { type: 'integer', minimum: 1, maximum: 100000 }, comments: { enum: ['strip', 'doc-only', 'keep'] } }, anyOf: [{ required: ['path'] }, { required: ['fileId'] }] };
   async execute(input: CodeFoldInput): Promise<AiToolOutput> {
-    const file = fileOf(this.reader, input); if (!file) return fail('NOT_FOUND: source file');
+    const file = fileOf(this.reader, input); if (!file) return fail(notFoundSource(input));
     const source = await this.read(file); if ('error' in source) return fail(`IO_ERROR: ${source.error}`);
     const level = input.level ?? 2; const budget = input.maxTokens ?? DEFAULT_MAX_TOKENS;
     const lines = source.text.split(/\r\n|\r|\n/u);
@@ -162,7 +168,7 @@ export class CodeOutlineTool implements AiTool {
   readonly inputSchema = { type: 'object', properties: { path: { type: 'string' }, fileId: { type: 'string' }, includeRanges: { type: 'boolean' }, compact: { type: 'boolean', description: 'Return only name, kind, lines and signature per symbol (about a third of the tokens).' } }, anyOf: [{ required: ['path'] }, { required: ['fileId'] }] };
   constructor(private readonly reader: ProjectIndexReader) {}
   async execute(input: AiToolInput): Promise<AiToolOutput> {
-    const file = fileOf(this.reader, input); if (!file) return fail('NOT_FOUND: source file');
+    const file = fileOf(this.reader, input); if (!file) return fail(notFoundSource(input));
     const symbols = [...this.reader.getSymbolsForFile(file.id)].sort((a, b) => a.line - b.line || a.endLine - b.endLine || a.name.localeCompare(b.name));
     if (input.compact === true) {
       const items = symbols.map(s => ({ id: s.id, name: s.name, kind: s.kind, path: file.path, line: s.line, source: 'compact', excerpt: s.signature ?? s.name, metadata: { endLine: s.endLine } }));

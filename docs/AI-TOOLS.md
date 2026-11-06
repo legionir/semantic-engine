@@ -238,11 +238,13 @@ Everything known about one symbol in a single call (signature, complexity, calle
 
 | Parameter | Type | Need | Meaning |
 |---|---|---|---|
-| `id` | string | optional | Symbol id. Give this or `name`. |
-| `name` | string | optional | Symbol name when you have no id; add `path` if the name is not unique. |
+| `id` | string | one of* | Symbol id. Give this or `name`. |
+| `name` | string | one of* | Symbol name when you have no id; add `path` if the name is not unique. |
 | `path` | string | optional | File path used only to disambiguate `name`. |
 | `limit` | integer | optional | Maximum callers/callees/members listed per section (default 20). _(default 20)_ |
 | `minConfidence` | integer | optional | Hide calls/callers whose edge confidence is below this (0–100, default 0). _(default 0)_ |
+
+\* give at least one of: `id`, `name`.
 
 **Returns.** items[0].metadata: signature, visibility, calls[], calledBy[], members[], complexity, referenceCount, plus per-part trust/basis; `truncated` lists which sections were cut. Diagnostics are empty unless the index was built with --lsp-diagnostics: check diagnosticsRun before reading an empty list as "clean".
 
@@ -387,7 +389,7 @@ Find risky files: frequently changed and complex. Good targets for extra review 
 
 ### `edit_plan`
 
-Step 1 of a guarded edit: describe text replacements and get a plan with a diff preview. Writes nothing. Requires the server to run with transactional edits enabled; otherwise returns DISABLED.
+Step 1 of a guarded edit: describe text replacements and get a plan with a diff preview. Writes nothing. Listed only when the server runs with transactional edits enabled (a direct call otherwise answers DISABLED).
 
 | Parameter | Type | Need | Meaning |
 |---|---|---|---|

@@ -326,7 +326,7 @@ export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
   },
   edit_plan: {
     group: 'edit',
-    use: 'Step 1 of a guarded edit: describe text replacements and get a plan with a diff preview. Writes nothing. Requires the server to run with transactional edits enabled; otherwise returns DISABLED.',
+    use: 'Step 1 of a guarded edit: describe text replacements and get a plan with a diff preview. Writes nothing. Listed only when the server runs with transactional edits enabled (a direct call otherwise answers DISABLED).',
     returns: 'metadata: planId, per-edit diff preview and validation. Next: edit_approve → edit_apply.',
     params: {
       edits: 'Replacements to make. Each needs path, start/end (UTF-16 offsets from code_read), replacement text and expectedHash of the current file text so a changed file is rejected.',

@@ -265,3 +265,22 @@ describe('SemanticEngineMcpServer', () => {
     await server.close();
   });
 });
+
+describe('structuredContent switch', () => {
+  it('sends the result once, with projectId and indexGeneration in the text, when switched off', async () => {
+    const { SemanticEngineMcpServer: Server } = await import('./SemanticEngineMcpServer');
+    const index = { schemaVersion: '2.0.0', root: 'x', rootPath: '/', generatedAt: 'g', generatorVersion: '0', languages: [], languageSupport: {}, files: [], symbols: [], graphs: { callGraph: [], typeGraph: [], dependencyGraph: [], reverseDependencyGraph: [] }, diagnostics: [], git: null, metrics: {} } as never;
+    const once = new Server({ projectIndex: index, projectId: 'p1', structuredContent: false });
+    const reply = await once.callTool('project_list_files', {});
+    expect(reply.structuredContent).toBeUndefined();
+    const body = JSON.parse((reply.content[0] as { text: string }).text);
+    expect(body.projectId).toBe('p1');
+    expect(body.indexGeneration).toBe(0);
+
+    const both = new Server({ projectIndex: index, projectId: 'p1' });
+    const twice = await both.callTool('project_list_files', {});
+    expect(twice.structuredContent).toMatchObject({ projectId: 'p1', indexGeneration: 0 });
+    expect(JSON.parse((twice.content[0] as { text: string }).text).projectId).toBeUndefined();
+    await once.close(); await both.close();
+  });
+});

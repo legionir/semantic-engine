@@ -25,7 +25,7 @@ import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import { ProjectIndexReader } from '../ProjectIndexReader';
 import { AiToolRegistry } from '../AiToolRegistry';
 import type { BlueprintIndex } from '../discovery/BlueprintIndex';
-import { AiToolInput } from '../tools/types';
+import { AiToolInput, AiToolOutput } from '../tools/types';
 import { ProjectIndex } from '../../core/types/project-index.types';
 import { resolveProjectIndexPath } from '../../core/config/ProjectPaths';
 import { parseIndexGeneration } from '../../core/config/indexGeneration';
@@ -64,6 +64,15 @@ export interface McpServerOptions {
    * stays unlisted. Absent by default.
    */
   readonly experimental?: Readonly<Record<string, boolean>>;
+  /**
+   * Send the result once instead of twice. By default `tools/call` carries it
+   * as text (`content`) and as `structuredContent`, which a client that puts
+   * both in the model's context pays for twice. With `false` only the text is
+   * sent, and it then also carries `projectId` and `indexGeneration`. Default
+   * true (what structured-ai reads); `SEMANTIC_ENGINE_MCP_STRUCTURED=off`
+   * flips the default for a deployment.
+   */
+  readonly structuredContent?: boolean;
 }
 
 export class SemanticEngineMcpServer {
@@ -80,6 +89,7 @@ export class SemanticEngineMcpServer {
   private readonly enablePhase2Edits?: boolean;
   private readonly phase2JournalDirectory?: string;
   private readonly experimental?: Readonly<Record<string, boolean>>;
+  private readonly emitStructured: boolean;
 
   constructor(options: McpServerOptions) {
     this.workspaceRoot = options.workspaceRoot;
@@ -88,6 +98,7 @@ export class SemanticEngineMcpServer {
     this.enablePhase2Edits = options.enablePhase2Edits;
     this.phase2JournalDirectory = options.phase2JournalDirectory;
     this.experimental = options.experimental;
+    this.emitStructured = options.structuredContent ?? process.env['SEMANTIC_ENGINE_MCP_STRUCTURED']?.toLowerCase() !== 'off';
     this.registry = this.createRegistry(options.projectIndex, options.blueprint);
     if (options.indexPath) this.refreshGeneration(options.indexPath);
 
@@ -237,30 +248,28 @@ export class SemanticEngineMcpServer {
    * کلاینت‌ها متن قبلی را.
    */
   async callTool(toolName: string, args: AiToolInput): Promise<CallToolResult> {
+    let result: AiToolOutput;
     try {
-      const result = await this.registry.executeWithValidation(toolName, args);
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result) }],
-        structuredContent: {
-          ...result,
-          ...(this.projectId !== undefined ? { projectId: this.projectId } : {}),
-          indexGeneration: this.generation,
-        },
-        isError: !result.success,
-      };
+      result = await this.registry.executeWithValidation(toolName, args);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const failed = { success: false, error: message, items: [] };
-      return {
-        content: [{ type: 'text', text: JSON.stringify(failed) }],
-        structuredContent: {
-          ...failed,
-          ...(this.projectId !== undefined ? { projectId: this.projectId } : {}),
-          indexGeneration: this.generation,
-        },
-        isError: true,
-      };
+      result = { success: false, error: error instanceof Error ? error.message : String(error), items: [] };
     }
+    return this.envelope(result);
+  }
+
+  private envelope(result: AiToolOutput): CallToolResult {
+    const ids = {
+      ...(this.projectId !== undefined ? { projectId: this.projectId } : {}),
+      indexGeneration: this.generation,
+    };
+    if (!this.emitStructured) {
+      return { content: [{ type: 'text', text: JSON.stringify({ ...result, ...ids }) }], isError: !result.success };
+    }
+    return {
+      content: [{ type: 'text', text: JSON.stringify(result) }],
+      structuredContent: { ...result, ...ids },
+      isError: !result.success,
+    };
   }
 
   /**

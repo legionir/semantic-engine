@@ -42,6 +42,13 @@ export interface AiTool<I extends AiToolInput = AiToolInput> {
   readonly description: string;
   readonly inputSchema: Record<string, unknown>;
   execute(input: I): Promise<AiToolOutput>;
+  /**
+   * False when the tool cannot work in this server (e.g. transactional edits
+   * are not enabled). Such a tool is left out of `tools/list` — a model should
+   * not be offered a tool whose every call answers DISABLED — but a direct call
+   * still gets the explicit DISABLED answer.
+   */
+  isAvailable?(): boolean;
 }
 
 export interface RankedSymbol extends SymbolEntry {
