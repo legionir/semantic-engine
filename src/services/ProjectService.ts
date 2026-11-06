@@ -57,6 +57,14 @@ export interface ManagedProject {
   };
 }
 
+/** A request named a project in a way that cannot be honoured (maps to HTTP 400). */
+export class ProjectInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProjectInputError';
+  }
+}
+
 export class ProjectService {
   /*
   | کلید این map ریشهٔ نرمال‌شده است، نه شناسه. دلیلش یک باگ واقعی بود:
@@ -74,6 +82,21 @@ export class ProjectService {
     private readonly defaultRoot: string = process.cwd(),
     private readonly options: ProjectServiceOptions = {}
   ) {}
+
+  /**
+   * Where a bundle imported under `projectId` lands: a folder of that name under
+   * the server's project root. `projectId` is request input, so it must be a
+   * plain folder name — it used to be handed to `registerProject` as a *path*,
+   * which let `../x` or `/etc` pick the directory the bundle is written to.
+   */
+  importRootFor(projectId: string): string {
+    if (!isPathSafeProjectId(projectId)) {
+      throw new ProjectInputError(
+        `projectId '${projectId}' must be a plain folder name (letters, digits, '.', '_', '-')`
+      );
+    }
+    return path.join(path.resolve(this.defaultRoot), projectId);
+  }
 
   /**
    * ثبت یا باز کردن یک پروژه بر اساس مسیر.

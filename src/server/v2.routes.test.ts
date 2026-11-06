@@ -122,3 +122,62 @@ describe('V2 REST Endpoints E2E', () => {
     expect(res.json.syncResult.filesSynced).toBe(2);
   });
 });
+
+describe('import-bundle input handling (F-07)', () => {
+  let server: HttpServer;
+  let serverUrl: string;
+  const token = 'bundle-token';
+
+  beforeAll(async () => {
+    server = new HttpServer({ port: 0, host: '127.0.0.1', token, allowRemote: false });
+    serverUrl = (await server.start()).url;
+  });
+  afterAll(async () => {
+    await server.stop();
+  });
+
+  async function post(route: string, body: unknown): Promise<{ status: number; json: any }> {
+    const res = await fetch(`${serverUrl}${route}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    });
+    return { status: res.status, json: await res.json() };
+  }
+
+  it.each(['../escape', '/etc', 'a/b', '..', 'x y'])('refuses projectId %j as a folder name', async projectId => {
+    const res = await post('/api/v2/projects/import-bundle', { projectId, files: { 'a.ts': 'x' } });
+    expect(res.status).toBe(400);
+    expect(res.json.error).toMatch(/projectId/);
+  });
+
+  it('does not leave a folder or a registered project behind when the bundle is rejected', async () => {
+    const id = 'rejected-bundle-proj';
+    const res = await post('/api/v2/projects/import-bundle', {
+      projectId: id,
+      files: { '../outside.ts': 'x' },
+    });
+    expect(res.status).toBe(400);
+    expect(fs.existsSync(path.resolve(id))).toBe(false);
+    const list = await fetch(`${serverUrl}/api/v1/projects`, { headers: { Authorization: `Bearer ${token}` } });
+    const projects = (await list.json()) as { projects?: Array<{ id: string }> };
+    expect((projects.projects ?? []).some(p => p.id === id)).toBe(false);
+  });
+
+  it('PUT files/:path without content is a 400 and leaves the file as it was', async () => {
+    const id = 'put-guard-proj';
+    const made = await post('/api/v2/projects/import-bundle', { projectId: id, files: { 'keep.ts': 'export const keep = 1;' } });
+    expect(made.status).toBe(201);
+    try {
+      const res = await fetch(`${serverUrl}/api/v1/projects/${id}/files/keep.ts`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      });
+      expect(res.status).toBe(400);
+      expect(fs.readFileSync(path.join(path.resolve(id), 'keep.ts'), 'utf8')).toBe('export const keep = 1;');
+    } finally {
+      fs.rmSync(path.resolve(id), { recursive: true, force: true });
+    }
+  });
+});

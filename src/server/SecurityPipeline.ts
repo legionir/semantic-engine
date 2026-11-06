@@ -268,7 +268,15 @@ export class SecurityPipeline {
     | ابزار محلی است و دسترسی شبکه‌ای پشت `checkConnection`/token است،
     | embedding را آزاد می‌گذاریم تا UI در preview دیده شود.
     */
-    res.setHeader('X-XSS-Protection', '1; mode=block');
+    /*
+    | `?token=` is accepted (the banners print such links). Without this header
+    | a page opened from one would send the full URL, token included, in
+    | `Referer` to any site it links to. `X-XSS-Protection` is dropped: it is
+    | obsolete and itself introduced bugs in the browsers that honoured it.
+    | API answers are never cached; the static server overrides this per file.
+    */
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Cache-Control', 'no-store');
 
     /*
     | قبلاً این هدر همیشه `*` بود، یعنی هر صفحه‌ای در هر دامنه‌ای
