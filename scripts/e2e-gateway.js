@@ -156,6 +156,9 @@ async function main() {
     await page.waitForFunction(() => !document.querySelector('#health-panel').hidden);
     const health = (await page.textContent('#health-panel')).replace(/\s+/g, ' ');
     check('health detail shows counters', /files: \d+/.test(health) && /symbols: \d+/.test(health), health.slice(0, 200));
+    // the health detail is a modal: it has to be closed before the page behind it can be used
+    await page.click('#health-panel [data-close]');
+    await page.waitForFunction(() => document.querySelector('#health-panel').hidden);
 
     // 3. a new instance from the form, with scan / diagnostics / cache options
     await page.click('#new-worker');
@@ -189,22 +192,39 @@ async function main() {
     check('stored config keeps the new options', config.scan?.maxDepth === 6 && config.scan?.useGitignore === false
       && config.cache?.mode === 'full' && config.artifactLocation === 'external', JSON.stringify(config.scan));
 
-    // 4. edit
+    // 4. edit: Edit configuration opens the settings page, which holds the worker form
     await row('fix-two').locator('button[data-action=edit]').click();
-    await page.waitForFunction(() => !document.querySelector('#worker-form').hidden);
+    await page.waitForURL(/\/open\.html\?project=fix-two/, { timeout: 15_000 });
+    await page.waitForSelector('#wc-form #field-maxDepth', { timeout: 15_000 });
     check('the edit form is filled from the stored config', (await page.inputValue('#field-maxDepth')) === '6'
       && (await page.inputValue('#field-ignore')) === '**/*.md' && !(await page.isChecked('#field-useGitignore')));
+    check('the settings page shows what Settings chose for embeddings', ((await page.textContent('#wc-inherit')) || '').startsWith('Settings:'));
+    check('a ready worker offers Stop but not Start', (await page.locator('#wc-actions [data-op=stop]').count()) === 1
+      && (await page.locator('#wc-actions [data-op=start]').count()) === 0);
     await page.fill('#field-debounceMs', '900');
-    await page.click('#save-only');
-    await page.waitForFunction(() => document.querySelector('#worker-form').hidden, null, { timeout: 30_000 });
+    await page.click('#wc-save');
+    await page.waitForFunction(() => /Saved/.test(document.getElementById('wc-errors').textContent), null, { timeout: 30_000 });
+    await page.goto(`${base}/gateway?token=${TOKEN}`);
+    await waitRowState('fix-two', 'ready');
     const edited = await (await fetch(`${base}/api/v1/gateway/projects/fix-two`, auth)).json();
     check('an edit is persisted', edited.config?.watchOptions?.debounceMs === 900, JSON.stringify(edited.config?.watchOptions));
 
-    // 5. stop / start
+    // 5. stop / start: each opens a progress overlay with the log tail
     await row('fix-two').locator('button[data-action=stop]').click();
+    await page.waitForSelector('.wc-overlay .wc-close', { timeout: 15_000 });
+    await page.waitForFunction(() => /Stopped in/.test(document.querySelector('.wc-overlay .wc-status')?.textContent || ''), null, { timeout: 60_000 });
+    await page.click('.wc-overlay .wc-close');
     await waitRowState('fix-two', 'stopped');
     check('stop puts the instance in the stopped state', true);
+    check('a stopped instance offers Start but not Stop', (await row('fix-two').locator('button[data-action=start]').count()) === 1
+      && (await row('fix-two').locator('button[data-action=stop]').count()) === 0);
     await row('fix-two').locator('button[data-action=start]').click();
+    await page.waitForFunction(() => /Started in/.test(document.querySelector('.wc-overlay .wc-status')?.textContent || ''), null, { timeout: 120_000 });
+    // the log tail is fetched after the status line reaches "Started": give it a moment to arrive
+    await page.waitForFunction(() => (document.querySelector('.wc-overlay .wc-log')?.textContent || '').trim() !== '', null, { timeout: 15_000 }).catch(() => undefined);
+    const overlayLog = (await page.textContent('.wc-overlay .wc-log')) || '';
+    check('the start overlay shows the worker log', /watching .* files indexed, pid \d+/.test(overlayLog), overlayLog.slice(-300));
+    await page.click('.wc-overlay .wc-close');
     await waitRowState('fix-two', 'ready');
     check('start brings it back', true);
 

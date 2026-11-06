@@ -4,13 +4,14 @@
 
 import * as http from 'http';
 import * as crypto from 'crypto';
-import Ajv from 'ajv';
+import Ajv, { ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
 import { PlatformConfig } from './types';
 import { isLoopbackHost } from '../cli/HttpGuard';
 
 const ajv = new Ajv({ allErrors: true, coerceTypes: true });
 addFormats(ajv);
+const COMPILED = new WeakMap<object, ValidateFunction>();
 
 /*
 | نام کلیدهایی که مقدارشان هرگز نباید از سرور بیرون برود.
@@ -167,7 +168,12 @@ export class SecurityPipeline {
    * اعتبارسنجی اسکیما برای بدنه درخواست با Ajv.
    */
   validateSchema(schema: object, data: unknown): { valid: boolean; errors?: string[] } {
-    const validate = this.ajvInstance.compile(schema);
+    /* `compile` is the expensive step and a route's schema never changes: compile once per schema object */
+    let validate = COMPILED.get(schema);
+    if (!validate) {
+      validate = this.ajvInstance.compile(schema);
+      COMPILED.set(schema, validate);
+    }
     const valid = validate(data);
 
     if (!valid) {
@@ -268,7 +274,15 @@ export class SecurityPipeline {
     | ابزار محلی است و دسترسی شبکه‌ای پشت `checkConnection`/token است،
     | embedding را آزاد می‌گذاریم تا UI در preview دیده شود.
     */
-    res.setHeader('X-XSS-Protection', '1; mode=block');
+    /*
+    | `?token=` is accepted (the banners print such links). Without this header
+    | a page opened from one would send the full URL, token included, in
+    | `Referer` to any site it links to. `X-XSS-Protection` is dropped: it is
+    | obsolete and itself introduced bugs in the browsers that honoured it.
+    | API answers are never cached; the static server overrides this per file.
+    */
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Cache-Control', 'no-store');
 
     /*
     | قبلاً این هدر همیشه `*` بود، یعنی هر صفحه‌ای در هر دامنه‌ای

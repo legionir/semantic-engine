@@ -57,7 +57,8 @@ export class ExplainSymbolTool implements AiTool<ExplainSymbolInput> {
       limit: { type: 'integer', default: 20 },
       minConfidence: { type: 'integer', default: 0 },
     },
-    required: [],
+    /* the schema now says what the runtime always required: an id or a name */
+    anyOf: [{ required: ['id'] }, { required: ['name'] }],
   };
 
   private engine: GraphQueryEngine | undefined;

@@ -573,3 +573,10 @@
 - **Also:** the Gateway serves `/open.html` and proxies the global settings/providers/models/chat/fs routes to a ready worker (`project:read` for GET, `project:admin` otherwise); `/api/v1/gateway/projects/:id/logs|events` and `/api/v1/gateway/info` were added; `start`/`ui`/`serve` children run quiet and `start` prints one banner.
 - **Trade-off:** a token in a URL can leak through history or proxy logs; it was requested explicitly and the header form remains supported and preferred.
 - **Status:** DECIDED, implemented.
+
+## D-0034 — Tracked lifecycle operations, phase-aware console, one place to edit a worker
+
+- **Date:** 2026-10-27
+- **Decision:** (1) Start, stop, restart and reindex are tracked operations (`OperationTracker`): `?async=1` answers 202 and the console polls `GET /api/v1/gateway/projects/:id/operation` and the log tail; without it the endpoints behave as before. A reindex stays "running" until the worker's `queueSize` returns to 0; stop and restart may interrupt it, anything else gets 409. (2) Every project row carries `phase` (stopped / starting / indexing / ready / degraded / crashed / stopping / restarting) and the console offers only the buttons that fit it. (3) Edit configuration opens `/open.html?project=<id>`, which holds the worker form next to the global Settings; values Settings chose are shown for anything the project has not set. The dashboard keeps only the New worker modal. (4) A project whose index cannot be loaded keeps the real error (`indexError`) and the gateway quotes it when a worker does not become ready.
+- **Why:** a MiniLM reindex takes minutes and a blocking POST gave the dashboard nothing to show; a worker that never became ready (60 s) said only "readiness answered 503"; and the dashboard form and the settings page held two disconnected views of one configuration.
+- **Status:** DECIDED, implemented.

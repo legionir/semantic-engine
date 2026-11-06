@@ -13,6 +13,17 @@ import { assertResolvedFetchableUrl } from '../providers/EmbeddingProviderServic
 const execFileAsync = promisify(execFile);
 
 /*
+| A clone of a private repository would otherwise stop at a username prompt and
+| sit there until the 120 s timeout, holding the request open.
+*/
+const gitEnv = (): NodeJS.ProcessEnv => ({
+  ...process.env,
+  GIT_TERMINAL_PROMPT: '0',
+  GIT_ASKPASS: 'echo',
+  GCM_INTERACTIVE: 'never',
+});
+
+/*
 | SE-API-002 — a rejected request is a client error, not a server fault.
 | The service used to throw plain `Error` for bad input (invalid repoUrl,
 | unsupported protocol, malformed commitHash, oversized bundle, path-traversal
@@ -30,6 +41,21 @@ export class SourceValidationError extends Error {
     this.name = 'SourceValidationError';
     this.status = status;
   }
+}
+
+/** First useful line of git's stderr, with any `user:password@` in the URL removed. */
+function describeGitFailure(error: unknown, repo: URL): string {
+  const err = error as { killed?: boolean; stderr?: string; message?: string };
+  if (err.killed) return 'timed out';
+  const text = String(err.stderr || err.message || 'unknown error');
+  const line = text.split('\n').map(l => l.trim()).find(l => l !== '' && !l.startsWith('Cloning into')) ?? 'unknown error';
+  const bare = new URL(repo.href);
+  const secret = [repo.username, repo.password].filter(v => v !== '');
+  bare.username = '';
+  bare.password = '';
+  let out = line.split(repo.href).join(bare.href);
+  for (const value of secret) out = out.split(value).join('***');
+  return out.slice(0, 300);
 }
 
 export interface GitSyncOptions {
@@ -131,30 +157,43 @@ export class SourceSyncService {
 
     try {
       const cloneArgs = [
+        /* no redirects (the host was vetted, a 302 target was not), no credential prompt, no file:// submodule tricks */
+        '-c', 'http.followRedirects=false',
+        '-c', 'protocol.file.allow=never',
+        '-c', 'core.hooksPath=/dev/null',
         'clone',
         '--no-tags',
         ...(options.shallow === false ? [] : ['--depth', '1']),
         ...(options.branch ? ['--branch', options.branch] : []),
+        '--',
         options.repoUrl,
         cloneDir,
       ];
 
-      await execFileAsync('git', cloneArgs, {
-        timeout,
-        maxBuffer: 2 * 1024 * 1024,
-        windowsHide: true,
-      });
-
-      if (options.commitHash) {
-        await execFileAsync('git', ['-C', cloneDir, 'fetch', '--depth', '1', 'origin', options.commitHash], {
+      try {
+        await execFileAsync('git', cloneArgs, {
           timeout,
           maxBuffer: 2 * 1024 * 1024,
           windowsHide: true,
+          env: gitEnv(),
+        });
+      } catch (error) {
+        /* the remote refused, was unreachable or needs credentials: an upstream failure, not a server bug */
+        throw new SourceValidationError(`git clone failed: ${describeGitFailure(error, repo)}`, 502);
+      }
+
+      if (options.commitHash) {
+        await execFileAsync('git', ['-c', 'http.followRedirects=false', '-C', cloneDir, 'fetch', '--depth', '1', 'origin', options.commitHash], {
+          timeout,
+          maxBuffer: 2 * 1024 * 1024,
+          windowsHide: true,
+          env: gitEnv(),
         });
         await execFileAsync('git', ['-C', cloneDir, 'checkout', '--detach', options.commitHash], {
           timeout,
           maxBuffer: 2 * 1024 * 1024,
           windowsHide: true,
+          env: gitEnv(),
         });
       }
 

@@ -236,6 +236,46 @@ describe('writeFileAtomic', () => {
     expect(fs.readFileSync(target(), 'utf8')).toBe('{"previous":"index"}');
   });
 
+  /*
+  | Windows refuses to rename over a file another process has open (EPERM) and
+  | allows it a moment later. A job must not die at 90% because a reader or a
+  | virus scanner held the index for a few milliseconds.
+  */
+  const renameFailing = (times: number, code: string) => {
+    let calls = 0;
+    const impl = {
+      ...fs.promises,
+      rename: async (from: string, to: string) => {
+        calls += 1;
+        if (calls <= times) throw Object.assign(new Error(`${code}: operation not permitted, rename`), { code });
+        return fs.promises.rename(from, to);
+      },
+    } as unknown as typeof fs.promises;
+    return { port: new NodeFileSystem({ fsImpl: impl, renamePausesMs: [1, 1, 1, 1, 1] }), calls: () => calls };
+  };
+  const onlyOn = (platform: NodeJS.Platform) => (process.platform === platform ? it : it.skip);
+
+  onlyOn('win32')('retries a rename that fails with EPERM while the target is briefly held open', async () => {
+    fs.writeFileSync(target(), 'previous');
+    const { port: flaky, calls } = renameFailing(3, 'EPERM');
+
+    await flaky.writeFileAtomic(target(), 'new');
+
+    expect(fs.readFileSync(target(), 'utf8')).toBe('new');
+    expect(calls()).toBe(4);
+    expect(fs.readdirSync(dir)).toEqual(['out.json']);
+  });
+
+  onlyOn('win32')('gives up on a rename that keeps failing and removes the temporary file', async () => {
+    fs.writeFileSync(target(), 'previous');
+    const { port: stuck } = renameFailing(1_000, 'EBUSY');
+
+    await expect(stuck.writeFileAtomic(target(), 'new')).rejects.toThrow('EBUSY');
+
+    expect(fs.readFileSync(target(), 'utf8')).toBe('previous');
+    expect(fs.readdirSync(dir)).toEqual(['out.json']);
+  });
+
   it('cleans up its temporary file when the write fails', async () => {
     fs.writeFileSync(target(), 'previous');
     const failing = new NodeFileSystem({

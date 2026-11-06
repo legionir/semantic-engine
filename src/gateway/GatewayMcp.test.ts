@@ -256,6 +256,64 @@ describeIfBuilt('all-projects MCP endpoint through the Gateway', () => {
     expect(info.text).not.toContain(token);
   });
 
+  /*
+  | Start / Stop / Restart / Reindex as tracked operations: `?async=1` answers 202
+  | at once, the operation can be polled, and the project's phase follows it.
+  */
+  const operationOf = async (id: string) =>
+    (await request(port, 'GET', `/api/v1/gateway/projects/${id}/operation`, token)).json as {
+      phase: string;
+      indexing: boolean;
+      operation: { id: string; action: string; status: string; error?: string } | null;
+    };
+
+  const untilDone = async (id: string, seen: string[] = []) => {
+    for (let attempt = 0; attempt < 600; attempt += 1) {
+      const status = await operationOf(id);
+      seen.push(status.phase);
+      if (status.operation && status.operation.status !== 'running') return status;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    throw new Error('operation did not finish');
+  };
+
+  it('tracks stop, start and reindex as operations whose phase the console can show', async () => {
+    const stop = await request(port, 'POST', `/api/v1/gateway/projects/${idBeta}/stop?async=1`, token, {});
+    expect(stop.status).toBe(202);
+    expect((stop.json as { operation: { action: string } }).operation.action).toBe('stop');
+    const stopped = await untilDone(idBeta);
+    expect(stopped.operation).toMatchObject({ action: 'stop', status: 'done' });
+    expect(stopped.phase).toBe('stopped');
+
+    const start = await request(port, 'POST', `/api/v1/gateway/projects/${idBeta}/start?async=1`, token, {});
+    expect(start.status).toBe(202);
+    const phases: string[] = [];
+    const started = await untilDone(idBeta, phases);
+    expect(started.operation).toMatchObject({ action: 'start', status: 'done' });
+    expect(phases).toContain('starting');
+    expect(started.phase).toBe('ready');
+
+    const first = await request(port, 'POST', `/api/v1/gateway/projects/${idBeta}/reindex?async=1`, token, {});
+    expect(first.status).toBe(202);
+    const second = await request(port, 'POST', `/api/v1/gateway/projects/${idBeta}/reindex?async=1`, token, {});
+    expect(second.status).toBe(409);
+
+    const indexing: string[] = [];
+    const reindexed = await untilDone(idBeta, indexing);
+    expect(reindexed.operation).toMatchObject({ action: 'reindex', status: 'done' });
+    expect(indexing).toContain('indexing');
+    expect(reindexed.phase).toBe('ready');
+  }, 240_000);
+
+  it('lists the phase and the running operation on every project row', async () => {
+    const list = await request(port, 'GET', '/api/v1/gateway/projects', token);
+    const rows = (list.json as { projects: { projectId: string; phase: string; indexing: boolean; operation: unknown }[] }).projects;
+    for (const row of rows) {
+      expect(['stopped', 'starting', 'indexing', 'ready', 'degraded', 'crashed', 'stopping', 'restarting']).toContain(row.phase);
+      expect(typeof row.indexing).toBe('boolean');
+    }
+  });
+
   it('serves a worker log tail and the recorded events', async () => {
     const logs = await request(port, 'GET', `/api/v1/gateway/projects/${idAlpha}/logs?lines=50`, token);
     expect(logs.status).toBe(200);

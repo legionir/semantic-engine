@@ -113,9 +113,27 @@ export class VectorIndexer {
       (!chunk.symbolId || liveSymbolIds.has(chunk.symbolId))
     );
 
-    const retained = previousLive.filter(chunk => !affectedFileIds.has(chunk.fileId));
-    const affectedFiles = projectIndex.files.filter(file => affectedFileIds.has(file.id));
-    const affectedSymbols = projectIndex.symbols.filter(symbol => affectedFileIds.has(symbol.fileId));
+    /*
+    | A file whose kept chunks were embedded by another model than the current
+    | generator is re-embedded too. Otherwise the first save after changing the
+    | model leaves the index half old model, half new: two incomparable vector
+    | spaces (and, before the store learned to cope, a project that failed to load).
+    */
+    const generator = this.options.embeddingGenerator;
+    let affected: ReadonlySet<string> = affectedFileIds;
+    if (generator) {
+      const foreign = new Set<string>();
+      for (const chunk of previousLive) {
+        if (chunk.embedding && chunk.embeddingModel && chunk.embeddingModel !== generator.modelName) {
+          foreign.add(chunk.fileId);
+        }
+      }
+      if (foreign.size > 0) affected = new Set([...affectedFileIds, ...foreign]);
+    }
+
+    const retained = previousLive.filter(chunk => !affected.has(chunk.fileId));
+    const affectedFiles = projectIndex.files.filter(file => affected.has(file.id));
+    const affectedSymbols = projectIndex.symbols.filter(symbol => affected.has(symbol.fileId));
     const affectedIndex: ProjectIndex = {
       ...projectIndex,
       files: affectedFiles,
@@ -125,7 +143,7 @@ export class VectorIndexer {
 
     const refreshed = await this.index(affectedIndex, {
       contents,
-      previous: previousLive.filter(chunk => affectedFileIds.has(chunk.fileId)),
+      previous: previousLive.filter(chunk => affected.has(chunk.fileId)),
     });
 
     return [...retained, ...refreshed].sort((a, b) => a.id.localeCompare(b.id));

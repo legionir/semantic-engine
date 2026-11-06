@@ -2,7 +2,44 @@
  * Request helpers of the platform HTTP server: route-pattern matching and
  * size-limited JSON body reading.
  */
+import * as crypto from 'crypto';
 import * as http from 'http';
+
+/**
+ * `new URL(target, base)` that never throws. A request target such as `//` or
+ * `//%` is not a valid URL; callers answer 400 instead of crashing on it — in
+ * an 'upgrade' listener a synchronous throw is an uncaught exception.
+ */
+export function parseUrlSafely(target: string | undefined, base: string): URL | null {
+  try {
+    return new URL(target ?? '/', base);
+  } catch {
+    return null;
+  }
+}
+
+/** `decodeURIComponent` that leaves a malformed escape as typed; the lookup then simply fails. */
+export function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Answer an unexpected failure without handing its message to the client: a
+ * thrown error carries file-system paths and internals. The detail goes to
+ * stderr under a request id the client can quote.
+ */
+export function respondInternalError(res: http.ServerResponse, error: unknown): void {
+  const requestId = crypto.randomBytes(6).toString('hex');
+  const detail = error instanceof Error ? (error.stack ?? error.message) : String(error);
+  process.stderr.write(`[http] internal error ${requestId}: ${detail}\n`);
+  if (res.writableEnded) return;
+  if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'internal error', requestId }));
+}
 
 export function matchPattern(pattern: string, pathname: string): Record<string, string> | null {
   const patternParts = pattern.split('/').filter(Boolean);
@@ -18,7 +55,12 @@ export function matchPattern(pattern: string, pathname: string): Record<string, 
     const aPart = pathParts[i]!;
 
     if (pPart.startsWith(':')) {
-      params[pPart.slice(1)] = decodeURIComponent(aPart);
+      try {
+        params[pPart.slice(1)] = decodeURIComponent(aPart);
+      } catch {
+        /* a malformed %-escape cannot name any resource */
+        return null;
+      }
     } else if (pPart !== aPart) {
       return null;
     }

@@ -170,3 +170,29 @@ describe('VectorStore — نگهبانِ ابعاد (SE-VEC-13)', () => {
     expect(results[0].score).toBeCloseTo(1, 9);
   });
 });
+
+describe('VectorStore — an index that holds two embedding sizes', () => {
+  const mixed = (): VectorChunk[] => [
+    ...Array.from({ length: 6 }, (_, i) => createChunk(`a${i}`, `old ${i}`, [1, i, 0])),
+    createChunk('b0', 'new model', [0, 1, 0, 0]),
+    createChunk('b1', 'new model 2', [0, 0, 1, 0]),
+  ];
+
+  it('loads and ranks only the comparable size (brute-force: other sizes score 0)', async () => {
+    const store = new VectorStore(mixed(), { backend: 'brute-force' });
+    const results = await store.search([1, 1, 0], { topK: 10, minScore: 0.05 });
+    expect(results.map(r => r.chunk.id).sort()).toEqual(['a0', 'a1', 'a2', 'a3', 'a4', 'a5']);
+  });
+
+  it('does the same with the usearch backend, which used to throw on the key/vector count', async () => {
+    let store: VectorStore;
+    try {
+      store = new VectorStore(mixed(), { backend: 'usearch' });
+    } catch (error) {
+      if (/not available/.test(String(error))) return; // optional native module absent
+      throw error;
+    }
+    const results = await store.search([1, 1, 0], { topK: 10 });
+    expect(results.every(r => r.chunk.id.startsWith('a'))).toBe(true);
+  });
+});

@@ -30,6 +30,7 @@ import { handleGatewayProjectRoute, handleRegisterProject, ProjectRouteDeps } fr
 import { handleGatewayUpgrade } from './GatewayUpgrade';
 import { serveGatewayUi } from './GatewayUi';
 import { GatewayMcp, resolveProject } from './GatewayMcp';
+import { OperationTracker } from './OperationTracker';
 import { packageVersion } from '../host/version';
 import * as fs from 'fs';
 import { WorkerConfigStore } from './WorkerConfigStore';
@@ -37,6 +38,7 @@ import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
 import { generateToken } from '../cli/HttpGuard';
 import { readBody } from './gatewayHttp';
+import { parseUrlSafely, respondInternalError, safeDecode } from '../server/httpRequestUtils';
 import { healthPayload, metricsPayload, projectEntry } from './gatewayPayloads';
 
 export const DEFAULT_GATEWAY_PORT = 4000;
@@ -83,6 +85,7 @@ export class GatewayServer {
   private readonly configs: WorkerConfigStore;
   private readonly startedAt: number;
   private readonly mcp: GatewayMcp;
+  private readonly operations = new OperationTracker();
   /** The last gateway events, so the dashboard can show history it did not witness. */
   private readonly recentEvents: Record<string, unknown>[] = [];
 
@@ -137,14 +140,7 @@ export class GatewayServer {
   private listen(): Promise<GatewayStartInfo> {
     return new Promise((resolve, reject) => {
       this.server = http.createServer((req, res) => {
-        this.handle(req, res).catch(error => {
-          if (!res.headersSent) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-          }
-          res.end(
-            JSON.stringify({ error: error instanceof Error ? error.message : String(error) })
-          );
-        });
+        this.handle(req, res).catch(error => respondInternalError(res, error));
       });
 
       this.server.once('error', reject);
@@ -209,10 +205,19 @@ export class GatewayServer {
   }
 
   private async handle(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    const url = new URL(req.url ?? '/', 'http://gateway.local');
+    const url = parseUrlSafely(req.url, 'http://gateway.local');
+    if (!url) {
+      this.send(res, 400, { error: 'request target is not a valid URL' });
+      return;
+    }
     const pathname = url.pathname;
     const method = req.method ?? 'GET';
     const startedAt = Date.now();
+
+    /* same reasoning as SecurityPipeline.applySecurityHeaders: `?token=` links must not leak via Referer */
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'no-store');
 
     this.requestsTotal += 1;
     res.on('finish', () => this.durations.record(Date.now() - startedAt));
@@ -287,7 +292,7 @@ export class GatewayServer {
         this.send(res, 403, { error: 'token lacks permission semantic:query' });
         return;
       }
-      const resolved = resolveProject(this.registry.list(), decodeURIComponent(mcp[1]!));
+      const resolved = resolveProject(this.registry.list(), safeDecode(mcp[1]!));
       if ('error' in resolved) {
         this.send(res, 404, { error: resolved.error });
         return;
@@ -323,19 +328,33 @@ export class GatewayServer {
       return;
     }
 
-    const logsRoute = /^\/api\/v1\/gateway\/projects\/([^/]+)\/(logs|events)$/.exec(pathname);
+    const logsRoute = /^\/api\/v1\/gateway\/projects\/([^/]+)\/(logs|events|operation)$/.exec(pathname);
     if (logsRoute && method === 'GET') {
       if (!this.auth.hasPermission(record, 'project:read')) {
         this.send(res, 403, { error: 'token lacks permission project:read' });
         return;
       }
-      const projectId = decodeURIComponent(logsRoute[1]!);
+      const projectId = safeDecode(logsRoute[1]!);
       if (!this.registry.get(projectId)) {
         this.send(res, 404, { error: `unknown project: ${projectId}` });
         return;
       }
       if (!this.auth.canAccessProject(record, projectId)) {
         this.send(res, 403, { error: `token cannot access project ${projectId}` });
+        return;
+      }
+      if (logsRoute[2] === 'operation') {
+        /* what the console polls while a button's work is running */
+        if (this.summarize(projectId)) await this.supervisor.refreshStats(projectId);
+        const entry = this.entry(projectId);
+        this.send(res, 200, {
+          projectId,
+          phase: entry['phase'],
+          indexing: entry['indexing'],
+          operation: entry['operation'],
+          state: entry['state'],
+          stats: entry['stats'],
+        });
         return;
       }
       if (logsRoute[2] === 'logs') {
@@ -486,7 +505,7 @@ export class GatewayServer {
 
     return {
       total: projects.length,
-      projects: projects.map(entry => projectEntry(this.supervisor, this.registry, id => this.summarize(id), entry.id)),
+      projects: projects.map(entry => this.entry(entry.id)),
     };
   }
 
@@ -512,9 +531,14 @@ export class GatewayServer {
       this.loadStoredWorkerConfig(id) ??
       (record ? this.configs.configFor(id, record.rootPath, record.name) : undefined);
     return {
-      ...projectEntry(this.supervisor, this.registry, id => this.summarize(id), id),
+      ...this.entry(id),
       ...(config !== undefined ? { config } : {}),
     };
+  }
+
+  /** One project's row, with whatever the gateway is doing to it right now. */
+  private entry(id: string): Record<string, unknown> {
+    return projectEntry(this.supervisor, this.registry, projectId => this.summarize(projectId), id, this.operations.get(id));
   }
 
   private async startWorkerFor(projectId: string, rootPath: string, name: string) {
@@ -527,7 +551,7 @@ export class GatewayServer {
       supervisor: this.supervisor,
       auth: this.auth,
       send: (res, status, body) => this.send(res, status, body),
-      projectEntry: id => projectEntry(this.supervisor, this.registry, id => this.summarize(id), id),
+      projectEntry: id => this.entry(id),
       requestStarted: () => {
         this.activeRequests += 1;
       },
@@ -546,10 +570,11 @@ export class GatewayServer {
       supervisor: this.supervisor,
       auth: this.auth,
       configs: this.configs,
+      operations: this.operations,
       send: (res, status, body) => this.send(res, status, body),
       broadcast: event => this.broadcast(event),
       readBody: req => readBody(req),
-      projectEntry: id => projectEntry(this.supervisor, this.registry, id => this.summarize(id), id),
+      projectEntry: id => this.entry(id),
       projectEntryWithConfig: id => this.projectEntryWithConfig(id),
       startWorkerFor: (projectId, rootPath, name) => this.startWorkerFor(projectId, rootPath, name),
       errorStatus: error => this.errorStatus(error),

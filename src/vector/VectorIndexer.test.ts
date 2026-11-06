@@ -175,3 +175,57 @@ describe('VectorIndexer', () => {
     expect(chunks).toHaveLength(0);
   });
 });
+
+describe('VectorIndexer.updateIncremental — a model change in the middle of an index', () => {
+  const generator = (model: string, size: number): IEmbeddingGenerator => ({
+    modelName: model,
+    isReady: async () => true,
+    generate: async () => ({ embedding: new Array(size).fill(0.5), model, dimensions: size }),
+    generateBatch: async (texts: readonly string[]) =>
+      texts.map(() => ({ embedding: new Array(size).fill(0.5), model, dimensions: size })),
+    dispose: async () => {},
+  });
+
+  const twoFileIndex = (): ProjectIndex => ({
+    schemaVersion: '2.0.0',
+    root: 'test',
+    generatedAt: new Date().toISOString(),
+    languages: ['typescript'],
+    files: [createFile('f1', 'src/a.ts'), createFile('f2', 'src/b.ts')],
+    symbols: [],
+    graphs: { callGraph: [], typeGraph: [], dependencyGraph: [] },
+    diagnostics: [],
+    metrics: { totalFiles: 2, totalLoc: 100, totalSymbols: 0, avgCyclomaticComplexity: 0, languageBreakdown: { typescript: 2 } },
+  });
+
+  it('re-embeds untouched files that still carry the previous model, so one index never mixes two models', async () => {
+    const index = twoFileIndex();
+    const old = new VectorIndexer({ embeddingGenerator: generator('model-old', 4) });
+    const first = await old.index(index);
+    expect(new Set(first.map(c => c.embeddingModel))).toEqual(new Set(['model-old']));
+
+    /* only f1 changed, but the generator is now another model */
+    const next = new VectorIndexer({ embeddingGenerator: generator('model-new', 8) });
+    const updated = await next.updateIncremental(index, new Set(['f1']), new Map(), first);
+
+    expect(new Set(updated.map(c => c.embeddingModel))).toEqual(new Set(['model-new']));
+    expect(new Set(updated.map(c => c.embedding!.length))).toEqual(new Set([8]));
+    expect(updated.map(c => c.fileId).sort()).toEqual(['f1', 'f2']);
+  });
+
+  it('still keeps untouched files as they are when the model has not changed', async () => {
+    const index = twoFileIndex();
+    const same = new VectorIndexer({ embeddingGenerator: generator('model-old', 4) });
+    const first = await same.index(index);
+    const batches: number[] = [];
+    const counting = generator('model-old', 4);
+    const original = counting.generateBatch.bind(counting);
+    (counting as { generateBatch: IEmbeddingGenerator['generateBatch'] }).generateBatch = async texts => {
+      batches.push(texts.length);
+      return original(texts);
+    };
+
+    await new VectorIndexer({ embeddingGenerator: counting }).updateIncremental(index, new Set(['f1']), new Map(), first);
+    expect(batches.reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(first.length / 2 + 1);
+  });
+});

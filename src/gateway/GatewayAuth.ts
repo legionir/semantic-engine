@@ -83,15 +83,20 @@ export class GatewayAuth {
     permissions: readonly PermissionScope[];
   }): { id: string; token: string } {
     const projects = options.allowedProjects;
+    /*
+    | An empty list used to fall through to `resourceScope: '*'` — a token that
+    | was meant to reach nothing reached every project. "All projects" must be
+    | asked for with '*'.
+    */
+    if (projects.length === 0) {
+      throw new Error('allowedProjects must name at least one project (use "*" for all projects)');
+    }
     const { rawToken, key } = this.keys.createKey({
       name: options.name,
       role: 'Agent',
       permissions: options.permissions,
-      resourceScope:
-        projects.includes(ALL_PROJECTS) || projects.length === 0
-          ? ALL_PROJECTS
-          : `project:${projects[0]}`,
-      ...(projects.length > 0 ? { allowedProjects: projects } : {}),
+      resourceScope: projects.includes(ALL_PROJECTS) ? ALL_PROJECTS : `project:${projects[0]}`,
+      allowedProjects: projects,
     });
     return { id: key.id, token: rawToken };
   }

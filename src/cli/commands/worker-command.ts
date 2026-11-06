@@ -18,7 +18,6 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
 import { runIndex } from './index-command';
@@ -31,6 +30,8 @@ import { loadBlueprintBeside } from '../../ai/discovery/loadBlueprint';
 import type { RouteDefinition } from '../../server/types';
 import { ProjectWebSocketChannel } from '../../server/wsProjectChannel';
 import { cpuPercent } from '../../gateway/metrics';
+import * as nodeCrypto from 'crypto';
+import { parseUrlSafely } from '../../server/httpRequestUtils';
 
 interface WorkerStatus {
   readonly ok: boolean;
@@ -47,6 +48,17 @@ interface WorkerStatus {
   readonly memoryMb: number;
   readonly queueSize: number;
   readonly lastIndexedAt?: string;
+  /** Why the index is `stale`: the real load error, so a 503 is never unexplained. */
+  readonly indexError?: string;
+  /**
+   * Language-server diagnostics: whether the pass is switched on for this
+   * worker, and what the last run found. `run` is absent when the index has
+   * never been through the pass.
+   */
+  readonly lsp: {
+    readonly enabled: boolean;
+    readonly run?: { filesWithFindings: number; filesSkippedByBudget: number; budgetMs: number; completedAt?: string };
+  };
 }
 
 /*
@@ -135,7 +147,12 @@ export async function runWorker(
     socket: import('stream').Duplex,
     head: Buffer
   ): void => {
-    const url = new URL(req.url ?? '/', 'http://worker.local');
+    const url = parseUrlSafely(req.url, 'http://worker.local');
+    if (!url) {
+      socket.write('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n');
+      socket.destroy();
+      return;
+    }
     if (url.pathname !== '/ws') {
       socket.write('HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n');
       socket.destroy();
@@ -146,7 +163,7 @@ export async function runWorker(
     const fromHeader =
       typeof header === 'string' && header.startsWith('Bearer ') ? header.slice(7).trim() : '';
     const candidate = fromHeader !== '' ? fromHeader : url.searchParams.get('token') ?? '';
-    if (candidate !== token) {
+    if (!tokensEqual(candidate, token)) {
       socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n');
       socket.destroy();
       return;
@@ -169,11 +186,12 @@ export async function runWorker(
     ...(gatewayManaged ? { gatewayManaged: true } : {}),
   });
 
-  const project = server.projects.registerProject(
-    paths.workspaceRoot,
-    paths.projectId,
-    path.basename(paths.workspaceRoot)
-  );
+  /*
+  | No display name is passed: the registry already holds the one the user
+  | chose in the Gateway. Passing the folder name here renamed the project to
+  | its folder every time a worker started.
+  */
+  const project = server.projects.registerProject(paths.workspaceRoot, paths.projectId);
 
   const startedAt = Date.now();
   let watcher: StartedChild | null = null;
@@ -184,6 +202,7 @@ export async function runWorker(
   let indexFailures = 0;
   const restartCount = Number(process.env['SEMANTIC_ENGINE_WORKER_RESTART_COUNT'] ?? 0);
 
+  const lspEnabled = boolOption(args.options, 'lspDiagnostics', false);
   const status = (): WorkerStatus => {
     const current = server.projects.getProject(paths.projectId);
     const stats = current?.stats;
@@ -207,7 +226,12 @@ export async function runWorker(
       blueprint: Boolean(current?.blueprint),
       memoryMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       queueSize: reindexing ? 1 : 0,
+      lsp: {
+        enabled: lspEnabled,
+        ...(current?.index?.diagnosticsRun ? { run: { ...current.index.diagnosticsRun } } : {}),
+      },
       ...(stats?.lastIndexedAt !== undefined ? { lastIndexedAt: stats.lastIndexedAt } : {}),
+      ...(current?.loadError !== undefined ? { indexError: current.loadError } : {}),
     };
   };
 
@@ -452,4 +476,11 @@ export async function runWorker(
 
   context.logger.info('worker stopped', { projectId: paths.projectId, url: info.url });
   return result;
+}
+
+/** Constant-time comparison; unequal lengths are rejected without comparing bytes. */
+function tokensEqual(candidate: string, expected: string): boolean {
+  const a = Buffer.from(candidate, 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && nodeCrypto.timingSafeEqual(a, b);
 }

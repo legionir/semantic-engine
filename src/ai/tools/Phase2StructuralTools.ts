@@ -84,6 +84,7 @@ export class EditPlanTool extends StructuralTool implements AiTool {
   readonly name = 'edit_plan'; readonly description = 'Create a dry-run transactional edit plan; no source is written.';
   readonly inputSchema = { type: 'object', properties: { edits: { type: 'array', items: { type: 'object' } }, source: { enum: ['structural-search', 'client'] } }, required: ['edits'] };
   constructor(reader: ProjectIndexReader, workspaceRoot: string | undefined, private readonly engine?: TransactionalEditEngine) { super(reader, workspaceRoot); }
+  isAvailable(): boolean { return this.engine !== undefined; }
   async execute(input: AiToolInput): Promise<AiToolOutput> { if (!this.engine || !Array.isArray(input.edits)) return fail('DISABLED: transactional edits are not configured'); try { const plan = await this.engine.plan(input.edits as TextEdit[], input.source === 'structural-search' ? 'structural-search' : 'client'); return ok([{ id: plan.id, name: plan.id, kind: 'edit_plan', source: 'transactional-edit', excerpt: plan.diff, metadata: { planId: plan.id, editCount: plan.edits.length, diff: plan.diff, approvalRequired: true, readOnlyPreview: true } }]); } catch (error) { return fail(error instanceof Error ? error.message : String(error)); } }
 }
 
@@ -91,6 +92,7 @@ export class EditApprovalTool implements AiTool {
   readonly name = 'edit_approve'; readonly description = 'Approve a previously previewed edit plan; approval does not apply it.';
   readonly inputSchema = { type: 'object', properties: { planId: { type: 'string' } }, required: ['planId'] };
   constructor(private readonly engine?: TransactionalEditEngine) {}
+  isAvailable(): boolean { return this.engine !== undefined; }
   async execute(input: AiToolInput): Promise<AiToolOutput> { if (!this.engine || typeof input.planId !== 'string') return fail('DISABLED: transactional edits are not configured'); try { const token = this.engine.approve(input.planId); return ok([], { planId: input.planId, approvalToken: token, applyRequired: true }); } catch (error) { return fail(error instanceof Error ? error.message : String(error)); } }
 }
 
@@ -98,6 +100,7 @@ export class EditApplyTool implements AiTool {
   readonly name = 'edit_apply'; readonly description = 'Apply an explicitly approved transaction and journal originals for rollback.';
   readonly inputSchema = { type: 'object', properties: { planId: { type: 'string' }, approvalToken: { type: 'string' } }, required: ['planId', 'approvalToken'] };
   constructor(private readonly engine?: TransactionalEditEngine) {}
+  isAvailable(): boolean { return this.engine !== undefined; }
   async execute(input: AiToolInput): Promise<AiToolOutput> { if (!this.engine || typeof input.planId !== 'string' || typeof input.approvalToken !== 'string') return fail('DISABLED: transactional edits are not configured'); try { const record = await this.engine.apply(input.planId, input.approvalToken); return ok([], { transactionId: record.transactionId, status: record.status, rollbackAvailable: true }); } catch (error) { return fail(error instanceof Error ? error.message : String(error)); } }
 }
 
@@ -105,6 +108,7 @@ export class EditRollbackTool implements AiTool {
   readonly name = 'edit_rollback'; readonly description = 'Rollback an applied transaction from its durable journal.';
   readonly inputSchema = { type: 'object', properties: { transactionId: { type: 'string' } }, required: ['transactionId'] };
   constructor(private readonly engine?: TransactionalEditEngine) {}
+  isAvailable(): boolean { return this.engine !== undefined; }
   async execute(input: AiToolInput): Promise<AiToolOutput> { if (!this.engine || typeof input.transactionId !== 'string') return fail('DISABLED: transactional edits are not configured'); try { const record = await this.engine.rollback(input.transactionId); return ok([], { transactionId: record.transactionId, status: record.status }); } catch (error) { return fail(error instanceof Error ? error.message : String(error)); } }
 }
 
@@ -112,6 +116,7 @@ export class EditStatusTool implements AiTool {
   readonly name = 'edit_status'; readonly description = 'Inspect journaled transaction status without changing any file.';
   readonly inputSchema = { type: 'object', properties: { transactionId: { type: 'string' }, limit: { type: 'integer', minimum: 1, maximum: 1000 } } };
   constructor(private readonly engine?: TransactionalEditEngine) {}
+  isAvailable(): boolean { return this.engine !== undefined; }
   async execute(input: AiToolInput): Promise<AiToolOutput> {
     if (!this.engine) return fail('DISABLED: transactional edits are not configured');
     try {

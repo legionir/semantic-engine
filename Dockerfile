@@ -19,6 +19,13 @@ ENV PORT=4000
 ENV HOST=0.0.0.0
 WORKDIR /app
 
+# `git` is required at run time: source sync (clone) and the history tools
+# (hotspots, co-churn, recent changes). `tini` reaps the worker / LSP / git
+# children and forwards SIGTERM so `docker stop` shuts down cleanly.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git ca-certificates tini \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
@@ -39,5 +46,5 @@ EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 4000) + '/health').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"
 
-ENTRYPOINT ["node", "dist/cli/main.js"]
+ENTRYPOINT ["/usr/bin/tini", "--", "node", "dist/cli/main.js"]
 CMD ["ui", "--host", "0.0.0.0", "--allow-remote", "--port", "4000"]

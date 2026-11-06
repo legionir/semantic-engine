@@ -12,6 +12,7 @@ const ALIASES: Readonly<Record<string, string>> = {
   '/gateway': 'gateway.html',
   '/gateway.html': 'gateway.html',
   '/gateway.js': 'gateway.js',
+  '/worker-console.js': 'worker-console.js',
   '/gateway.css': 'gateway.css',
   '/visualizer': 'visualizer.html',
   '/visualizer.html': 'visualizer.html',

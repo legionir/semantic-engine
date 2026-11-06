@@ -110,7 +110,17 @@ export class FindTestsTool implements AiTool<FindTestsInput> {
       | a slice must be flagged so the AI does not read the returned set as
       | "these are all the related tests".
       */
-      return { success: true, items, metadata: { truncated: scored.length > limit, matchCount: scored.length, limit } };
+      return {
+        success: true,
+        items,
+        metadata: {
+          truncated: scored.length > limit,
+          matchCount: scored.length,
+          limit,
+          /* the links come from naming and import heuristics over the index, so an empty list is "none linked", not "untested" */
+          ...(scored.length === 0 ? { note: 'no test file is linked to this target by naming or imports; the code may still be tested indirectly' } : {}),
+        },
+      };
     } catch (error) { return { success: false, error: error instanceof Error ? error.message : String(error), items: [] }; }
   }
 }

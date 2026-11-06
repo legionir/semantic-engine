@@ -194,7 +194,14 @@ export class SemanticSearchTool implements AiTool<SemanticSearchInput> {
     // آفلاین-محور: بدون مسیر مدل محلی، ترنسفورمر را امتحان نکن — وگرنه
     // transformers.js نام مدل را به‌عنوان شناسهٔ Hub می‌بیند و تلاشِ اتصال به
     // شبکه می‌کند؛ هم خلافِ عهدِ آفلاین بودن است هم در تست‌ها کند/غیرقطعی می‌شود.
-    const localModelPath = process.env.SEMANTIC_ENGINE_LOCAL_MODEL_PATH;
+    /*
+    | `SEMANTIC_ENGINE_MODELS_DIR` is where Settings downloads models (the CLI sets it
+    | for every command), so it is just as local as the explicit path. Without it
+    | a project indexed with a downloaded model could never be queried with that
+    | model, and `semantic_search` degraded to keyword-only (`no-embedding-model`).
+    */
+    const localModelPath =
+      process.env.SEMANTIC_ENGINE_LOCAL_MODEL_PATH || process.env.SEMANTIC_ENGINE_MODELS_DIR || undefined;
     if (!localModelPath) return undefined;
 
     try {

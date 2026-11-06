@@ -38,6 +38,16 @@ export interface WorkerHealthSnapshot {
   readonly memoryMb?: number;
   readonly queueSize?: number;
   readonly lastIndexedAt?: string;
+  readonly indexError?: string;
+  readonly lsp?: {
+    readonly enabled: boolean;
+    readonly run?: {
+      readonly filesWithFindings: number;
+      readonly filesSkippedByBudget: number;
+      readonly budgetMs: number;
+      readonly completedAt?: string;
+    };
+  };
 }
 
 export type WorkerEventKind =
@@ -251,7 +261,8 @@ export class WorkerProcess {
           this.emit('ready');
           return;
         }
-        lastError = `readiness answered ${reply.status}`;
+        const why = typeof reply.json['indexError'] === 'string' ? ` (${reply.json['indexError']})` : '';
+        lastError = `readiness answered ${reply.status}${why}`;
       } catch (error) {
         lastError = error instanceof Error ? error.message : String(error);
       }

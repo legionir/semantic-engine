@@ -96,16 +96,21 @@ export function applyGlobalConfig(
   const wantsEmbedding =
     command === 'start'
       ? options['vectors'] !== false && options['vectors'] !== 'false'
-      : (command === 'index' || command === 'watch') &&
+      : (command === 'index' || command === 'watch' || command === 'worker') &&
         (options['vectors'] === true || options['vectors'] === 'true');
   const notices: string[] = [];
   if (wantsEmbedding) {
     const problem = unusableLocalModel(config, modelsDirFor(dataRoot, config));
-    if (problem && command === 'start') {
+    if (problem && (command === 'start' || command === 'worker')) {
       /*
-      | `start` must come up. A selected model that is not downloaded (or whose
-      | runtime is missing) would abort the index step before the UI exists, so
-      | fall back to the built-in model and say so.
+      | `start` and a gateway `worker` must come up. A selected model that is not
+      | downloaded (or whose runtime is missing) would abort the index step before
+      | anything is served, so fall back to the built-in model and say so.
+      |
+      | A worker used to ignore the chosen model altogether: only `index`/`watch`
+      | applied it, so projects served by the gateway were always indexed with the
+      | hashing model whatever Settings said. Its per-project embedding block still
+      | wins, because an explicit flag is never overwritten here.
       */
       notices.push(`${problem}; using the built-in hashing model for now`);
       applyEmbedding({ ...config, embedding: { ...config.embedding, model: LOCAL_DEFAULT_EMBEDDING_MODEL, useDefaultModel: true } }, fill);

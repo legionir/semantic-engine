@@ -11,6 +11,7 @@ import { GatewayAuth } from './GatewayAuth';
 import { netConnectOptions } from './workerTarget';
 import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { WorkerSupervisor } from './WorkerSupervisor';
+import { parseUrlSafely } from '../server/httpRequestUtils';
 
 export interface GatewayUpgradeDeps {
   readonly auth: GatewayAuth;
@@ -32,7 +33,11 @@ export function handleGatewayUpgrade(
     }
   };
 
-  const url = new URL(req.url ?? '/', 'http://gateway.local');
+  const url = parseUrlSafely(req.url, 'http://gateway.local');
+  if (!url) {
+    fail(400, 'Bad Request');
+    return;
+  }
   const match = /^\/ws\/projects\/([^/]+)$/.exec(url.pathname);
   if (!match) {
     fail(404, 'Not Found');
