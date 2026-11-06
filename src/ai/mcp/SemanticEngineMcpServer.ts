@@ -31,6 +31,7 @@ import { resolveProjectIndexPath } from '../../core/config/ProjectPaths';
 import { parseIndexGeneration } from '../../core/config/indexGeneration';
 import { MANIFEST_FILE_NAME, readCommittedIndexBytes } from '../../core/config/artifactManifest';
 import { loadBlueprintBeside } from '../discovery/loadBlueprint';
+import { MCP_INSTRUCTIONS } from './instructions';
 
 export interface McpServerOptions {
   readonly projectIndex: ProjectIndex;
@@ -99,6 +100,7 @@ export class SemanticEngineMcpServer {
         capabilities: {
           tools: {},
         },
+        instructions: MCP_INSTRUCTIONS,
       }
     );
 

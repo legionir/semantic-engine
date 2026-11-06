@@ -135,6 +135,19 @@ export class ImpactAnalysisTool implements AiTool<ImpactAnalysisInput> {
             maxNodes: Math.max(limit * 10, 200),
           });
 
+      /*
+      | An id that matches no file, symbol, module or package used to come back
+      | as `success: true` with no items — which reads as "nothing is impacted"
+      | instead of "that is not something in the index".
+      */
+      if (seeds.length === 0 && !this.isModule(input.id) && !this.isPackage(input.id)) {
+        return {
+          success: false,
+          error: `No file, symbol, module or package found for id or path: ${input.id}. Use find_symbol or project_list_files to get a valid id.`,
+          items: [],
+        };
+      }
+
       const cyclic = 'cyclic' in traversal ? traversal.cyclic : false;
       const visitedCount = 'visitedCount' in traversal
         ? traversal.visitedCount

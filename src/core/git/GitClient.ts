@@ -145,9 +145,9 @@ export class GitClient {
    */
   async getCurrentCommit(): Promise<GitCommitInfo | null> {
     try {
-      const format = '%H|%h|%s|%an|%aI';
+      const format = '%H%x1f%h%x1f%s%x1f%an%x1f%aI';
       const output = await this.execGit(['log', '-1', `--format=${format}`]);
-      const [hash, shortHash, message, author, date] = output.split('|');
+      const [hash, shortHash, message, author, date] = output.split('\x1f');
       if (!hash) return null;
       return {
         hash: hash.trim(),
@@ -289,14 +289,15 @@ export class GitClient {
    */
   async getLog(limit: number = 10): Promise<GitCommitInfo[]> {
     try {
-      const format = '%H|%h|%s|%an|%aI';
-      const output = await this.execGit(['log', `-${limit}`, `--format=${format}`]);
+      const format = '%H%x1f%h%x1f%s%x1f%an%x1f%aI';
+      /* `-- .`: a project that lives in a sub-folder of a larger repository sees its own history, not the whole repository's */
+      const output = await this.execGit(['log', `-${limit}`, `--format=${format}`, '--', '.']);
       return output
         .split('\n')
         .map(line => line.trim())
         .filter(Boolean)
         .map(line => {
-          const [hash, shortHash, message, author, date] = line.split('|');
+          const [hash, shortHash, message, author, date] = line.split('\x1f');
           return {
             hash: hash!,
             shortHash: shortHash ?? hash!.slice(0, 7),
@@ -315,14 +316,14 @@ export class GitClient {
    */
   async getFileLog(relativePath: string, limit: number = 10): Promise<GitCommitInfo[]> {
     try {
-      const format = '%H|%h|%s|%an|%aI';
+      const format = '%H%x1f%h%x1f%s%x1f%an%x1f%aI';
       const output = await this.execGit(['log', `-${limit}`, `--format=${format}`, '--', relativePath]);
       return output
         .split('\n')
         .map(line => line.trim())
         .filter(Boolean)
         .map(line => {
-          const [hash, shortHash, message, author, date] = line.split('|');
+          const [hash, shortHash, message, author, date] = line.split('\x1f');
           return {
             hash: hash!,
             shortHash: shortHash ?? hash!.slice(0, 7),

@@ -44,7 +44,8 @@ abstract class SourceTool {
     } catch (error) { return { error: error instanceof Error ? error.message : String(error) }; }
   }
   protected item(file: FileEntry, excerpt: string, metadata: Record<string, unknown> = {}) {
-    return { id: file.id, name: file.path, kind: 'source', path: file.path, line: 1, source: 'phase1-read', excerpt, metadata };
+    /* a match reports the line it was found on; whole-file reads start at line 1 */
+    return { id: file.id, name: file.path, kind: 'source', path: file.path, line: typeof metadata['line'] === 'number' ? metadata['line'] : 1, source: 'phase1-read', excerpt, metadata };
   }
 }
 

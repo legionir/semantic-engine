@@ -61,8 +61,9 @@ export class GetGitHotspotsTool implements AiTool {
           return {
             filePath,
             commitsCount: stats.commitCount,
-            linesAdded: 0,
-            linesDeleted: 0,
+            /* the commit-count history carries no line counts: null, not a made-up 0 */
+            linesAdded: null,
+            linesDeleted: null,
             churnScore,
             complexity,
             hotspotScore: churnScore * complexity,
@@ -92,8 +93,8 @@ export class GetGitHotspotsTool implements AiTool {
   private format(hotspots: readonly {
     filePath: string;
     commitsCount: number;
-    linesAdded: number;
-    linesDeleted: number;
+    linesAdded: number | null;
+    linesDeleted: number | null;
     churnScore: number;
     complexity: number;
     hotspotScore: number;
@@ -101,7 +102,16 @@ export class GetGitHotspotsTool implements AiTool {
     return {
       success: true,
       /* SE-AI-HONESTY — `truncated` says the ranked list was capped. */
-      metadata: { hotspots, source, truncated: candidateCount > hotspots.length, candidateCount },
+      metadata: {
+        hotspots,
+        source,
+        truncated: candidateCount > hotspots.length,
+        candidateCount,
+        /* an empty list must say why, or "no risk" and "no history" look the same */
+        ...(hotspots.length === 0
+          ? { note: 'no git history was found for the indexed files (not a git repository, no commits, or none touching indexed files); this is not evidence that nothing is risky' }
+          : {}),
+      },
       items: hotspots.map(h => ({
         id: h.filePath,
         name: h.filePath,

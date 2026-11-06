@@ -24,6 +24,7 @@ import { DetectArchitectureViolationsTool } from './tools/DetectArchitectureViol
 import { GetGitHotspotsTool } from './tools/GetGitHotspotsTool';
 import { ToolResultCache } from './tools/ToolResultCache';
 import { ToolInputValidator } from './tools/ToolInputValidator';
+import { TOOL_DOCS } from './tools/toolDocs';
 import {
   CodeReadTool,
   CodeFoldTool,
@@ -215,12 +216,52 @@ export class AiToolRegistry {
     return this.tools.get(name);
   }
 
+  /**
+   * What a model is shown for each tool: the tool's own description and schema,
+   * completed with the reviewed text in `toolDocs.ts` (when to use it, what it
+   * returns, what every parameter means).
+   */
   list(): { name: string; description: string; inputSchema: Record<string, unknown> }[] {
-    return Array.from(this.tools.values()).map(t => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: t.inputSchema,
-    }));
+    return Array.from(this.tools.values()).map(t => this.describe(t));
+  }
+
+  private describe(tool: AiTool): { name: string; description: string; inputSchema: Record<string, unknown> } {
+    const doc = TOOL_DOCS[tool.name];
+    if (!doc) return { name: tool.name, description: tool.description, inputSchema: tool.inputSchema };
+
+    const schema = JSON.parse(JSON.stringify(tool.inputSchema)) as Record<string, unknown>;
+    const properties = (schema['properties'] ?? {}) as Record<string, Record<string, unknown>>;
+    for (const [key, text] of Object.entries(doc.params)) {
+      if (properties[key]) properties[key] = { ...properties[key], description: text };
+    }
+    for (const [key, patch] of Object.entries(doc.schemaPatch ?? {})) {
+      if (properties[key]) properties[key] = { ...properties[key], ...patch };
+    }
+    return {
+      name: tool.name,
+      description: `${tool.description} ${doc.use} Returns: ${doc.returns}`,
+      inputSchema: schema,
+    };
+  }
+
+  /**
+   * Parameters the tool does not declare are ignored by every tool; a typo
+   * (`limt`) would otherwise look like a limit that was applied. They are
+   * reported in `metadata.warnings` so the caller can correct itself.
+   */
+  private unknownParameterWarnings(tool: AiTool, input: AiToolInput): string[] {
+    const declared = (tool.inputSchema as { properties?: Record<string, unknown> }).properties;
+    if (!declared) return [];
+    const known = Object.keys(declared);
+    const warnings: string[] = [];
+    for (const key of Object.keys(input)) {
+      if (key in declared) continue;
+      const near = known.find(candidate => editDistance(candidate.toLowerCase(), key.toLowerCase()) <= 2);
+      warnings.push(
+        `unknown parameter '${key}' was ignored${near ? `; did you mean '${near}'?` : ''} (accepted: ${known.join(', ') || 'none'})`
+      );
+    }
+    return warnings;
   }
 
   /**
@@ -243,6 +284,13 @@ export class AiToolRegistry {
       return { success: false, error: validation.error, items: [] };
     }
 
+    const warnings = this.unknownParameterWarnings(tool, input);
+    const result = await this.run(tool, name, input);
+    if (warnings.length === 0) return result;
+    return { ...result, metadata: { ...(result.metadata ?? {}), warnings } };
+  }
+
+  private async run(tool: AiTool, name: string, input: AiToolInput): Promise<AiToolOutput> {
     const hash = this.projectHash;
     if (this.options.enableCache !== false && hash && !NON_CACHEABLE_TOOLS.has(name)) {
       const cached = this.cache.get(name, input, hash);
@@ -267,4 +315,19 @@ export class AiToolRegistry {
   async executeWithValidation(name: string, input: AiToolInput): Promise<AiToolOutput> {
     return this.execute(name, input);
   }
+}
+
+/** Levenshtein distance; parameter names are short, so the simple form is enough. */
+function editDistance(a: string, b: string): number {
+  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i += 1) {
+    let previous = row[0]!;
+    row[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const current = row[j]!;
+      row[j] = Math.min(row[j]! + 1, row[j - 1]! + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
+      previous = current;
+    }
+  }
+  return row[b.length]!;
 }
