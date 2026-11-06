@@ -162,13 +162,14 @@ describe('ProjectRegistry — stable identity, canonical root as the unique key'
     expect(fs.readdirSync(root)).toEqual(['src']);
   });
 
-  it('quarantines a corrupt registry instead of failing', () => {
+  it('quarantines a corrupt registry and rebuilds the list from manifests', () => {
     const root = makeProject(base, 'app');
     registry().register({ rootPath: root, name: 'App' });
 
     fs.writeFileSync(path.join(dataRoot, REGISTRY_FILE), '{ this is not json');
     const reopened = registry();
-    expect(reopened.list()).toHaveLength(0);
+    /* F-01: the list is rebuilt from the project's manifest, not lost */
+    expect(reopened.list().map(r => r.name)).toEqual(['App']);
 
     const quarantined = fs
       .readdirSync(dataRoot)
