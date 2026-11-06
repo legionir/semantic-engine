@@ -113,7 +113,13 @@ export class ProjectService {
     | پروژهٔ هم‌نام یکی نمی‌شود.
     */
     const previous = this.projects.get(rootPath);
-    const record = this.registerInRegistry(rootPath, name, requestedId);
+    /*
+    | Only an explicit name is sent to the registry. The folder name used as a
+    | fallback for display must not overwrite the name a user chose in the
+    | Gateway: a worker re-registers its root at every start, and it used to
+    | rename the project to its folder name each time.
+    */
+    const record = this.registerInRegistry(rootPath, customName, requestedId);
     const id = record?.id ?? previous?.id ?? this.deriveId(rootPath, name, requestedId);
     const aliases = mergeAliases(previous, record, id, requestedId);
 
@@ -457,7 +463,7 @@ export class ProjectService {
    */
   private registerInRegistry(
     rootPath: string,
-    name: string,
+    name: string | undefined,
     requestedId: string
   ): ProjectRecord | undefined {
     const registry = this.options.registry;
@@ -466,7 +472,7 @@ export class ProjectService {
     try {
       return registry.register({
         rootPath,
-        name,
+        ...(name !== undefined && name.trim() !== '' ? { name } : {}),
         ...(requestedId !== '' ? { id: requestedId } : {}),
       });
     } catch (error) {

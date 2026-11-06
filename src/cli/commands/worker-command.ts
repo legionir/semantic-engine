@@ -18,7 +18,6 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
 import { runIndex } from './index-command';
@@ -187,11 +186,12 @@ export async function runWorker(
     ...(gatewayManaged ? { gatewayManaged: true } : {}),
   });
 
-  const project = server.projects.registerProject(
-    paths.workspaceRoot,
-    paths.projectId,
-    path.basename(paths.workspaceRoot)
-  );
+  /*
+  | No display name is passed: the registry already holds the one the user
+  | chose in the Gateway. Passing the folder name here renamed the project to
+  | its folder every time a worker started.
+  */
+  const project = server.projects.registerProject(paths.workspaceRoot, paths.projectId);
 
   const startedAt = Date.now();
   let watcher: StartedChild | null = null;
