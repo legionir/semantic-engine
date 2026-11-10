@@ -236,9 +236,14 @@ describe('SE-AI-03 — گزارش صادقانه', () => {
     expect(meta.truncated).toBe(false);
   });
 
-  it('گرهٔ ناشناخته، نتیجهٔ خالی — نه خطا', async () => {
+  it('گرهٔ ناشناخته خطای روشن است، نه «چیزی تأثیر نمی‌پذیرد»', async () => {
+    /*
+    | پیش‌تر success:true با لیست خالی بود؛ برای یک AI یعنی «تغییر امن است».
+    | get_dependencies و explain_symbol برای id ناشناخته همین‌طور خطا می‌دهند.
+    */
     const result = await tool().execute({ id: 'does-not-exist' });
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/No file, symbol, module or package found/);
     expect(result.items).toEqual([]);
   });
 

@@ -57,6 +57,14 @@ export interface ManagedProject {
   };
 }
 
+/** A request named a project in a way that cannot be honoured (maps to HTTP 400). */
+export class ProjectInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProjectInputError';
+  }
+}
+
 export class ProjectService {
   /*
   | کلید این map ریشهٔ نرمال‌شده است، نه شناسه. دلیلش یک باگ واقعی بود:
@@ -76,6 +84,21 @@ export class ProjectService {
   ) {}
 
   /**
+   * Where a bundle imported under `projectId` lands: a folder of that name under
+   * the server's project root. `projectId` is request input, so it must be a
+   * plain folder name — it used to be handed to `registerProject` as a *path*,
+   * which let `../x` or `/etc` pick the directory the bundle is written to.
+   */
+  importRootFor(projectId: string): string {
+    if (!isPathSafeProjectId(projectId)) {
+      throw new ProjectInputError(
+        `projectId '${projectId}' must be a plain folder name (letters, digits, '.', '_', '-')`
+      );
+    }
+    return path.join(path.resolve(this.defaultRoot), projectId);
+  }
+
+  /**
    * ثبت یا باز کردن یک پروژه بر اساس مسیر.
    */
   registerProject(projectPath: string, customId?: string, customName?: string): ManagedProject {
@@ -90,7 +113,13 @@ export class ProjectService {
     | پروژهٔ هم‌نام یکی نمی‌شود.
     */
     const previous = this.projects.get(rootPath);
-    const record = this.registerInRegistry(rootPath, name, requestedId);
+    /*
+    | Only an explicit name is sent to the registry. The folder name used as a
+    | fallback for display must not overwrite the name a user chose in the
+    | Gateway: a worker re-registers its root at every start, and it used to
+    | rename the project to its folder name each time.
+    */
+    const record = this.registerInRegistry(rootPath, customName, requestedId);
     const id = record?.id ?? previous?.id ?? this.deriveId(rootPath, name, requestedId);
     const aliases = mergeAliases(previous, record, id, requestedId);
 
@@ -434,7 +463,7 @@ export class ProjectService {
    */
   private registerInRegistry(
     rootPath: string,
-    name: string,
+    name: string | undefined,
     requestedId: string
   ): ProjectRecord | undefined {
     const registry = this.options.registry;
@@ -443,7 +472,7 @@ export class ProjectService {
     try {
       return registry.register({
         rootPath,
-        name,
+        ...(name !== undefined && name.trim() !== '' ? { name } : {}),
         ...(requestedId !== '' ? { id: requestedId } : {}),
       });
     } catch (error) {

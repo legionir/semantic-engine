@@ -22,6 +22,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ArtifactLocation } from './DataRootResolver';
+import { atomicWriteFileSync, withFileLockSync } from '../utils/atomicFile';
 
 export const GLOBAL_CONFIG_FILE = 'config.json';
 export const MODELS_DIR_NAME = 'models';
@@ -257,10 +258,7 @@ export function loadGlobalConfig(dataRoot: string): LoadedGlobalConfig {
 
 /** Atomic write: a reader never sees half a file. */
 function writeConfigFile(file: string, config: GlobalConfig, document: unknown = config): void {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temp, `${JSON.stringify(document, null, 2)}\n`, { mode: 0o600 });
-  fs.renameSync(temp, file);
+  atomicWriteFileSync(file, `${JSON.stringify(document, null, 2)}\n`, { mode: 0o600 });
 }
 
 /**
@@ -284,38 +282,12 @@ export function ensureGlobalConfig(dataRoot: string): LoadedGlobalConfig {
 
 /**
  * Serialise read-modify-write across processes (UI server, CLI children).
- * Exclusive-create lock file; a lock older than `STALE_MS` is taken over.
+ * The lock records its owner: it is taken over only when that process is gone
+ * or the lock is stale, and a waiter that times out fails instead of stealing
+ * a live lock.
  */
-const LOCK_STALE_MS = 10_000;
-const LOCK_WAIT_MS = 3_000;
-
 function withFileLock<T>(file: string, run: () => T): T {
-  const lock = `${file}.lock`;
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const deadline = Date.now() + LOCK_WAIT_MS;
-  for (;;) {
-    try {
-      fs.closeSync(fs.openSync(lock, 'wx'));
-      break;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-      try {
-        if (Date.now() - fs.statSync(lock).mtimeMs > LOCK_STALE_MS) fs.rmSync(lock, { force: true });
-      } catch {
-        /* released between the two calls */
-      }
-      if (Date.now() > deadline) {
-        fs.rmSync(lock, { force: true });
-        continue;
-      }
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
-    }
-  }
-  try {
-    return run();
-  } finally {
-    fs.rmSync(lock, { force: true });
-  }
+  return withFileLockSync(`${file}.lock`, run, { staleMs: 10_000, waitMs: 5_000 });
 }
 
 /** Keys this version does not know are kept verbatim so a save never deletes them. */

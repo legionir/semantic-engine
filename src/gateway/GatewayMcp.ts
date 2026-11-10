@@ -16,6 +16,7 @@ import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { WorkerSupervisor } from './WorkerSupervisor';
 import { targetConnectOptions } from './workerTarget';
 import { packageVersion } from '../host/version';
+import { MCP_INSTRUCTIONS } from '../ai/mcp/instructions';
 
 const PROTOCOL_VERSION = '2025-03-26';
 const LIST_PROJECTS = 'list_projects';
@@ -115,7 +116,8 @@ export class GatewayMcp {
             serverInfo: { name: 'semantic-gateway', version: packageVersion() },
             instructions:
               'This gateway serves many projects. Call list_projects, then pass "project" ' +
-              '(id or name) to every other tool.',
+              '(id or name) to every other tool.\n' +
+              MCP_INSTRUCTIONS,
           });
         }
         case 'ping':

@@ -156,6 +156,9 @@ async function main() {
     await page.waitForFunction(() => !document.querySelector('#health-panel').hidden);
     const health = (await page.textContent('#health-panel')).replace(/\s+/g, ' ');
     check('health detail shows counters', /files: \d+/.test(health) && /symbols: \d+/.test(health), health.slice(0, 200));
+    // the health detail is a modal: it has to be closed before the page behind it can be used
+    await page.click('#health-panel [data-close]');
+    await page.waitForFunction(() => document.querySelector('#health-panel').hidden);
 
     // 3. a new instance from the form, with scan / diagnostics / cache options
     await page.click('#new-worker');
@@ -217,7 +220,10 @@ async function main() {
       && (await row('fix-two').locator('button[data-action=stop]').count()) === 0);
     await row('fix-two').locator('button[data-action=start]').click();
     await page.waitForFunction(() => /Started in/.test(document.querySelector('.wc-overlay .wc-status')?.textContent || ''), null, { timeout: 120_000 });
-    check('the start overlay shows the worker log', ((await page.textContent('.wc-overlay .wc-log')) || '').includes('worker listening'));
+    // the log tail is fetched after the status line reaches "Started": give it a moment to arrive
+    await page.waitForFunction(() => (document.querySelector('.wc-overlay .wc-log')?.textContent || '').trim() !== '', null, { timeout: 15_000 }).catch(() => undefined);
+    const overlayLog = (await page.textContent('.wc-overlay .wc-log')) || '';
+    check('the start overlay shows the worker log', /watching .* files indexed, pid \d+/.test(overlayLog), overlayLog.slice(-300));
     await page.click('.wc-overlay .wc-close');
     await waitRowState('fix-two', 'ready');
     check('start brings it back', true);

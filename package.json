@@ -27,6 +27,7 @@
     "dist/",
     "public/",
     "contracts/",
+    "skills/",
     "tree-sitter-grammars/",
     "README.md"
   ],
@@ -52,6 +53,9 @@
     "bench:check": "node scripts/bench.js --check",
     "eval": "npm run build && node scripts/eval-retrieval.js",
     "eval:check": "node scripts/eval-retrieval.js --check",
+    "docs:ai-tools": "npm run build && node scripts/gen-ai-tools-doc.js",
+    "docs:ai-tools:check": "node scripts/gen-ai-tools-doc.js --check",
+    "install:skill": "node scripts/install-claude-skill.js",
     "test:e2e": "node scripts/e2e-panel.js && node scripts/e2e-gateway.js"
   },
   "dependencies": {
@@ -60,7 +64,7 @@
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "chokidar": "^4.0.3",
-    "minimatch": "^9.0.0",
+    "minimatch": "^11.0.5",
     "typescript": "~5.9.3",
     "vscode-jsonrpc": "^8.2.1",
     "web-tree-sitter": "^0.26.11"

@@ -38,6 +38,7 @@ import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
 import { generateToken } from '../cli/HttpGuard';
 import { readBody } from './gatewayHttp';
+import { parseUrlSafely, respondInternalError, safeDecode } from '../server/httpRequestUtils';
 import { healthPayload, metricsPayload, projectEntry } from './gatewayPayloads';
 
 export const DEFAULT_GATEWAY_PORT = 4000;
@@ -139,14 +140,7 @@ export class GatewayServer {
   private listen(): Promise<GatewayStartInfo> {
     return new Promise((resolve, reject) => {
       this.server = http.createServer((req, res) => {
-        this.handle(req, res).catch(error => {
-          if (!res.headersSent) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-          }
-          res.end(
-            JSON.stringify({ error: error instanceof Error ? error.message : String(error) })
-          );
-        });
+        this.handle(req, res).catch(error => respondInternalError(res, error));
       });
 
       this.server.once('error', reject);
@@ -211,10 +205,19 @@ export class GatewayServer {
   }
 
   private async handle(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    const url = new URL(req.url ?? '/', 'http://gateway.local');
+    const url = parseUrlSafely(req.url, 'http://gateway.local');
+    if (!url) {
+      this.send(res, 400, { error: 'request target is not a valid URL' });
+      return;
+    }
     const pathname = url.pathname;
     const method = req.method ?? 'GET';
     const startedAt = Date.now();
+
+    /* same reasoning as SecurityPipeline.applySecurityHeaders: `?token=` links must not leak via Referer */
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'no-store');
 
     this.requestsTotal += 1;
     res.on('finish', () => this.durations.record(Date.now() - startedAt));
@@ -289,7 +292,7 @@ export class GatewayServer {
         this.send(res, 403, { error: 'token lacks permission semantic:query' });
         return;
       }
-      const resolved = resolveProject(this.registry.list(), decodeURIComponent(mcp[1]!));
+      const resolved = resolveProject(this.registry.list(), safeDecode(mcp[1]!));
       if ('error' in resolved) {
         this.send(res, 404, { error: resolved.error });
         return;
@@ -331,7 +334,7 @@ export class GatewayServer {
         this.send(res, 403, { error: 'token lacks permission project:read' });
         return;
       }
-      const projectId = decodeURIComponent(logsRoute[1]!);
+      const projectId = safeDecode(logsRoute[1]!);
       if (!this.registry.get(projectId)) {
         this.send(res, 404, { error: `unknown project: ${projectId}` });
         return;

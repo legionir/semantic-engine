@@ -129,7 +129,8 @@ async function main() {
     const pageErrors = [];
     page.on('pageerror', error => pageErrors.push(error.message));
     page.on('response', response => {
-      if (response.status() >= 400 && response.url().includes('/api/')) apiErrors.push(`${response.status()} ${response.url()}`);
+      /* The settings page asks `/api/v1/gateway/info` to learn whether it sits behind a Gateway; a single-project server answers 404 by design. */
+      if (response.status() >= 400 && response.url().includes('/api/') && !response.url().endsWith('/api/v1/gateway/info')) apiErrors.push(`${response.status()} ${response.url()}`);
     });
 
     // 1. token + project detection

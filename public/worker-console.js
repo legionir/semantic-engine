@@ -79,7 +79,8 @@ const WorkerConsole = (function () {
 
     function esc(value) {
         return String(value === undefined || value === null ? "" : value)
-            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
     }
 
     function formatElapsed(ms) {

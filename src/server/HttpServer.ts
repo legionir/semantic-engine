@@ -3,7 +3,7 @@
  */
 
 import { authContext as buildAuthContext, findForeignRoot, isManagedBlockedRoute } from './httpRequestChecks';
-import { matchPattern, parseRequestTarget, readBody, writeRouteResponse } from './httpRequestUtils';
+import { matchPattern, parseRequestTarget, readBody, respondInternalError, writeRouteResponse } from './httpRequestUtils';
 import { StaticAssetServer } from './StaticAssetServer';
 import * as http from 'http';
 import * as fs from 'fs';
@@ -235,12 +235,7 @@ export class HttpServer {
   async start(): Promise<{ port: number; host: string; url: string }> {
     return new Promise((resolve, reject) => {
       this.server = http.createServer((req, res) => {
-        this.handleRequest(req, res).catch(error => {
-          if (!res.headersSent) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
-          }
-        });
+        this.handleRequest(req, res).catch(error => respondInternalError(res, error));
       });
 
       this.server.once('error', reject);

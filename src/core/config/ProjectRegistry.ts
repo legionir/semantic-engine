@@ -36,6 +36,7 @@ import {
   projectIdFor,
 } from './ProjectIdentity';
 import { DataRootOptions, ensureDataRoot, resolveDataRoot } from './DataRootResolver';
+import { atomicWriteJsonSync, withFileLockSync } from '../utils/atomicFile';
 
 export const REGISTRY_FILE = 'registry.json';
 export const REGISTRY_VERSION = 1;
@@ -117,6 +118,9 @@ export class ProjectRegistry {
   private readonly now: () => Date;
   private readonly dataOptions: DataRootOptions;
   private cache: ProjectRecord[] | null = null;
+  /** size:mtime of the registry file the cache was read from; a different stamp means another process wrote. */
+  private cacheStamp: string | null = null;
+  private lockDepth = 0;
 
   constructor(options: ProjectRegistryOptions = {}) {
     const dataDir = options.dataRoot ?? options.dataDir;
@@ -172,65 +176,69 @@ export class ProjectRegistry {
    * اگر نام تازه‌ای داده شده باشد نام را عوض می‌کند — بدون تغییر id.
    */
   register(input: RegisterProjectInput): ProjectRecord {
-    const canonicalRoot = assertProjectRoot(input.rootPath);
-    const records = this.load();
-    const timestamp = this.now().toISOString();
+    return this.locked(() => {
+      const canonicalRoot = assertProjectRoot(input.rootPath);
+      const records = this.load();
+      const timestamp = this.now().toISOString();
 
-    const existing = records.find(record => record.rootPath === canonicalRoot);
-    if (existing) {
-      const aliases = new Set(existing.aliases);
-      const requestedId = (input.id ?? '').trim();
-      if (requestedId !== '' && requestedId !== existing.id && isSafeProjectId(requestedId)) {
-        aliases.add(requestedId);
+      const existing = records.find(record => record.rootPath === canonicalRoot);
+      if (existing) {
+        const aliases = new Set(existing.aliases);
+        const requestedId = (input.id ?? '').trim();
+        if (requestedId !== '' && requestedId !== existing.id && isSafeProjectId(requestedId)) {
+          aliases.add(requestedId);
+        }
+
+        const updated: ProjectRecord = {
+          ...existing,
+          name: (input.name ?? '').trim() !== '' ? (input.name as string) : existing.name,
+          aliases: [...aliases],
+          lastSeenAt: timestamp,
+        };
+
+        this.replace(updated);
+        return updated;
       }
 
-      const updated: ProjectRecord = {
-        ...existing,
-        name: (input.name ?? '').trim() !== '' ? (input.name as string) : existing.name,
-        aliases: [...aliases],
+      const name = (input.name ?? '').trim() !== ''
+        ? (input.name as string)
+        : path.basename(canonicalRoot);
+
+      const id = this.chooseId(input.id, name, canonicalRoot, records);
+      const record: ProjectRecord = {
+        id,
+        name,
+        rootPath: canonicalRoot,
+        aliases: this.aliasesFor(input.id, id),
+        enabled: input.enabled ?? true,
+        autoStart: input.autoStart ?? false,
+        createdAt: timestamp,
         lastSeenAt: timestamp,
       };
 
-      this.replace(updated);
-      return updated;
-    }
-
-    const name = (input.name ?? '').trim() !== ''
-      ? (input.name as string)
-      : path.basename(canonicalRoot);
-
-    const id = this.chooseId(input.id, name, canonicalRoot, records);
-    const record: ProjectRecord = {
-      id,
-      name,
-      rootPath: canonicalRoot,
-      aliases: this.aliasesFor(input.id, id),
-      enabled: input.enabled ?? true,
-      autoStart: input.autoStart ?? false,
-      createdAt: timestamp,
-      lastSeenAt: timestamp,
-    };
-
-    records.push(record);
-    this.save(records);
-    this.writeManifest(record);
-    return record;
+      records.push(record);
+      this.save(records);
+      this.writeManifest(record);
+      return record;
+    });
   }
 
   /** تغییر نام، بدون تغییر id. */
   rename(id: string, name: string): ProjectRecord {
-    const record = this.get(id);
-    if (!record) throw new Error(`Unknown project id: ${id}`);
-    const trimmed = name.trim();
-    if (trimmed === '') throw new Error('Project name must not be empty.');
+    return this.locked(() => {
+      const record = this.get(id);
+      if (!record) throw new Error(`Unknown project id: ${id}`);
+      const trimmed = name.trim();
+      if (trimmed === '') throw new Error('Project name must not be empty.');
 
-    const updated: ProjectRecord = {
-      ...record,
-      name: trimmed,
-      lastSeenAt: this.now().toISOString(),
-    };
-    this.replace(updated);
-    return updated;
+      const updated: ProjectRecord = {
+        ...record,
+        name: trimmed,
+        lastSeenAt: this.now().toISOString(),
+      };
+      this.replace(updated);
+      return updated;
+    });
   }
 
   /**
@@ -241,24 +249,26 @@ export class ProjectRegistry {
     id: string,
     patch: { name?: string; enabled?: boolean; autoStart?: boolean }
   ): ProjectRecord {
-    const record = this.get(id);
-    if (!record) throw new Error(`Unknown project id: ${id}`);
+    return this.locked(() => {
+      const record = this.get(id);
+      if (!record) throw new Error(`Unknown project id: ${id}`);
 
-    let name = record.name;
-    if (patch.name !== undefined) {
-      name = patch.name.trim();
-      if (name === '') throw new Error('Project name must not be empty.');
-    }
+      let name = record.name;
+      if (patch.name !== undefined) {
+        name = patch.name.trim();
+        if (name === '') throw new Error('Project name must not be empty.');
+      }
 
-    const updated: ProjectRecord = {
-      ...record,
-      name,
-      enabled: patch.enabled ?? record.enabled,
-      autoStart: patch.autoStart ?? record.autoStart,
-      lastSeenAt: this.now().toISOString(),
-    };
-    this.replace(updated);
-    return updated;
+      const updated: ProjectRecord = {
+        ...record,
+        name,
+        enabled: patch.enabled ?? record.enabled,
+        autoStart: patch.autoStart ?? record.autoStart,
+        lastSeenAt: this.now().toISOString(),
+      };
+      this.replace(updated);
+      return updated;
+    });
   }
 
   /**
@@ -266,39 +276,45 @@ export class ProjectRegistry {
    * و اگر ریشهٔ مقصد از قبل ثبت شده باشد خطا می‌دهد تا دو رکورد یکی نشوند.
    */
   relocate(id: string, newRootPath: string): ProjectRecord {
-    const record = this.get(id);
-    if (!record) throw new Error(`Unknown project id: ${id}`);
+    return this.locked(() => {
+      const record = this.get(id);
+      if (!record) throw new Error(`Unknown project id: ${id}`);
 
-    const canonical = assertProjectRoot(newRootPath);
-    const clash = this.load().find(other => other.rootPath === canonical && other.id !== record.id);
-    if (clash) {
-      throw new Error(
-        `Cannot relocate ${id}: ${canonical} is already registered as ${clash.id}.`
-      );
-    }
+      const canonical = assertProjectRoot(newRootPath);
+      const clash = this.load().find(other => other.rootPath === canonical && other.id !== record.id);
+      if (clash) {
+        throw new Error(
+          `Cannot relocate ${id}: ${canonical} is already registered as ${clash.id}.`
+        );
+      }
 
-    const updated: ProjectRecord = {
-      ...record,
-      rootPath: canonical,
-      lastSeenAt: this.now().toISOString(),
-    };
-    this.replace(updated);
-    return updated;
+      const updated: ProjectRecord = {
+        ...record,
+        rootPath: canonical,
+        lastSeenAt: this.now().toISOString(),
+      };
+      this.replace(updated);
+      return updated;
+    });
   }
 
   remove(id: string): boolean {
-    const record = this.get(id);
-    if (!record) return false;
-    this.save(this.load().filter(item => item.id !== record.id));
-    return true;
+    return this.locked(() => {
+      const record = this.get(id);
+      if (!record) return false;
+      this.save(this.load().filter(item => item.id !== record.id));
+      return true;
+    });
   }
 
   touch(id: string): ProjectRecord | undefined {
-    const record = this.get(id);
-    if (!record) return undefined;
-    const updated: ProjectRecord = { ...record, lastSeenAt: this.now().toISOString() };
-    this.replace(updated);
-    return updated;
+    return this.locked(() => {
+      const record = this.get(id);
+      if (!record) return undefined;
+      const updated: ProjectRecord = { ...record, lastSeenAt: this.now().toISOString() };
+      this.replace(updated);
+      return updated;
+    });
   }
 
   /** manifest پروژه در data root؛ هیچ‌گاه داخل source root. */
@@ -323,6 +339,8 @@ export class ProjectRegistry {
       name: record.name,
       rootPath: record.rootPath,
       aliases: [...record.aliases],
+      enabled: record.enabled,
+      autoStart: record.autoStart,
       createdAt: record.createdAt,
       lastSeenAt: record.lastSeenAt,
       registeredBy: 'semantic-engine',
@@ -381,14 +399,49 @@ export class ProjectRegistry {
     this.writeManifest(updated);
   }
 
+  /**
+   * Run a read-modify-write while holding the cross-process registry lock.
+   * The cache is dropped first, so the change is applied to what is on disk
+   * now — not to what this process read minutes ago.
+   */
+  private locked<T>(run: () => T): T {
+    if (this.lockDepth > 0) return run();
+    this.lockDepth += 1;
+    try {
+      return withFileLockSync(
+        `${this.registryPathValue}.lock`,
+        () => {
+          this.cache = null;
+          this.cacheStamp = null;
+          return run();
+        },
+        { staleMs: 15_000, waitMs: 8_000 }
+      );
+    } finally {
+      this.lockDepth -= 1;
+    }
+  }
+
+  private stampOfRegistryFile(): string | null {
+    try {
+      const stat = fs.statSync(this.registryPathValue);
+      return `${stat.size}:${stat.mtimeMs}`;
+    } catch {
+      return null;
+    }
+  }
+
   private load(): ProjectRecord[] {
-    if (this.cache) return this.cache;
+    const stamp = this.stampOfRegistryFile();
+    if (this.cache && this.cacheStamp === stamp) return this.cache;
 
     let raw: string;
     try {
       raw = fs.readFileSync(this.registryPathValue, 'utf8');
     } catch {
-      this.cache = [];
+      /* no registry file yet: start from the manifests that exist, if any */
+      this.cache = this.rebuildFromManifests();
+      this.cacheStamp = stamp;
       return this.cache;
     }
 
@@ -400,12 +453,13 @@ export class ProjectRegistry {
 
       if (projects === null) throw new Error('registry.projects is not an array');
       this.cache = projects;
+      this.cacheStamp = stamp;
       return this.cache;
     } catch {
       /*
-      | فایل نیمه‌نویس یا خراب نباید سرویس را بخواباند. قرنطینه‌اش می‌کنیم
-      | تا قابل بررسی بماند و با فهرست خالی ادامه می‌دهیم؛ پروژه‌ها با اولین
-      | register دوباره ثبت می‌شوند.
+      | فایل نیمه‌نویس یا خراب نباید سرویس را بخواباند. قرنطینه‌اش می‌کنیم تا
+      | قابل بررسی بماند. فهرست از manifest هر پروژه (که کنار دادهٔ خودش
+      | نوشته شده) بازسازی می‌شود، پس پروژه‌های ثبت‌شده گم نمی‌شوند.
       */
       try {
         const quarantined = `${this.registryPathValue}.corrupt-${Date.now()}`;
@@ -413,32 +467,73 @@ export class ProjectRegistry {
       } catch {
         /* اگر قرنطینه ممکن نبود، همان فایل خراب سر جایش می‌ماند. */
       }
-      this.cache = [];
+      this.cache = this.rebuildFromManifests();
+      this.cacheStamp = this.stampOfRegistryFile();
       return this.cache;
     }
   }
 
+  /**
+   * Rebuild the project list from `<dataRoot>/projects/<id>/manifest.json`.
+   * Only manifests whose root still exists and whose id matches the folder are
+   * taken; anything else is ignored rather than guessed.
+   */
+  private rebuildFromManifests(): ProjectRecord[] {
+    const projectsDir = path.join(this.dataRootValue, PROJECTS_DIR_NAME);
+    let names: string[];
+    try {
+      names = fs.readdirSync(projectsDir);
+    } catch {
+      return [];
+    }
+
+    const records: ProjectRecord[] = [];
+    const seenRoots = new Set<string>();
+    for (const name of names.sort()) {
+      try {
+        const manifest = JSON.parse(
+          fs.readFileSync(path.join(projectsDir, name, PROJECT_MANIFEST_FILE), 'utf8')
+        ) as Record<string, unknown>;
+        const root = manifest['rootPath'];
+        if (manifest['projectId'] !== name || typeof root !== 'string' || !fs.existsSync(root)) continue;
+        if (seenRoots.has(root)) continue;
+
+        const record = normalizeRecord({
+          id: name,
+          name: manifest['name'],
+          rootPath: root,
+          aliases: manifest['aliases'],
+          enabled: manifest['enabled'],
+          autoStart: manifest['autoStart'],
+          createdAt: manifest['createdAt'],
+          lastSeenAt: manifest['lastSeenAt'],
+        });
+        if (record) {
+          records.push(record);
+          seenRoots.add(root);
+        }
+      } catch {
+        /* a project folder without a readable manifest is not a registration */
+      }
+    }
+    return records;
+  }
+
   private save(records: readonly ProjectRecord[]): void {
-    this.cache = [...records];
     const dir = path.dirname(this.registryPathValue);
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
     writeJsonAtomic(this.registryPathValue, {
       version: REGISTRY_VERSION,
       projects: [...records],
     } satisfies RegistryFile);
+    this.cache = [...records];
+    this.cacheStamp = this.stampOfRegistryFile();
   }
 }
 
-/** نوشتن tmp + rename، تا خواننده هرگز فایل نیمه‌نویس نبیند. */
+/** نوشتن tmp + fsync + rename، تا خواننده هرگز فایل نیمه‌نویس نبیند. */
 function writeJsonAtomic(target: string, payload: unknown): void {
-  const dir = path.dirname(target);
-  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-  const tmp = path.join(
-    dir,
-    `.${path.basename(target)}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
-  );
-  fs.writeFileSync(tmp, `${JSON.stringify(payload, null, 2)}\n`, { mode: 0o600 });
-  fs.renameSync(tmp, target);
+  atomicWriteJsonSync(target, payload, { mode: 0o600, dirMode: 0o700 });
 }
 
 /** برای تست و برای doctor: data root مؤثر بدون ساختن چیزی. */

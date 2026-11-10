@@ -27,6 +27,7 @@
 
 import * as crypto from 'crypto';
 import type { IncomingMessage, ServerResponse } from 'http';
+import { parseUrlSafely } from '../server/httpRequestUtils';
 
 /**
  * سقف پیش‌فرض بدنه.
@@ -130,7 +131,9 @@ export class HttpGuard {
     | `?token=` is the fallback for clients that can only be given a URL (the
     | link the start banner prints). The header still wins when both are sent.
     */
-    const queryToken = new URL(request.url ?? '/', 'http://local').searchParams.get('token') ?? undefined;
+    const parsedUrl = parseUrlSafely(request.url, 'http://local');
+    if (!parsedUrl) return deny(response, 400, 'bad request');
+    const queryToken = parsedUrl.searchParams.get('token') ?? undefined;
     if (!this.acceptsToken(bearer ?? queryToken)) {
       /*
       | پیام عمداً بی‌محتواست: نه می‌گوید توکن لازم است، نه اینکه

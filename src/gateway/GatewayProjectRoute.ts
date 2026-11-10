@@ -12,6 +12,7 @@ import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { WorkerSupervisor } from './WorkerSupervisor';
 import { WorkerConfigStore } from './WorkerConfigStore';
 import { OperationTracker } from './OperationTracker';
+import { parseUrlSafely } from '../server/httpRequestUtils';
 
 export interface ProjectRouteDeps {
   readonly registry: ProjectRegistry;
@@ -184,7 +185,7 @@ export async function handleGatewayProjectRoute(
   | the log tail); without it the request behaves as it always did and answers
   | when the action is done (a reindex answers when the worker has accepted it).
   */
-  const asyncMode = new URL(req.url ?? '/', 'http://gateway.local').searchParams.get('async') === '1';
+  const asyncMode = parseUrlSafely(req.url, 'http://gateway.local')?.searchParams.get('async') === '1';
   const operationId = deps.operations.begin(projectId, action);
   if (operationId === undefined) {
     const running = deps.operations.running(projectId);

@@ -4,9 +4,9 @@
 
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
-import * as path from 'path';
 import { CancellationTokenSource } from '../host/Cancellation';
 import { SseManager } from '../server/SseManager';
+import { atomicWriteFileSync } from '../core/utils/atomicFile';
 
 export interface JobRecord<TResult = unknown> {
   readonly id: string;
@@ -244,10 +244,7 @@ export class JobManager extends EventEmitter {
       ...(job.data !== undefined ? { data: job.data } : {}),
     }));
     try {
-      fs.mkdirSync(path.dirname(this.stateFile), { recursive: true });
-      const temp = `${this.stateFile}.tmp-${process.pid}`;
-      fs.writeFileSync(temp, `${JSON.stringify(records)}\n`, 'utf8');
-      fs.renameSync(temp, this.stateFile);
+      atomicWriteFileSync(this.stateFile, `${JSON.stringify(records)}\n`);
     } catch {
       /* Persistence is best effort; the in-memory job remains authoritative. */
     }

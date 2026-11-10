@@ -12,6 +12,7 @@ import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { createWorkerConfig, validateWorkerConfig } from './WorkerConfigSchema';
 import { ProjectWorkerConfig } from './types';
 import { isPathSafeProjectId } from '../core/config/ProjectIdentity';
+import { atomicWriteJsonSync } from '../core/utils/atomicFile';
 
 export class WorkerConfigStore {
   constructor(private readonly registry: ProjectRegistry) {}
@@ -56,15 +57,9 @@ export class WorkerConfigStore {
   storeWorkerConfig(config: ProjectWorkerConfig): void {
     const target = this.workerConfigPath(config.projectId);
     fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
-    /* temp + rename: a crash can never leave a half-written config that a
-       later hydration would parse as "no config" or, worse, as a truncated
-       object. */
-    const tmp = path.join(
-      path.dirname(target),
-      `.worker-config.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
-    );
-    fs.writeFileSync(tmp, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
-    fs.renameSync(tmp, target);
+    /* temp + fsync + rename: a crash can never leave a half-written config that a
+       later hydration would parse as "no config" or, worse, as a truncated object. */
+    atomicWriteJsonSync(target, config, { mode: 0o600, dirMode: 0o700 });
   }
 
   /**
