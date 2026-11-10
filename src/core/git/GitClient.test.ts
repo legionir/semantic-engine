@@ -47,6 +47,19 @@ describe('GitClient', () => {
     expect(['main', 'master']).toContain(branch);
   });
 
+  it('repository history sums added and deleted lines per file', async () => {
+    fs.writeFileSync(path.join(repoRoot, 'README.md'), '# Hello\nline two\nline three\n', 'utf8');
+    execSync('git commit -am "grow"', { cwd: repoRoot });
+    fs.writeFileSync(path.join(repoRoot, 'README.md'), '# Hello\nline three\n', 'utf8');
+    execSync('git commit -am "shrink"', { cwd: repoRoot });
+
+    const stats = (await client.getRepositoryHistory()).statsByPath.get('README.md')!;
+    expect(stats.commitCount).toBe(3);
+    /* initial: +1; grow: -1 +3 (the first line gains a trailing newline); shrink: -1 */
+    expect(stats.linesAdded).toBe(4);
+    expect(stats.linesDeleted).toBe(2);
+  });
+
   it('should detect dirty status', async () => {
     fs.mkdirSync(path.join(repoRoot, 'src'), { recursive: true });
     fs.writeFileSync(path.join(repoRoot, 'src', 'utils.ts'), 'export const x = 1;', 'utf8');

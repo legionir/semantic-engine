@@ -30,6 +30,8 @@ export async function readRepositoryHistory(
 
   const statsByPath = new Map<string, {
     commitCount: number;
+    linesAdded: number;
+    linesDeleted: number;
     lastCommit: GitCommitInfo | null;
     contributors: Map<string, GitContributorInfo>;
   }>();
@@ -46,7 +48,9 @@ export async function readRepositoryHistory(
     const output = await git.execGit([
       'log',
       `-${maxCommits}`,
-      '--name-only',
+      /* `--numstat` gives the same paths plus line counts; no rename detection keeps one plain row per path. */
+      '--numstat',
+      '--no-renames',
       '--no-merges',
       `--format=${format}`,
     ]);
@@ -70,8 +74,15 @@ export async function readRepositoryHistory(
         date: date ?? '',
       };
 
-      for (const rawPath of body.split('\n')) {
-        const repoPath = rawPath.trim();
+      for (const rawLine of body.split('\n')) {
+        if (rawLine.trim() === '') continue;
+        /* `added<TAB>deleted<TAB>path`; a binary file reports `-` for both counts. */
+        const firstTab = rawLine.indexOf('\t');
+        const secondTab = firstTab === -1 ? -1 : rawLine.indexOf('\t', firstTab + 1);
+        if (secondTab === -1) continue;
+        const added = Number.parseInt(rawLine.slice(0, firstTab), 10);
+        const deleted = Number.parseInt(rawLine.slice(firstTab + 1, secondTab), 10);
+        const repoPath = rawLine.slice(secondTab + 1).trim();
         if (repoPath === '') continue;
 
         // فایل‌های بیرون از کارگاه به این اسکن ربطی ندارند
@@ -80,11 +91,13 @@ export async function readRepositoryHistory(
 
         let entry = statsByPath.get(filePath);
         if (!entry) {
-          entry = { commitCount: 0, lastCommit: null, contributors: new Map() };
+          entry = { commitCount: 0, linesAdded: 0, linesDeleted: 0, lastCommit: null, contributors: new Map() };
           statsByPath.set(filePath, entry);
         }
 
         entry.commitCount++;
+        if (Number.isFinite(added)) entry.linesAdded += added;
+        if (Number.isFinite(deleted)) entry.linesDeleted += deleted;
         // `git log` از جدید به قدیم می‌آید، پس اولین دیده‌شده تازه‌ترین است
         if (!entry.lastCommit) entry.lastCommit = commit;
 
@@ -110,6 +123,8 @@ export async function readRepositoryHistory(
   for (const [filePath, entry] of statsByPath) {
     result.set(filePath, {
       commitCount: entry.commitCount,
+      linesAdded: entry.linesAdded,
+      linesDeleted: entry.linesDeleted,
       lastCommit: entry.lastCommit,
       contributors: [...entry.contributors.values()]
         .sort((a, b) => b.commitCount - a.commitCount || a.email.localeCompare(b.email)),

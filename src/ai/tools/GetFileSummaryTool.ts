@@ -4,6 +4,11 @@
 
 import { AiTool, AiToolInput, AiToolOutput } from './types';
 import { ProjectIndexReader } from '../ProjectIndexReader';
+import type { SymbolEntry, SymbolKind } from '../../core/types/project-index.types';
+
+const CONTAINER_KINDS: ReadonlySet<SymbolKind> = new Set<SymbolKind>([
+  'class', 'interface', 'enum', 'struct', 'trait', 'namespace', 'module',
+]);
 
 export interface GetFileSummaryInput extends AiToolInput {
   readonly path?: string;
@@ -46,7 +51,7 @@ export class GetFileSummaryTool implements AiTool<GetFileSummaryInput> {
       }
 
       const symbols = this.reader.getSymbolsForFile(file.id);
-      const publicSymbols = symbols.filter(s => s.exported || s.visibility === 'public');
+      const publicSymbols = symbols.filter(s => this.isPublicApi(s));
       const imports = file.imports ?? [];
       const exports = file.exports ?? [];
 
@@ -92,6 +97,19 @@ export class GetFileSummaryTool implements AiTool<GetFileSummaryInput> {
         items: [],
       };
     }
+  }
+
+  /**
+   * The extractor marks nearly every symbol `visibility: 'public'` by default,
+   * including variables declared inside function bodies. Public API is what a
+   * consumer of the file can reach: an exported symbol, or a public member of
+   * an exported container (class, interface, enum, ...).
+   */
+  private isPublicApi(symbol: SymbolEntry): boolean {
+    if (symbol.exported) return true;
+    if (symbol.visibility !== 'public' || !symbol.parentId) return false;
+    const parent = this.reader.getSymbolById(symbol.parentId);
+    return parent !== undefined && CONTAINER_KINDS.has(parent.kind) && this.isPublicApi(parent);
   }
 
   private inferSummary(file: import('../../core/types/project-index.types').FileEntry, publicSymbols: import('../../core/types/project-index.types').SymbolEntry[]): string {

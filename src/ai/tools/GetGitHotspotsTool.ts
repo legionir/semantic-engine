@@ -61,8 +61,8 @@ export class GetGitHotspotsTool implements AiTool {
           return {
             filePath,
             commitsCount: stats.commitCount,
-            linesAdded: 0,
-            linesDeleted: 0,
+            linesAdded: stats.linesAdded ?? 0,
+            linesDeleted: stats.linesDeleted ?? 0,
             churnScore,
             complexity,
             hotspotScore: churnScore * complexity,
