@@ -61,6 +61,8 @@ export class GetGitHotspotsTool implements AiTool {
           return {
             filePath,
             commitsCount: stats.commitCount,
+            // linesAdded: stats.linesAdded ?? 0,
+            // linesDeleted: stats.linesDeleted ?? 0,
             /* the commit-count history carries no line counts: null, not a made-up 0 */
             linesAdded: null,
             linesDeleted: null,

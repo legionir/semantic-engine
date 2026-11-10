@@ -41,6 +41,9 @@ export interface GitFileCommitStats {
   readonly commitCount: number;
   readonly lastCommit: GitCommitInfo | null;
   readonly contributors: readonly GitContributorInfo[];
+  /** مجموع خطوط اضافه/حذف‌شده در commitهای پیمایش‌شده (فقط از `getRepositoryHistory`). */
+  readonly linesAdded?: number;
+  readonly linesDeleted?: number;
 }
 
 /** خروجی یک پیمایش تاریخچه برای *کل* مخزن. */

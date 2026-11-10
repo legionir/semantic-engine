@@ -20,6 +20,22 @@ describe('Phase 1 read-only tools', () => {
   beforeEach(async () => { root = await fs.mkdtemp(path.join(os.tmpdir(), 'semantic-engine-p1-')); await fs.mkdir(path.join(root, 'src')); await fs.writeFile(path.join(root, 'src/a.ts'), 'import x from "x";\nexport function add(a: number, b: number) {\n  return a + b;\n}\n', 'utf8'); reader = new ProjectIndexReader(index(root)); });
   afterEach(async () => { await fs.rm(root, { recursive: true, force: true }); });
 
+  test('code_read reads a 1-based inclusive line range', async () => {
+    const tool = new CodeReadTool(reader, root);
+    const middle = await tool.execute({ path: 'src/a.ts', startLine: 2, endLine: 3 });
+    expect(middle.items[0]?.excerpt).toBe('export function add(a: number, b: number) {\n  return a + b;\n');
+    const first = await tool.execute({ path: 'src/a.ts', startLine: 1, endLine: 1 });
+    expect(first.items[0]?.excerpt).toBe('import x from "x";\n');
+    const tail = await tool.execute({ path: 'src/a.ts', startLine: 4 });
+    expect(tail.items[0]?.excerpt).toBe('}\n');
+  });
+
+  test('code_read rejects a line range past the end and mixing lines with offsets', async () => {
+    const tool = new CodeReadTool(reader, root);
+    expect((await tool.execute({ path: 'src/a.ts', startLine: 99, endLine: 100 })).success).toBe(false);
+    expect((await tool.execute({ path: 'src/a.ts', startLine: 1, end: 6 })).success).toBe(false);
+  });
+
   test('code_read reads bounded UTF-16 ranges and emits a freshness handle', async () => { const result = await new CodeReadTool(reader, root).execute({ path: 'src/a.ts', start: 0, end: 6 }); expect(result.success).toBe(true); expect(result.items[0]?.excerpt).toBe('import'); expect(result.items[0]?.metadata).toEqual(expect.objectContaining({ handle: expect.stringContaining('src/a.ts:0-6#') })); });
   test('code_read refuses traversal and stale handles without source', async () => { const denied = await new CodeReadTool(reader, root).execute({ path: '../secret' }); expect(denied.success).toBe(false); const first = await new CodeReadTool(reader, root).execute({ path: 'src/a.ts', start: 0, end: 4 }); const handle = first.items[0]?.metadata?.handle as string; await fs.appendFile(path.join(root, 'src/a.ts'), '\n// changed'); const stale = await new CodeReadTool(reader, root).execute({ handle }); expect(stale.success).toBe(false); expect(stale.error).toContain('STALE_HANDLE'); });
   test('code_fold is deterministic, bounded, and reports telemetry', async () => { const tool = new CodeFoldTool(reader, root); const a = await tool.execute({ path: 'src/a.ts', level: 2, maxTokens: 20 }); const b = await tool.execute({ path: 'src/a.ts', level: 2, maxTokens: 20 }); expect(a).toEqual(b); expect(a.success).toBe(true); expect(a.items[0]?.metadata).toEqual(expect.objectContaining({ returnedTokens: expect.any(Number), unfoldable: true })); });

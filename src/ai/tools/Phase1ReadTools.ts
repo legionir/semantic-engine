@@ -55,11 +55,27 @@ abstract class SourceTool {
   }
 }
 
-export interface CodeReadInput extends AiToolInput { readonly path?: string; readonly fileId?: string; readonly handle?: string; readonly start?: number; readonly end?: number; readonly maxResultBytes?: number; }
+export interface CodeReadInput extends AiToolInput { readonly path?: string; readonly fileId?: string; readonly handle?: string; readonly start?: number; readonly end?: number; readonly startLine?: number; readonly endLine?: number; readonly maxResultBytes?: number; }
+
+/** Character offsets of a 1-based inclusive line range; `undefined` when the range lies outside the text. */
+function lineRangeOffsets(text: string, startLine: number, endLine: number): { start: number; end: number } | undefined {
+  if (!Number.isInteger(startLine) || !Number.isInteger(endLine) || startLine < 1 || endLine < startLine) return undefined;
+  let line = 1;
+  let start = startLine === 1 ? 0 : -1;
+  for (let i = 0; i < text.length; i += 1) {
+    if (text.charCodeAt(i) !== 10) continue;
+    if (line === endLine) return start === -1 ? undefined : { start, end: i + 1 };
+    line += 1;
+    if (line === startLine) start = i + 1;
+  }
+  /* the file has fewer lines than requested: clamp the end, but the start must exist */
+  return start === -1 || start > text.length ? undefined : { start, end: text.length };
+}
+
 export class CodeReadTool extends SourceTool implements AiTool<CodeReadInput> {
   readonly name = 'code_read';
-  readonly description = 'Read bounded source content by file, UTF-16 range, or freshness-bound handle.';
-  readonly inputSchema = { type: 'object', properties: { path: { type: 'string' }, fileId: { type: 'string' }, handle: { type: 'string' }, start: { type: 'integer', minimum: 0 }, end: { type: 'integer', minimum: 0 }, maxResultBytes: { type: 'integer', minimum: 1, maximum: 1000000 } }, anyOf: [{ required: ['path'] }, { required: ['fileId'] }, { required: ['handle'] }] };
+  readonly description = 'Read bounded source content by file, by line range (startLine/endLine, 1-based inclusive), by UTF-16 character offset range (start/end), or by freshness-bound handle. start/end are character offsets, not line numbers.';
+  readonly inputSchema = { type: 'object', properties: { path: { type: 'string' }, fileId: { type: 'string' }, handle: { type: 'string' }, start: { type: 'integer', minimum: 0, description: 'UTF-16 character offset (not a line number)' }, end: { type: 'integer', minimum: 0, description: 'UTF-16 character offset (not a line number), exclusive' }, startLine: { type: 'integer', minimum: 1, description: '1-based first line to read' }, endLine: { type: 'integer', minimum: 1, description: '1-based last line to read, inclusive' }, maxResultBytes: { type: 'integer', minimum: 1, maximum: 1000000 } }, anyOf: [{ required: ['path'] }, { required: ['fileId'] }, { required: ['handle'] }] };
   async execute(input: CodeReadInput): Promise<AiToolOutput> {
     const parsed = input.handle ? (() => { try { return parseHandle(input.handle); } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; } })() : undefined;
     if (parsed && 'error' in parsed) return fail(`INVALID_ARGUMENT: ${parsed.error}`);
@@ -67,7 +83,11 @@ export class CodeReadTool extends SourceTool implements AiTool<CodeReadInput> {
     if (!file) return fail(notFoundSource(input, parsed && !('error' in parsed) ? parsed.relativePath : undefined));
     const source = await this.read(file);
     if ('error' in source) return fail(`IO_ERROR: ${source.error}`);
-    const range = parsed ? { start: parsed.start, end: parsed.end } : { start: input.start ?? 0, end: input.end ?? source.text.length };
+    const byLine = !parsed && (input.startLine !== undefined || input.endLine !== undefined);
+    if (byLine && (input.start !== undefined || input.end !== undefined)) return fail('INVALID_ARGUMENT: use either startLine/endLine or start/end, not both');
+    const lines = byLine ? lineRangeOffsets(source.text, input.startLine ?? 1, input.endLine ?? Number.MAX_SAFE_INTEGER) : undefined;
+    if (byLine && !lines) return fail('OUT_OF_RANGE: requested line range');
+    const range = parsed ? { start: parsed.start, end: parsed.end } : lines ?? { start: input.start ?? 0, end: input.end ?? source.text.length };
     if (parsed && !source.hash.startsWith(parsed.hash8)) return fail('STALE_HANDLE: source content changed');
     if (!Number.isInteger(range.start) || !Number.isInteger(range.end) || range.start < 0 || range.end < range.start || range.end > source.text.length) return fail(`OUT_OF_RANGE: requested UTF-16 range ${range.start}..${range.end} but ${file.path} has ${source.text.length} code units (start must be >= 0 and <= end <= length)`);
     const text = source.text.slice(range.start, range.end);

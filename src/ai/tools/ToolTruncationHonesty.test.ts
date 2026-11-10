@@ -135,6 +135,24 @@ describe('SE-AI-HONESTY: capped tool results must not look complete', () => {
     expect(res.metadata).toEqual(expect.objectContaining({ truncated: true, publicSymbolCount: 25 }));
   });
 
+  test('get_file_summary counts exported symbols and public members of exported classes, not locals', async () => {
+    const base = { fileId: 'f1', source: 'tree-sitter' as const, confidence: makeConfidence(100), line: 1, endLine: 2 };
+    const symbols: SymbolEntry[] = [
+      { ...base, id: 'fn', parentId: null, kind: 'function', name: 'run', exported: true, visibility: 'public' },
+      { ...base, id: 'helper', parentId: null, kind: 'function', name: 'helper', visibility: 'public' },
+      { ...base, id: 'local', parentId: 'fn', kind: 'variable', name: 'now', visibility: 'public' },
+      { ...base, id: 'cls', parentId: null, kind: 'class', name: 'Box', exported: true, visibility: 'public' },
+      { ...base, id: 'pub', parentId: 'cls', kind: 'method', name: 'open', visibility: 'public' },
+      { ...base, id: 'priv', parentId: 'cls', kind: 'method', name: 'hide', visibility: 'private' },
+      { ...base, id: 'hidden', parentId: null, kind: 'class', name: 'Internal', visibility: 'public' },
+      { ...base, id: 'hiddenMember', parentId: 'hidden', kind: 'method', name: 'go', visibility: 'public' },
+    ];
+    const reader = new ProjectIndexReader(buildIndex(root, [fileEntry('f1', 'src/api.ts')], symbols));
+    const res = await new GetFileSummaryTool(reader).execute({ path: 'src/api.ts' });
+    expect(res.items.map(item => item.name).sort()).toEqual(['Box', 'open', 'run']);
+    expect(res.metadata).toEqual(expect.objectContaining({ publicSymbolCount: 3 }));
+  });
+
   test('get_dependencies reports truncated when the walk fills a full page', async () => {
     const files = Array.from({ length: 6 }, (_, i) => fileEntry(`f${i}`, `src/d${i}.ts`));
     const edges = Array.from({ length: 5 }, (_, i) => depEdge('f0', `f${i + 1}`));
