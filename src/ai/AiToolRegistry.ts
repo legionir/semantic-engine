@@ -25,6 +25,7 @@ import { GetGitHotspotsTool } from './tools/GetGitHotspotsTool';
 import { ToolResultCache } from './tools/ToolResultCache';
 import { ToolInputValidator } from './tools/ToolInputValidator';
 import { TOOL_DOCS } from './tools/toolDocs';
+import { ADVANCED_TOOL_NAMES, AGENT_TOOL_NAMES, INTERNAL_TOOL_NAMES, createAgentTools } from './tools/AgentTools';
 import {
   CodeReadTool,
   CodeFoldTool,
@@ -71,6 +72,8 @@ export interface AiToolRegistryOptions {
   readonly phase2JournalDirectory?: string;
   /** Experimental capabilities are opt-in and disabled by default. */
   readonly experimental?: Readonly<Record<string, boolean>>;
+  /** Also list the specialist tools (`ADVANCED_TOOL_NAMES`). Off by default to keep the surface small. */
+  readonly allTools?: boolean;
 }
 
 /**
@@ -99,7 +102,13 @@ const NON_CACHEABLE_TOOLS: ReadonlySet<string> = new Set([
   'code_fold',
   'search_text',
   'structural_search',
+  // The agent-facing tools only route to the tools above and below; caching
+  // happens (or is refused) at the tool that does the work.
+  ...AGENT_TOOL_NAMES.filter(name => !['project_info', 'find_symbol', 'explain_symbol', 'find_tests'].includes(name)),
 ]);
+
+const INTERNAL_TOOLS: ReadonlySet<string> = new Set(INTERNAL_TOOL_NAMES);
+const ADVANCED_TOOLS: ReadonlySet<string> = new Set(ADVANCED_TOOL_NAMES);
 
 export class AiToolRegistry {
   private readonly tools = new Map<string, AiTool>();
@@ -176,6 +185,9 @@ export class AiToolRegistry {
     this.register(new GainsReportTool(this.options.reader, this.options.workspaceRoot));
     this.register(new CodeOutlineTool(this.options.reader));
     this.register(new SymbolFindTool(this.options.reader));
+    for (const tool of createAgentTools((name, input) => this.execute(name, input), this.options.reader)) {
+      this.register(tool);
+    }
     const phase2Engine = this.options.enablePhase2Edits && this.options.workspaceRoot
       ? new TransactionalEditEngine(this.options.workspaceRoot, this.options.phase2JournalDirectory)
       : undefined;
@@ -217,14 +229,30 @@ export class AiToolRegistry {
   }
 
   /**
-   * What a model is shown for each tool: the tool's own description and schema,
-   * completed with the reviewed text in `toolDocs.ts` (when to use it, what it
-   * returns, what every parameter means).
+   * What a model is shown: the agent-facing tools first (in their presented
+   * order), then whatever was opted into (specialist tools with `allTools`,
+   * edits, experimental capabilities). The implementations behind the
+   * agent-facing tools stay callable through `execute` but are never listed.
+   *
+   * Each entry is the tool's own description and schema completed with the
+   * reviewed text in `toolDocs.ts` (when to use it, what it returns, what
+   * every parameter means).
    */
   list(): { name: string; description: string; inputSchema: Record<string, unknown> }[] {
+    const order = new Map(AGENT_TOOL_NAMES.map((name, index) => [name, index]));
     return Array.from(this.tools.values())
-      .filter(t => t.isAvailable?.() !== false)
+      .filter(t => this.isListed(t.name))
+      .sort((a, b) => (order.get(a.name) ?? order.size) - (order.get(b.name) ?? order.size))
       .map(t => this.describe(t));
+  }
+
+  /** True when `list()` offers the tool: what a remote caller may invoke. */
+  isListed(name: string): boolean {
+    const tool = this.tools.get(name);
+    if (!tool || tool.isAvailable?.() === false) return false;
+    if (INTERNAL_TOOLS.has(name)) return false;
+    if (ADVANCED_TOOLS.has(name)) return this.options.allTools === true;
+    return true;
   }
 
   private describe(tool: AiTool): { name: string; description: string; inputSchema: Record<string, unknown> } {

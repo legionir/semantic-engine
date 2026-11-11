@@ -31,6 +31,7 @@ import { resolveProjectIndexPath } from '../../core/config/ProjectPaths';
 import { parseIndexGeneration } from '../../core/config/indexGeneration';
 import { MANIFEST_FILE_NAME, readCommittedIndexBytes } from '../../core/config/artifactManifest';
 import { loadBlueprintBeside } from '../discovery/loadBlueprint';
+import { renderToolResult } from './renderToolResult';
 import { MCP_INSTRUCTIONS } from './instructions';
 
 export interface McpServerOptions {
@@ -65,14 +66,15 @@ export interface McpServerOptions {
    */
   readonly experimental?: Readonly<Record<string, boolean>>;
   /**
-   * Send the result once instead of twice. By default `tools/call` carries it
-   * as text (`content`) and as `structuredContent`, which a client that puts
-   * both in the model's context pays for twice. With `false` only the text is
-   * sent, and it then also carries `projectId` and `indexGeneration`. Default
-   * true (what structured-ai reads); `SEMANTIC_ENGINE_MCP_STRUCTURED=off`
-   * flips the default for a deployment.
+   * Also send the raw result object as `structuredContent`, with `content`
+   * carrying the same object as JSON. Off by default: a client that puts both
+   * in the model's context pays for the result twice, and JSON is harder for a
+   * model to read than the text rendering. `SEMANTIC_ENGINE_MCP_STRUCTURED=on`
+   * turns it on for a deployment whose client parses the object.
    */
   readonly structuredContent?: boolean;
+  /** List the specialist tools too; `SEMANTIC_ENGINE_MCP_ALL_TOOLS=on` does the same. */
+  readonly allTools?: boolean;
 }
 
 export class SemanticEngineMcpServer {
@@ -90,6 +92,7 @@ export class SemanticEngineMcpServer {
   private readonly phase2JournalDirectory?: string;
   private readonly experimental?: Readonly<Record<string, boolean>>;
   private readonly emitStructured: boolean;
+  private readonly allTools: boolean;
 
   constructor(options: McpServerOptions) {
     this.workspaceRoot = options.workspaceRoot;
@@ -98,7 +101,8 @@ export class SemanticEngineMcpServer {
     this.enablePhase2Edits = options.enablePhase2Edits;
     this.phase2JournalDirectory = options.phase2JournalDirectory;
     this.experimental = options.experimental;
-    this.emitStructured = options.structuredContent ?? process.env['SEMANTIC_ENGINE_MCP_STRUCTURED']?.toLowerCase() !== 'off';
+    this.emitStructured = options.structuredContent ?? process.env['SEMANTIC_ENGINE_MCP_STRUCTURED']?.toLowerCase() === 'on';
+    this.allTools = options.allTools ?? process.env['SEMANTIC_ENGINE_MCP_ALL_TOOLS']?.toLowerCase() === 'on';
     this.registry = this.createRegistry(options.projectIndex, options.blueprint);
     if (options.indexPath) this.refreshGeneration(options.indexPath);
 
@@ -129,6 +133,7 @@ export class SemanticEngineMcpServer {
       ...(this.enablePhase2Edits === true ? { enablePhase2Edits: true as const } : {}),
       ...(this.phase2JournalDirectory !== undefined ? { phase2JournalDirectory: this.phase2JournalDirectory } : {}),
       ...(this.experimental !== undefined ? { experimental: this.experimental } : {}),
+      ...(this.allTools ? { allTools: true as const } : {}),
     });
   }
 
@@ -238,19 +243,20 @@ export class SemanticEngineMcpServer {
   }
 
   /**
-   * ساخت پاسخ `tools/call`.
-   *
-   * `content` دقیقاً همان متن قبلی است؛ `structuredContent` افزودهٔ فاز ۷ است
-   * و همان خروجی ابزار را به‌علاوهٔ `projectId` و `indexGeneration` می‌برد.
-   * مصرف‌کننده‌ای که `structuredContent` را unpack می‌کند
-   * (`structured-ai/agent/mcp/protocol/JsonRpcCodec.js`) همان آبجکت را
-   * می‌بیند و `trackGeneration` روی همان `indexGeneration` کار می‌کند؛ بقیهٔ
-   * کلاینت‌ها متن قبلی را.
+   * Answer to `tools/call`: readable text by default; with `structuredContent`
+   * enabled, the raw result as JSON text plus the same object (with
+   * `projectId` and `indexGeneration`) as `structuredContent`.
    */
   async callTool(toolName: string, args: AiToolInput): Promise<CallToolResult> {
     let result: AiToolOutput;
     try {
-      result = await this.registry.executeWithValidation(toolName, args);
+      result = this.registry.isListed(toolName)
+        ? await this.registry.executeWithValidation(toolName, args)
+        : {
+            success: false,
+            error: `Tool '${toolName}' not found. Available: ${this.registry.list().map(t => t.name).join(', ')}`,
+            items: [],
+          };
     } catch (error) {
       result = { success: false, error: error instanceof Error ? error.message : String(error), items: [] };
     }
@@ -263,7 +269,7 @@ export class SemanticEngineMcpServer {
       indexGeneration: this.generation,
     };
     if (!this.emitStructured) {
-      return { content: [{ type: 'text', text: JSON.stringify({ ...result, ...ids }) }], isError: !result.success };
+      return { content: [{ type: 'text', text: renderToolResult(result, ids) }], isError: !result.success };
     }
     return {
       content: [{ type: 'text', text: JSON.stringify(result) }],
@@ -278,6 +284,26 @@ export class SemanticEngineMcpServer {
   async start(): Promise<void> {
     this.transport = new StdioServerTransport();
     await this.server.connect(this.transport);
+    /*
+    | The SDK's `connect()` returns as soon as the stdin listeners are attached.
+    | Callers treat `start()` as "serve until the client disconnects", so stay
+    | pending until stdin ends or the transport closes; returning early made
+    | the caller's `finally` close the server right after `initialize`.
+    */
+    await new Promise<void>(resolve => {
+      const done = (): void => {
+        process.stdin.off('end', done);
+        process.stdin.off('close', done);
+        resolve();
+      };
+      process.stdin.once('end', done);
+      process.stdin.once('close', done);
+      const previous = this.server.onclose;
+      this.server.onclose = () => {
+        previous?.();
+        done();
+      };
+    });
   }
 
   /**
