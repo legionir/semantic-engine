@@ -21,6 +21,9 @@ import * as os from 'os';
 import * as path from 'path';
 import { GatewayServer } from './GatewayServer';
 
+/* Workers inherit this process's env; these suites read the raw result object. */
+process.env['SEMANTIC_ENGINE_MCP_STRUCTURED'] = 'on';
+
 interface Reply {
   status: number;
   headers: http.IncomingHttpHeaders;

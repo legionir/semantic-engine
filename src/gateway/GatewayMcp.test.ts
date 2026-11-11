@@ -184,7 +184,7 @@ describeIfBuilt('all-projects MCP endpoint through the Gateway', () => {
     });
     expect(reply.status).toBe(200);
     const result = reply.json?.['result'] as { serverInfo: { name: string; version: string } };
-    expect(result.serverInfo.name).toBe('semantic-gateway');
+    expect(result.serverInfo.name).toBe('semantic-engine');
     expect(result.serverInfo.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
@@ -196,6 +196,16 @@ describeIfBuilt('all-projects MCP endpoint through the Gateway', () => {
     expect(names).toContain('find_symbol');
     const find = tools.find(tool => tool.name === 'find_symbol')!;
     expect(find.inputSchema.properties).toHaveProperty('project');
+  });
+
+  it('lists the full tool set with no worker running (a client that connects early must not see only list_projects)', () => {
+    const { GatewayMcp } = require('./GatewayMcp') as typeof import('./GatewayMcp');
+    const alone = new GatewayMcp({ registry: {}, supervisor: { list: () => [] }, auth: {} } as never);
+    const names = (alone as unknown as { listTools(): { name: string }[] }).listTools().map(tool => tool.name);
+    expect(names).toEqual([
+      'list_projects', 'project_info', 'find_context', 'search', 'find_symbol', 'explain_symbol', 'file_outline',
+      'read_code', 'list_files', 'impact', 'find_tests', 'git_history',
+    ]);
   });
 
   it('lists the projects through list_projects', async () => {

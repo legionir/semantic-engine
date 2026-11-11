@@ -19,8 +19,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "semantic-engine": "./bin/semantic-engine.js",
-    "semantic-engine-mcp": "./dist/ai/mcp/cli.js"
+    "semantic-engine": "./bin/semantic-engine.js"
   },
   "files": [
     "bin/",

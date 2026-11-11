@@ -17,11 +17,21 @@ import { WorkerSupervisor } from './WorkerSupervisor';
 import { targetConnectOptions } from './workerTarget';
 import { packageVersion } from '../host/version';
 import { MCP_INSTRUCTIONS } from '../ai/mcp/instructions';
+import { AiToolRegistry } from '../ai/AiToolRegistry';
+import { ProjectIndexReader } from '../ai/ProjectIndexReader';
+import { ProjectIndex } from '../core/types/project-index.types';
 
 const PROTOCOL_VERSION = '2025-03-26';
 const LIST_PROJECTS = 'list_projects';
 
 type JsonObject = Record<string, unknown>;
+
+/** Enough of an index to instantiate the tools and read their schemas. */
+const EMPTY_INDEX = {
+  schemaVersion: '2.0.0', root: '', rootPath: '', generatedAt: '', generatorVersion: '', languages: [], languageSupport: {},
+  files: [], symbols: [], graphs: { callGraph: [], typeGraph: [], dependencyGraph: [], reverseDependencyGraph: [] },
+  diagnostics: [], git: null, metrics: {},
+} as unknown as ProjectIndex;
 type AuthRecord = NonNullable<ReturnType<GatewayAuth['verify']>['record']>;
 
 export interface GatewayMcpDeps {
@@ -58,7 +68,7 @@ export function resolveProject(
 }
 
 export class GatewayMcp {
-  private toolCache: { at: number; tools: ToolDefinition[] } | undefined;
+  private tools: ToolDefinition[] | undefined;
 
   constructor(private readonly deps: GatewayMcpDeps) {}
 
@@ -113,7 +123,7 @@ export class GatewayMcp {
           return this.success(id, {
             protocolVersion: typeof asked === 'string' ? asked : PROTOCOL_VERSION,
             capabilities: { tools: {} },
-            serverInfo: { name: 'semantic-gateway', version: packageVersion() },
+            serverInfo: { name: 'semantic-engine', version: packageVersion() },
             instructions:
               'This gateway serves many projects. Call list_projects, then pass "project" ' +
               '(id or name) to every other tool.\n' +
@@ -123,7 +133,7 @@ export class GatewayMcp {
         case 'ping':
           return this.success(id, {});
         case 'tools/list':
-          return this.success(id, { tools: await this.listTools(record) });
+          return this.success(id, { tools: this.listTools() });
         case 'tools/call':
           return await this.callTool(id, (request['params'] ?? {}) as JsonObject, record);
         default:
@@ -148,7 +158,7 @@ export class GatewayMcp {
 
   /* ── tools ─────────────────────────────────────────────────────────── */
 
-  private async listTools(record: AuthRecord): Promise<ToolDefinition[]> {
+  private listTools(): ToolDefinition[] {
     const own: ToolDefinition = {
       name: LIST_PROJECTS,
       description:
@@ -156,63 +166,40 @@ export class GatewayMcp {
         'Call this first; pass an id or name as "project" to the other tools.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     };
-    return [own, ...(await this.projectTools(record))];
+    return [own, ...this.projectTools()];
   }
 
-  /** The tool catalogue is the same for every project, so any ready worker supplies it. */
-  private async projectTools(record: AuthRecord): Promise<ToolDefinition[]> {
-    if (this.toolCache && Date.now() - this.toolCache.at < 60_000) return this.toolCache.tools;
-
-    const projects = this.visibleProjects(record);
-    let tried = 0;
-    let lastError = '';
-    for (const project of projects) {
-      const worker = this.deps.supervisor.get(project.id);
-      if (!worker || worker.pid === null || worker.exitCode !== null) continue;
-      tried += 1;
-      let reply: JsonObject | undefined;
-      try {
-        reply = await this.workerRpc(project.id, { jsonrpc: '2.0', id: 'tools', method: 'tools/list', params: {} });
-      } catch (error) {
-        lastError = `${project.id}: ${error instanceof Error ? error.message : String(error)}`;
-        continue;
-      }
-      const tools = (reply?.['result'] as JsonObject | undefined)?.['tools'];
-      if (!Array.isArray(tools)) {
-        lastError = `${project.id}: no tools in the answer`;
-        continue;
-      }
-
-      const decorated = (tools as ToolDefinition[]).map(tool => {
-        const schema = (tool.inputSchema ?? { type: 'object', properties: {} }) as JsonObject;
-        const properties = { ...((schema['properties'] as JsonObject | undefined) ?? {}) };
-        const required = Array.isArray(schema['required']) ? (schema['required'] as string[]) : [];
-        return {
-          ...tool,
-          inputSchema: {
-            ...schema,
-            properties: {
-              project: {
-                type: 'string',
-                description: 'Project id or name (see list_projects). Optional when only one project is registered.',
-              },
-              ...properties,
+  /**
+   * The tool catalogue does not depend on a project or on its index, so it is
+   * built here once. Asking a worker for it meant a client that connected
+   * before any worker was ready saw only `list_projects`, and (with no
+   * list-changed notification) never learned about the rest.
+   */
+  private projectTools(): ToolDefinition[] {
+    if (this.tools) return this.tools;
+    const registry = new AiToolRegistry({
+      reader: new ProjectIndexReader(EMPTY_INDEX),
+      ...(process.env['SEMANTIC_ENGINE_MCP_ALL_TOOLS']?.toLowerCase() === 'on' ? { allTools: true as const } : {}),
+    });
+    this.tools = registry.list().map(tool => {
+      const schema = tool.inputSchema as JsonObject;
+      const properties = (schema['properties'] as JsonObject | undefined) ?? {};
+      return {
+        ...tool,
+        inputSchema: {
+          ...schema,
+          properties: {
+            project: {
+              type: 'string',
+              description: 'Project id or name (see list_projects). Optional when only one project is registered.',
             },
-            required,
+            ...properties,
           },
-        };
-      });
-      this.toolCache = { at: Date.now(), tools: decorated };
-      return decorated;
-    }
-    /*
-    | Workers are running but none could list its tools: say so. Returning only
-    | list_projects would look like a healthy gateway with a tiny tool set.
-    */
-    if (tried > 0) {
-      throw new Error(`no running project could list its tools (${lastError}). Reindex or restart that project from the dashboard.`);
-    }
-    return [];
+          required: Array.isArray(schema['required']) ? (schema['required'] as string[]) : [],
+        },
+      };
+    });
+    return this.tools;
   }
 
   private async callTool(id: unknown, params: JsonObject, record: AuthRecord): Promise<JsonObject> {

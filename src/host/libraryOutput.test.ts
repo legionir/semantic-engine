@@ -17,7 +17,6 @@ const SRC = path.join(__dirname, '..');
 
 /** فایل‌هایی که خودشان یک برنامه‌اند، نه بخشی از کتابخانه. */
 const ENTRY_POINTS: readonly string[] = [
-  'ai/mcp/cli.ts',
   'vector/VectorStore.benchmark.ts',
 ];
 

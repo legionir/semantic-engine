@@ -12,6 +12,7 @@ import * as path from 'path';
 import { ProjectIndex } from '../../core/types/project-index.types';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
+import { runIndex } from './index-command';
 import {
   normalizeWorkspaceRoot,
   resolveProjectIndexPath,
@@ -80,6 +81,16 @@ export async function runServe(args: ParsedArgs, context: CommandContext): Promi
   }
 
   const indexPath = resolveIndexPath(args, context.cwd);
+  /*
+  | No index yet: build it instead of exiting. An MCP client that launches
+  | `serve --stdio` only sees a server that failed to start; it never reads
+  | the "run index first" message. An explicit --index is taken literally.
+  */
+  if (!fs.existsSync(indexPath) && stringOption(args.options, 'index') === undefined) {
+    context.logger.info(`no index for this project yet; indexing before serving`);
+    const indexed = await runIndex(args, context);
+    if (indexed.code !== EXIT.ok) return indexed;
+  }
   const loaded = loadIndex(indexPath);
   if ('error' in loaded) return { code: EXIT.failure, error: loaded.error };
 

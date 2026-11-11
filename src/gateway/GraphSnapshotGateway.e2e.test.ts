@@ -23,6 +23,9 @@ import * as path from 'path';
 import { GatewayServer } from './GatewayServer';
 import { GraphSnapshotStore } from '../core/codeintel/GraphSnapshotStore';
 
+/* Workers inherit this process's env; these suites read the raw result object. */
+process.env['SEMANTIC_ENGINE_MCP_STRUCTURED'] = 'on';
+
 const PACKAGE_ROOT = path.join(__dirname, '..', '..');
 const built = fs.existsSync(path.join(PACKAGE_ROOT, 'dist', 'cli', 'main.js'));
 const describeIfBuilt = built ? describe : describe.skip;
