@@ -15,10 +15,15 @@ import { normalizeWorkspaceRoot, PROJECT_OUTPUT_DIR } from '../../core/config/Pr
 import { migrateLegacyArtifacts } from '../../core/config/migrateLegacyArtifacts';
 import { projectPathsFromArgs } from '../projectPathsFromArgs';
 import { mergeScanOverrides, parseScanFlags } from '../scanFlags';
+import type { ProgressLike } from '../../host/Progress';
 
 export const DEFAULT_OUTPUT_DIR = PROJECT_OUTPUT_DIR;
 
-export async function runIndex(args: ParsedArgs, context: CommandContext): Promise<CommandResult> {
+export async function runIndex(
+  args: ParsedArgs,
+  context: CommandContext,
+  progress?: ProgressLike
+): Promise<CommandResult> {
   const root = normalizeWorkspaceRoot(stringOption(args.options, 'root') ?? context.cwd);
 
 
@@ -112,6 +117,7 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
       ...(diagnosticsBudget ? { diagnosticsBudgetMs: Number(diagnosticsBudget) } : {}),
       pretty,
       blueprint: wantsBlueprint,
+      ...(progress ? { progress } : {}),
     });
   } catch (error) {
     if (error instanceof IndexBusyError) return { code: EXIT.failure, error: error.message };

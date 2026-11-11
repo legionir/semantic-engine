@@ -331,3 +331,9 @@ details.advanced > summary::before { content: "▸"; color: var(--muted); }
 details.advanced[open] > summary::before { content: "▾"; }
 details.advanced[open] > summary { margin-bottom: 12px; }
 details.advanced > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+/* all three saves in one group; the worker's two are mounted into the slot */
+.save-group { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-right: 12px; margin-right: 4px; border-right: 1px solid var(--line); }
+.save-slot { display: inline-flex; gap: 8px; }
+.save-slot[hidden] { display: none; }
+@media (max-width: 640px) { .save-group { border-right: 0; padding-right: 0; width: 100%; } }

@@ -47,6 +47,8 @@ interface WorkerStatus {
   readonly blueprint: boolean;
   readonly memoryMb: number;
   readonly queueSize: number;
+  /** The reindex in progress, when there is one: what it is doing and how far along it is (0–100). */
+  readonly indexProgress?: { readonly message: string; readonly percent: number | null; readonly startedAt: string };
   readonly lastIndexedAt?: string;
   /** Why the index is `stale`: the real load error, so a 503 is never unexplained. */
   readonly indexError?: string;
@@ -196,6 +198,7 @@ export async function runWorker(
   const startedAt = Date.now();
   let watcher: StartedChild | null = null;
   let reindexing = false;
+  let indexProgress: { message: string; percent: number | null; startedAt: string } | null = null;
   /* سنجه‌های فاز ۱۳ — چیزی که فقط این پروسه می‌داند. */
   let activeRequests = 0;
   let indexDurationMs = 0;
@@ -226,6 +229,7 @@ export async function runWorker(
       blueprint: Boolean(current?.blueprint),
       memoryMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       queueSize: reindexing ? 1 : 0,
+      ...(reindexing && indexProgress ? { indexProgress: { ...indexProgress } } : {}),
       lsp: {
         enabled: lspEnabled,
         ...(current?.index?.diagnosticsRun ? { run: { ...current.index.diagnosticsRun } } : {}),
@@ -307,7 +311,15 @@ export async function runWorker(
         const reindexStartedAt = Date.now();
         /* `?full=1` rebuilds from scratch: the extraction cache is ignored and rewritten */
         const runArgs = ctx.query['full'] === '1' ? { ...args, options: { ...args.options, full: true } } : args;
-        void runIndex(runArgs, context)
+        indexProgress = { message: 'Starting', percent: 0, startedAt: new Date(reindexStartedAt).toISOString() };
+        const progress = {
+          report: (update: { message?: string; percent?: number }): void => {
+            if (!indexProgress) return;
+            if (update.message) indexProgress.message = update.message;
+            if (update.percent !== undefined) indexProgress.percent = update.percent;
+          },
+        };
+        void runIndex(runArgs, context, progress)
           .then(result => {
             indexDurationMs = Date.now() - reindexStartedAt;
             if (result.code !== EXIT.ok) indexFailures += 1;
@@ -319,6 +331,7 @@ export async function runWorker(
           })
           .finally(() => {
             reindexing = false;
+            indexProgress = null;
           });
         return { status: 202, json: { ok: true, started: true, projectId: paths.projectId } };
       },

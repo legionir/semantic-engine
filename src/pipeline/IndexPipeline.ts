@@ -45,6 +45,8 @@ import { ILlmClient } from '../ai/llm/LlmClient';
 import { FileDiagnosticsSource } from '../lsp/DiagnosticsProvider';
 import { EnrichmentInput, EnrichmentResult } from '../lsp/LspEnrichmentService';
 
+type PipelineStage = 'scan' | 'extract' | 'graphs' | 'git' | 'build' | 'vectors';
+
 export interface IndexPipelineOptions {
   readonly workspaceRoot: string;
   /** مسیری که در `ProjectIndex` ثبت می‌شود؛ نوشتن کار `OutputWriter` است. */
@@ -148,6 +150,7 @@ export class IndexPipeline {
   private readonly fs: FileSystemPort;
   private readonly progress: ProgressLike | undefined;
   private readonly token: CancellationToken | undefined;
+  private stage: PipelineStage = 'scan';
 
   constructor(private readonly options: IndexPipelineOptions) {
     this.logger = (options.logger ?? silentLogger);
@@ -161,7 +164,7 @@ export class IndexPipeline {
     const { workspaceRoot } = this.options;
 
     // ── ۱. اسکن، با گرفتن محتوا در همان گذر ────────────────────────────
-    this.report('Scanning workspace');
+    this.enter('scan', 'Scanning workspace');
 
     const contents = new Map<string, string>();
     this.fileReads = 0;
@@ -190,7 +193,7 @@ export class IndexPipeline {
     this.logger.debug('scan complete', { files: files.length, contents: contents.size });
 
     // ── ۲. symbol و وابستگی، روی محتوای همان گذر ───────────────────────
-    this.report('Extracting symbols and dependencies');
+    this.enter('extract', 'Extracting symbols and dependencies');
 
     const resolver = new TSPathResolver(workspaceRoot);
     const { symbols, dependencies, diagnosticsByFile, configUsagesByFile, addDiagnostic } =
@@ -241,7 +244,7 @@ export class IndexPipeline {
     const reExportEdges = reExports.edges;
 
     // ── ۵. گراف‌ها ────────────────────────────────────────────────────
-    this.report('Building graphs');
+    this.enter('graphs', 'Building graphs');
     throwIfCancelled(this.token, 'Indexing');
 
     /*
@@ -273,7 +276,7 @@ export class IndexPipeline {
     const git = await this.collectGit(scanResult.files, symbols);
 
     // ── ۷. ساخت ایندکس ────────────────────────────────────────────────
-    this.report('Building project index');
+    this.enter('build', 'Building project index');
 
     const exporter = new JsonExporter();
     const projectIndex = await exporter.buildProjectIndex(
@@ -396,7 +399,7 @@ export class IndexPipeline {
       return { gitInfo: undefined, driftScore: 0, fileMetrics: undefined };
     }
 
-    this.report('Collecting git information');
+    this.enter('git', 'Collecting git information');
     const paths = files.map(file => file.path);
     const [info, metrics] = await Promise.all([
       collector.collect(paths),
@@ -417,9 +420,11 @@ export class IndexPipeline {
     const indexer = this.options.vectorIndexer;
     if (!indexer) return null;
 
-    this.report('Indexing vector chunks');
+    this.enter('vectors', 'Indexing vector chunks');
     return indexer.index(index, {
       contents,
+      onProgress: (done, total) =>
+        this.reportStage(`Embedding chunks… (${done}/${total})`, total === 0 ? 1 : done / total),
       /*
       | SE-VEC-09 — chunkهای اجرای قبلی. هر chunk با شناسه و
       | contentHash یکسان، embeddingش دوباره تولید نمی‌شود. بدون
@@ -437,8 +442,35 @@ export class IndexPipeline {
       logger: this.logger,
       token: this.token,
       report: (message, increment) => this.report(message, increment),
+      reportStage: (message, fraction) => this.reportStage(message, fraction),
       contentOf: (file, cache, countRead) => this.contentOf(file, cache, countRead),
     };
+  }
+
+  /**
+   * Where each stage sits on the 0–100 bar. Embedding dominates a run with
+   * vectors, so it gets half of the bar; without vectors the extraction does.
+   * The shares are estimates, but the movement inside a stage is real: it is
+   * the count of files or chunks done.
+   */
+  private stageRange(stage: PipelineStage): readonly [number, number] {
+    const withVectors = Boolean(this.options.vectorIndexer);
+    const table: Record<PipelineStage, readonly [number, number]> = withVectors
+      ? { scan: [0, 5], extract: [5, 30], graphs: [30, 40], git: [40, 45], build: [45, 50], vectors: [50, 98] }
+      : { scan: [0, 10], extract: [10, 60], graphs: [60, 80], git: [80, 90], build: [90, 98], vectors: [98, 98] };
+    return table[stage];
+  }
+
+  /** Enter a stage: report its message at the stage's starting percent. */
+  private enter(stage: PipelineStage, message: string): void {
+    this.stage = stage;
+    this.progress?.report({ message, percent: this.stageRange(stage)[0] });
+  }
+
+  private reportStage(message: string, fraction: number): void {
+    const [from, to] = this.stageRange(this.stage);
+    const clamped = Math.min(1, Math.max(0, fraction));
+    this.progress?.report({ message, percent: Math.round((from + (to - from) * clamped) * 10) / 10 });
   }
 
   private report(message: string, increment?: number): void {

@@ -37,6 +37,7 @@ export interface WorkerHealthSnapshot {
   readonly blueprint?: boolean;
   readonly memoryMb?: number;
   readonly queueSize?: number;
+  readonly indexProgress?: { readonly message: string; readonly percent: number | null; readonly startedAt: string };
   readonly lastIndexedAt?: string;
   readonly indexError?: string;
   readonly lsp?: {

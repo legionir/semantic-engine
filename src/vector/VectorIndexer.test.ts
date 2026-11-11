@@ -154,6 +154,45 @@ describe('VectorIndexer', () => {
     expect(chunks[0]!.embedding).toHaveLength(3);
   });
 
+  it('embeds in batches and reports how many chunks are done', async () => {
+    const files = Array.from({ length: 70 }, (_v, i) => createFile(`f${i}`, `src/f${i}.ts`));
+    const projectIndex: ProjectIndex = {
+      schemaVersion: '2.0.0',
+      root: 'test',
+      generatedAt: new Date().toISOString(),
+      languages: ['typescript'],
+      files,
+      symbols: [],
+      graphs: { callGraph: [], typeGraph: [], dependencyGraph: [] },
+      diagnostics: [],
+      metrics: { totalFiles: 70, totalLoc: 0, totalSymbols: 0, avgCyclomaticComplexity: 0, languageBreakdown: { typescript: 70 } },
+    };
+    const batchSizes: number[] = [];
+    const generator: IEmbeddingGenerator = {
+      modelName: 'mock-model',
+      isReady: async () => true,
+      generate: async () => ({ embedding: [1, 2], model: 'mock-model', dimensions: 2 }),
+      generateBatch: async (texts: readonly string[]) => {
+        batchSizes.push(texts.length);
+        return texts.map(() => ({ embedding: [1, 2], model: 'mock-model', dimensions: 2 }));
+      },
+      dispose: async () => {},
+    };
+    const seen: Array<[number, number]> = [];
+
+    const chunks = await new VectorIndexer({ embeddingGenerator: generator }).index(projectIndex, {
+      onProgress: (done, total) => seen.push([done, total]),
+    });
+
+    expect(chunks).toHaveLength(70);
+    expect(chunks.every(chunk => chunk.embedding?.length === 2)).toBe(true);
+    expect(batchSizes.length).toBeGreaterThan(1);
+    expect(batchSizes.reduce((a, b) => a + b, 0)).toBe(70);
+    expect(seen[0]).toEqual([0, 70]);
+    expect(seen[seen.length - 1]).toEqual([70, 70]);
+    for (let i = 1; i < seen.length; i++) expect(seen[i]![0]).toBeGreaterThan(seen[i - 1]![0]);
+  });
+
   it('should skip binary files', async () => {
     const binaryFile = createFile('f2', 'assets/logo.png', { binary: true, language: null, encoding: 'binary' });
 

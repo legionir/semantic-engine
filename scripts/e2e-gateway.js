@@ -224,8 +224,10 @@ async function main() {
     check('a ready worker offers Stop but not Start', (await page.locator('#wc-actions [data-op=stop]').count()) === 1
       && (await page.locator('#wc-actions [data-op=start]').count()) === 0);
     await page.fill('#field-debounceMs', '900');
+    // the worker's Save sits in the page's one save bar, next to "Save as defaults"
+    check('Save, Save & restart and Save as defaults share one bar', (await page.locator('#saveGroup #wc-save, #saveGroup #wc-save-restart, #saveGroup #saveDefaultsBtn').count()) === 3);
     await page.click('#wc-save');
-    await page.waitForFunction(() => /Saved/.test(document.getElementById('wc-errors').textContent), null, { timeout: 30_000 });
+    await page.waitForFunction(() => /Saved/.test(document.getElementById('defaultsStatus').textContent), null, { timeout: 30_000 });
     await page.goto(`${base}/gateway?token=${TOKEN}`);
     await waitRowState('fix-two', 'ready');
     const edited = await (await fetch(`${base}/api/v1/gateway/projects/fix-two`, auth)).json();

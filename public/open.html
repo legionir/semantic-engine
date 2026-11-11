@@ -271,10 +271,13 @@
     <!-- Actions -->
     <section class="card actions-card">
       <div class="run-row">
-        <button type="button" id="startIndexBtn" class="btn primary large has-icon" disabled>
+        <span class="save-group" id="saveGroup" role="group" aria-label="Save">
+          <span id="wcSaveSlot" class="save-slot" hidden></span>
+          <button type="button" id="saveDefaultsBtn" class="btn" title="Write the values above to the settings file: the defaults every worker starts with">Save as defaults</button>
+        </span>
+        <button type="button" id="startIndexBtn" class="btn has-icon" disabled>
           <svg class="ic" aria-hidden="true"><use href="#i-play"/></svg><span>Reindex</span>
         </button>
-        <button type="button" id="saveDefaultsBtn" class="btn" title="Write the values above to the settings file so every start uses them">Save as defaults</button>
         <button type="button" id="cancelIndexBtn" class="btn ghost has-icon" hidden>
           <svg class="ic" aria-hidden="true"><use href="#i-stop"/></svg><span>Cancel</span>
         </button>

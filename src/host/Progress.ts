@@ -9,6 +9,12 @@
 export interface ProgressUpdate {
   readonly message?: string;
   readonly increment?: number;
+  /**
+   * Overall progress of the whole run, 0–100, when the reporter can tell
+   * (the index pipeline can: it weighs its stages and counts files/chunks).
+   * Absent means "no measurement", never "0".
+   */
+  readonly percent?: number;
 }
 
 /**

@@ -146,7 +146,7 @@ export async function extractAll(
 
     processed++;
     if (processed % 25 === 0) {
-      ctx.report(`Extracting… (${processed}/${files.length})`, (25 / files.length) * 100);
+      ctx.reportStage(`Extracting symbols… (${processed}/${files.length} files)`, processed / files.length);
     }
 
     /*

@@ -70,9 +70,6 @@ function buildEmbeddingGenerator(
   });
 }
 
-/** Steps `IndexPipeline` reports in a full run; used to scale the progress bar. */
-const PIPELINE_STEPS = 8;
-
 type IndexJobData = {
   readonly scan?: IndexRequestBody['scan'];
   readonly output?: IndexRequestBody['output'];
@@ -109,9 +106,9 @@ function createIndexRunner(
   const wantBlueprint = output.blueprint !== false;
 
   return async (token, updateProgress) => {
-    /* the pipeline reports its own steps; each one moves the bar forward */
-    let step = 0;
-    updateProgress('Starting', 2);
+    /* the pipeline weighs its stages and counts files/chunks: `percent` is that real figure */
+    let last = 2;
+    updateProgress('Starting', last);
     const result = await runIndexJob({
       workspaceRoot: project.rootPath,
       outputDir: path.dirname(project.indexPath),
@@ -125,9 +122,9 @@ function createIndexRunner(
       token,
       progress: {
         report: update => {
-          if (!update.message) return;
-          step += 1;
-          updateProgress(update.message, Math.min(95, Math.round((step / PIPELINE_STEPS) * 95)));
+          /* a message without a measurement (the scanner's own) changes the label, never the bar */
+          if (update.percent !== undefined) last = Math.min(99, Math.max(last, Math.round(update.percent)));
+          if (update.message || update.percent !== undefined) updateProgress(update.message ?? 'Indexing', last);
         },
       },
     });

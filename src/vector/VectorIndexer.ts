@@ -56,6 +56,8 @@ export interface IndexOptions {
    * embeddingِ موجود، دوباره تولید **نمی‌شود** (SE-VEC-09).
    */
   readonly previous?: readonly VectorChunk[];
+  /** Called as embeddings are produced: `done` of `total` chunks that needed one. */
+  readonly onProgress?: (done: number, total: number) => void;
 }
 
 export class VectorIndexer {
@@ -85,7 +87,7 @@ export class VectorIndexer {
 
     // ۳. Generate embeddings if generator provided
     if (this.options.embeddingGenerator) {
-      await this.attachEmbeddings(chunks, indexOptions.previous);
+      await this.attachEmbeddings(chunks, indexOptions.previous, indexOptions.onProgress);
     }
 
     return chunks;
@@ -158,7 +160,8 @@ export class VectorIndexer {
    */
   private async attachEmbeddings(
     chunks: VectorChunk[],
-    previous?: readonly VectorChunk[]
+    previous?: readonly VectorChunk[],
+    onProgress?: (done: number, total: number) => void
   ): Promise<void> {
     const generator = this.options.embeddingGenerator!;
     const ready = await generator.isReady();
@@ -199,17 +202,32 @@ export class VectorIndexer {
 
     if (pending.length === 0) return;
 
-    const results = await generator.generateBatch(pending.map(c => c.content));
-    this.validateEmbeddingResults(results, pending.length);
+    /*
+    | Embedded in batches, not in one call, so a long run can say how far it is.
+    | Dimensions must agree across batches, as they did within the single call.
+    */
+    const BATCH = 32;
+    let dimensions: number | undefined;
+    onProgress?.(0, pending.length);
+    for (let from = 0; from < pending.length; from += BATCH) {
+      const batch = pending.slice(from, from + BATCH);
+      const results = await generator.generateBatch(batch.map(c => c.content));
+      const got = this.validateEmbeddingResults(results, batch.length);
+      if (dimensions !== undefined && got !== dimensions) {
+        throw new Error(`embedding provider returned inconsistent vector dimensions: expected ${dimensions}, received ${got}`);
+      }
+      dimensions ??= got;
 
-    for (let i = 0; i < pending.length; i++) {
-      const chunk = pending[i]!;
-      const result = results[i];
-      if (!result) throw new Error(`Embedding result missing at index ${i}`);
+      for (let i = 0; i < batch.length; i++) {
+        const chunk = batch[i]!;
+        const result = results[i];
+        if (!result) throw new Error(`Embedding result missing at index ${from + i}`);
 
-      const writable = chunk as VectorChunk & { embedding?: number[]; embeddingModel?: string };
-      writable.embedding = [...result.embedding];
-      writable.embeddingModel = result.model ?? generator.modelName;
+        const writable = chunk as VectorChunk & { embedding?: number[]; embeddingModel?: string };
+        writable.embedding = [...result.embedding];
+        writable.embeddingModel = result.model ?? generator.modelName;
+      }
+      onProgress?.(Math.min(pending.length, from + batch.length), pending.length);
     }
   }
 

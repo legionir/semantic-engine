@@ -171,6 +171,21 @@ describe('IndexPipeline', () => {
       expect(updates.map(u => u.message).join(' ')).toMatch(/Scanning|Extracting/);
     });
 
+    it('reports a real percent: starts low, never goes backwards, stays below 100', async () => {
+      for (let i = 0; i < 60; i++) write(`src/f${i}.ts`, `export const v${i} = ${i};\n`);
+      const updates: ProgressUpdate[] = [];
+
+      await pipeline({ progress: { report: (u: ProgressUpdate) => void updates.push(u) } }).run();
+
+      const percents = updates.map(u => u.percent).filter((p): p is number => p !== undefined);
+      expect(percents.length).toBeGreaterThan(3);
+      expect(percents[0]).toBeLessThanOrEqual(10);
+      for (let i = 1; i < percents.length; i++) expect(percents[i]!).toBeGreaterThanOrEqual(percents[i - 1]!);
+      expect(Math.max(...percents)).toBeLessThan(100);
+      /* the extraction counts files, so its message carries the real count */
+      expect(updates.some(u => /Extracting symbols… \(\d+\/\d+ files\)/.test(u.message ?? ''))).toBe(true);
+    });
+
     it('stops on an already cancelled token', async () => {
       const source = new CancellationTokenSource();
       source.cancel();

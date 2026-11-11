@@ -9,6 +9,8 @@ export interface StageContext {
   readonly logger: ILogger;
   readonly token: CancellationToken | undefined;
   report(message: string, increment?: number): void;
+  /** Progress inside the current stage: `fraction` is 0–1 of that stage's share of the run. */
+  reportStage(message: string, fraction: number): void;
   contentOf(file: FileEntry, cache: Map<string, string>, countRead: () => void): Promise<string | null>;
 }
 

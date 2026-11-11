@@ -87,6 +87,8 @@ export function projectEntry(
     phase,
     indexing: phase === 'indexing',
     operation,
+    /* what a running reindex reports about itself: a step and a real percent, or null */
+    indexProgress: snapshot?.indexProgress ?? null,
     indexState: snapshot?.indexState ?? '',
     name: registered?.name ?? id,
     rootPath: registered?.rootPath ?? '',

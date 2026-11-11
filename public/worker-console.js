@@ -36,6 +36,8 @@ const WorkerConsole = (function () {
         ".wc-bar{height:8px;border-radius:99px;background:var(--panel-3,#222a3a);overflow:hidden}",
         ".wc-fill{height:100%;width:0;border-radius:99px;background:var(--accent-grad,linear-gradient(90deg,#5b8cff,#9b5cf6));transition:width .3s}",
         ".wc-fill.wc-busy{width:38%;animation:wc-slide 1.3s ease-in-out infinite}",
+        ".wc-fill.wc-pct{animation:none}",
+        ".wc-line .wc-pctn{font-variant-numeric:tabular-nums;font-weight:600;margin-left:8px}",
         ".wc-fill.wc-ok{width:100%;background:var(--ok,#37d39a)}",
         ".wc-fill.wc-bad{width:100%;background:var(--bad,#f8717a)}",
         "@keyframes wc-slide{0%{margin-left:-38%}100%{margin-left:100%}}",
@@ -108,7 +110,7 @@ const WorkerConsole = (function () {
             '<div class="wc-dialog" role="dialog" aria-modal="true">' +
             '<div class="wc-head"><div><h2></h2><p class="wc-sub"></p></div><button type="button" class="wc-x" aria-label="Close">&times;</button></div>' +
             '<div class="wc-body">' +
-            '<div class="wc-line"><span class="wc-status"></span><span class="wc-elapsed"></span></div>' +
+            '<div class="wc-line"><span><span class="wc-status"></span><span class="wc-pctn"></span></span><span class="wc-elapsed"></span></div>' +
             '<div class="wc-bar"><div class="wc-fill wc-busy"></div></div>' +
             '<p class="wc-hint"></p>' +
             '<pre class="wc-log" hidden></pre>' +
@@ -126,6 +128,7 @@ const WorkerConsole = (function () {
             close: function () {
                 if (handle.closed) return;
                 handle.closed = true;
+                if (handle.clockTimer) { clearInterval(handle.clockTimer); handle.clockTimer = null; }
                 overlay.remove();
                 if (handle.onClose) handle.onClose();
             },
@@ -135,8 +138,53 @@ const WorkerConsole = (function () {
                 node.className = "wc-status" + (kind ? " wc-status-" + kind : "");
             },
             setElapsed: function (text) { q(".wc-elapsed").textContent = text; },
+            /*
+            | The elapsed time ticks on its own timer from the last time the server
+            | told us, so it moves every 250 ms whatever the polling does. It used to
+            | change only when a poll answered, so a slow poll froze it and the next
+            | answer skipped numbers. It never runs backwards: a server value below
+            | the local one is ignored.
+            */
+            syncClock: function (serverMs) {
+                const local = handle.clockBase === undefined ? 0 : handle.clockBase + (performance.now() - handle.clockAt);
+                if (handle.clockBase !== undefined && serverMs <= local) return;
+                handle.clockBase = serverMs;
+                handle.clockAt = performance.now();
+                if (!handle.clockTimer) {
+                    handle.clockTimer = setInterval(function () {
+                        q(".wc-elapsed").textContent = formatElapsed(handle.clockBase + (performance.now() - handle.clockAt));
+                    }, 250);
+                }
+                q(".wc-elapsed").textContent = formatElapsed(serverMs);
+            },
+            /* stops the ticking and shows the final time; it never shows less than the clock already did */
+            stopClock: function (finalMs) {
+                const local = handle.clockBase === undefined ? 0 : handle.clockBase + (performance.now() - handle.clockAt);
+                if (handle.clockTimer) { clearInterval(handle.clockTimer); handle.clockTimer = null; }
+                const shown = Math.max(finalMs === undefined ? 0 : finalMs, local);
+                if (finalMs !== undefined) q(".wc-elapsed").textContent = formatElapsed(shown);
+                return shown;
+            },
+            /* a measured fraction (0-100) instead of the sliding bar; null goes back to sliding */
+            setPercent: function (pct) {
+                const fill = q(".wc-fill");
+                const label = q(".wc-pctn");
+                if (pct === null || pct === undefined) {
+                    fill.className = "wc-fill wc-busy"; fill.style.width = ""; label.textContent = "";
+                    return;
+                }
+                const value = Math.max(0, Math.min(100, pct));
+                fill.className = "wc-fill wc-pct";
+                fill.style.width = value + "%";
+                label.textContent = Math.round(value) + "%";
+            },
             setHint: function (text) { q(".wc-hint").textContent = text || ""; },
-            setBar: function (kind) { q(".wc-fill").className = "wc-fill wc-" + kind; },
+            setBar: function (kind) {
+                const fill = q(".wc-fill");
+                fill.className = "wc-fill wc-" + kind;
+                fill.style.width = "";
+                if (kind !== "busy") q(".wc-pctn").textContent = "";
+            },
             setLogs: function (lines) {
                 const pre = q(".wc-log");
                 const stick = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 24;
@@ -186,6 +234,7 @@ const WorkerConsole = (function () {
         }
 
         let stopped = false;
+        let lastPercent = null;
         view.onClose = function () { stopped = true; };
 
         for (;;) {
@@ -203,7 +252,18 @@ const WorkerConsole = (function () {
 
             const current = status && status.operation && (!operation || status.operation.id === operation.id) ? status.operation : null;
             if (!view.closed && current) {
-                view.setElapsed(formatElapsed(current.elapsedMs));
+                if (current.status === "running") view.syncClock(current.elapsedMs);
+                /* a running reindex says what it is doing and how far along it is */
+                const progress = status.indexProgress;
+                if (current.status === "running" && progress) {
+                    view.setStatus(progress.message || verbs.busy);
+                    if (typeof progress.percent === "number") lastPercent = progress.percent;
+                    view.setPercent(typeof progress.percent === "number" ? progress.percent : lastPercent);
+                } else if (current.status === "running") {
+                    /* between the worker's last step and its "done": hold the bar, do not fall back to sliding */
+                    view.setStatus(lastPercent === null ? verbs.busy + "…" : "Finishing…");
+                    view.setPercent(lastPercent);
+                }
                 const stats = status.stats && status.stats.available
                     ? status.stats.filesCount + " files · " + status.stats.symbolsCount + " symbols indexed so far"
                     : "";
@@ -212,8 +272,9 @@ const WorkerConsole = (function () {
 
             if (current && current.status !== "running") {
                 if (!view.closed) {
+                    const shownMs = view.stopClock(current.elapsedMs);
                     if (current.status === "done") {
-                        view.setStatus(verbs.done + " in " + formatElapsed(current.elapsedMs), "ok");
+                        view.setStatus(verbs.done + " in " + formatElapsed(shownMs), "ok");
                         view.setBar("ok");
                     } else {
                         view.setStatus("Failed: " + (current.error || "see the log below"), "bad");
@@ -227,6 +288,7 @@ const WorkerConsole = (function () {
             if (!current && status && status.phase && ["ready", "stopped", "crashed", "degraded"].indexOf(status.phase) !== -1) {
                 /* the gateway forgot the operation (restart): report what the project looks like */
                 if (!view.closed) {
+                    view.stopClock();
                     view.setStatus("Finished — the project is " + status.phase, status.phase === "ready" || status.phase === "stopped" ? "ok" : "bad");
                     view.setBar(status.phase === "ready" || status.phase === "stopped" ? "ok" : "bad");
                     view.finish("Close");
@@ -238,7 +300,7 @@ const WorkerConsole = (function () {
                 if (ctx.onChange) ctx.onChange();
                 return;
             }
-            await new Promise(function (resolve) { setTimeout(resolve, 1200); });
+            await new Promise(function (resolve) { setTimeout(resolve, 1000); });
         }
     }
 
@@ -326,8 +388,6 @@ const WorkerConsole = (function () {
                 '<pre class="wc-preview" id="wc-preview"></pre>' +
                 '<p class="wc-errors" id="wc-errors" role="alert"></p>' +
                 '<div class="wc-actions" style="margin-top:10px">' +
-                '<button type="button" class="wc-btn wc-primary" id="wc-save">Save</button>' +
-                '<button type="button" class="wc-btn" id="wc-save-restart">Save &amp; restart</button>' +
                 '<a class="wc-btn" id="wc-dashboard" href="/gateway" style="text-decoration:none">&larr; All projects</a></div>';
             const back = host.querySelector("#wc-dashboard");
             back.setAttribute("href", ui.withToken("/gateway", ctx.token));
@@ -398,7 +458,7 @@ const WorkerConsole = (function () {
             updatePreview();
         }
 
-        async function save(restart) {
+        async function saveConfig(restart) {
             if (formBlocked) return;
             const values = formValues();
             const errors = ui.validateForm(values);
@@ -413,9 +473,15 @@ const WorkerConsole = (function () {
                     body: JSON.stringify(request.body)
                 });
                 errorNode.textContent = "";
-                errorNode.style.color = "var(--ok,#37d39a)";
-                errorNode.textContent = "Saved" + (restart ? "" : ". A running worker restarts to pick it up.");
-                setTimeout(function () { errorNode.style.color = ""; }, 4000);
+                /* the answer appears beside the save buttons, wherever they are */
+                const say = document.getElementById("defaultsStatus");
+                const message = "Saved " + (current() ? current().name : "the worker") + (restart ? "" : ". A running worker restarts to pick it up.");
+                if (say) say.textContent = message;
+                else {
+                    errorNode.style.color = "var(--ok,#37d39a)";
+                    errorNode.textContent = message;
+                    setTimeout(function () { errorNode.style.color = ""; }, 4000);
+                }
                 await refresh();
                 if (restart && current() && current().phase !== "stopped") runOperation(ctx, current(), "restart");
             } catch (error) {
@@ -430,7 +496,35 @@ const WorkerConsole = (function () {
             paintStatus();
         }
 
+        /*
+        | Save and Save & restart live in the page's one save bar (#wcSaveSlot), next to
+        | "Save as defaults", so every save is in the same place. Without that slot
+        | (a page that does not have the bar) they stay at the foot of this card.
+        */
+        function mountSaveButtons() {
+            const slot = document.getElementById("wcSaveSlot");
+            const holder = slot || host.querySelector("#wc-dashboard").parentNode;
+            const make = function (id, label, cls, title) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.id = id;
+                button.className = cls;
+                button.textContent = label;
+                button.title = title;
+                return button;
+            };
+            const cls = slot ? "btn" : "wc-btn";
+            const save = make("wc-save", "Save", cls + (slot ? " primary" : " wc-primary"), "Save this project's worker configuration");
+            const saveRestart = make("wc-save-restart", "Save & restart", cls, "Save, then restart the worker so it runs with the new options");
+            holder.insertBefore(saveRestart, holder.firstChild);
+            holder.insertBefore(save, saveRestart);
+            save.addEventListener("click", function () { saveConfig(false); });
+            saveRestart.addEventListener("click", function () { saveConfig(true); });
+            if (slot) slot.hidden = false;
+        }
+
         frame();
+        mountSaveButtons();
         paintStatus();
         await loadForm();
 
@@ -456,8 +550,6 @@ const WorkerConsole = (function () {
                 runOperation(ctx, project, op.getAttribute("data-op"));
                 return;
             }
-            if (event.target.id === "wc-save") save(false);
-            if (event.target.id === "wc-save-restart") save(true);
         });
 
         timer = setInterval(refresh, 4000);
