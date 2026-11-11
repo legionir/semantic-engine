@@ -17,6 +17,8 @@ import { WorkerSupervisor } from './WorkerSupervisor';
 import { targetConnectOptions } from './workerTarget';
 import { packageVersion } from '../host/version';
 import { MCP_INSTRUCTIONS } from '../ai/mcp/instructions';
+import { RequestLog, previewArgs } from './RequestLog';
+import { PROJECT_ID_HEADER } from './GatewayProxy';
 import { AiToolRegistry } from '../ai/AiToolRegistry';
 import { ProjectIndexReader } from '../ai/ProjectIndexReader';
 import { ProjectIndex } from '../core/types/project-index.types';
@@ -38,6 +40,14 @@ export interface GatewayMcpDeps {
   readonly registry: ProjectRegistry;
   readonly supervisor: WorkerSupervisor;
   readonly auth: GatewayAuth;
+  /** Every tools/call is recorded here once it has an answer. */
+  readonly log?: RequestLog;
+}
+
+/** What a call is logged with, and the project a `/mcp/<project>` URL pins it to. */
+interface CallContext {
+  readonly client: string;
+  readonly fixedProject?: string;
 }
 
 interface ToolDefinition extends JsonObject {
@@ -67,6 +77,18 @@ export function resolveProject(
   return { error: `unknown project "${query}". Known projects: ${known}. Call ${LIST_PROJECTS} first.` };
 }
 
+/** The failure a tool reported, from its text answer (readable text or the JSON envelope). */
+function errorLine(text: string | undefined): string {
+  if (!text) return 'the tool reported an error';
+  try {
+    const parsed = JSON.parse(text) as { error?: unknown };
+    if (typeof parsed.error === 'string') return parsed.error;
+  } catch {
+    /* readable text */
+  }
+  return text.split('\n')[0]!.replace(/^ERROR:\s*/, '');
+}
+
 export class GatewayMcp {
   private tools: ToolDefinition[] | undefined;
 
@@ -76,16 +98,24 @@ export class GatewayMcp {
     req: http.IncomingMessage,
     res: http.ServerResponse,
     body: unknown,
-    record: AuthRecord
+    record: AuthRecord,
+    fixedProject?: string
   ): Promise<void> {
+    const agent = req.headers['user-agent'];
+    const context: CallContext = {
+      client: typeof agent === 'string' && agent.trim() !== '' ? agent.trim().slice(0, 80) : 'unknown',
+      ...(fixedProject !== undefined ? { fixedProject } : {}),
+    };
+    /* a per-project URL names its project on the answer, as the proxied route did */
+    if (fixedProject !== undefined) res.setHeader(PROJECT_ID_HEADER, fixedProject);
     if (Array.isArray(body)) {
-      const replies = (await Promise.all(body.map(item => this.dispatch(item, record)))).filter(
+      const replies = (await Promise.all(body.map(item => this.dispatch(item, record, context)))).filter(
         (reply): reply is JsonObject => reply !== undefined
       );
       if (replies.length === 0) return this.accepted(res);
       return this.json(res, replies);
     }
-    const reply = await this.dispatch(body, record);
+    const reply = await this.dispatch(body, record, context);
     if (reply === undefined) return this.accepted(res);
     return this.json(res, reply);
   }
@@ -106,7 +136,7 @@ export class GatewayMcp {
       .filter(entry => this.deps.auth.canAccessProject(record, entry.id));
   }
 
-  private async dispatch(message: unknown, record: AuthRecord): Promise<JsonObject | undefined> {
+  private async dispatch(message: unknown, record: AuthRecord, context: CallContext): Promise<JsonObject | undefined> {
     const request = (message ?? {}) as JsonObject;
     const id = request['id'];
     const method = request['method'];
@@ -135,7 +165,7 @@ export class GatewayMcp {
         case 'tools/list':
           return this.success(id, { tools: this.listTools() });
         case 'tools/call':
-          return await this.callTool(id, (request['params'] ?? {}) as JsonObject, record);
+          return await this.loggedCall(id, (request['params'] ?? {}) as JsonObject, record, context);
         default:
           return this.failure(id, -32601, `method not found: ${method}`);
       }
@@ -202,7 +232,44 @@ export class GatewayMcp {
     return this.tools;
   }
 
-  private async callTool(id: unknown, params: JsonObject, record: AuthRecord): Promise<JsonObject> {
+  /** Runs the call and records it: project, tool, duration, outcome and answer size. */
+  private async loggedCall(id: unknown, params: JsonObject, record: AuthRecord, context: CallContext): Promise<JsonObject> {
+    const started = Date.now();
+    const target = { project: '' };
+    let reply: JsonObject;
+    try {
+      reply = await this.callTool(id, params, record, context, target);
+    } catch (error) {
+      reply = this.failure(id, -32603, error instanceof Error ? error.message : String(error));
+    }
+    if (this.deps.log && typeof params['name'] === 'string') {
+      const result = reply['result'] as { isError?: boolean; content?: { text?: string }[] } | undefined;
+      const rpcError = reply['error'] as { message?: string } | undefined;
+      const failed = rpcError !== undefined || result?.isError === true;
+      const args = { ...((params['arguments'] as JsonObject | undefined) ?? {}) };
+      delete args['project'];
+      this.deps.log.record({
+        project: target.project,
+        tool: params['name'],
+        args: previewArgs(args),
+        durationMs: Date.now() - started,
+        ok: !failed,
+        ...(failed ? { error: rpcError?.message ?? errorLine(result?.content?.[0]?.text) } : {}),
+        resultBytes: Buffer.byteLength(JSON.stringify(reply['result'] ?? reply['error'] ?? null)),
+        key: record.name,
+        client: context.client,
+      });
+    }
+    return reply;
+  }
+
+  private async callTool(
+    id: unknown,
+    params: JsonObject,
+    record: AuthRecord,
+    context: CallContext,
+    resolved: { project: string }
+  ): Promise<JsonObject> {
     const name = params['name'];
     if (typeof name !== 'string') return this.failure(id, -32602, 'tools/call needs a tool name');
 
@@ -225,12 +292,17 @@ export class GatewayMcp {
     let target: { id: string } | { error: string };
     if (typeof requested === 'string' && requested.trim() !== '') {
       target = resolveProject(projects, requested);
+    } else if (context.fixedProject !== undefined) {
+      target = projects.find(project => project.id === context.fixedProject) ?? {
+        error: `project ${context.fixedProject} is not available to this token`,
+      };
     } else if (projects.length === 1) {
       target = projects[0]!;
     } else {
       target = { error: `"project" is required because this gateway serves ${projects.length} projects. Call ${LIST_PROJECTS}.` };
     }
     if ('error' in target) return this.toolResult(id, target.error, true);
+    resolved.project = target.id;
 
     const worker = this.deps.supervisor.get(target.id);
     if (!worker || worker.pid === null || worker.exitCode !== null) {

@@ -253,6 +253,39 @@ describeIfBuilt('all-projects MCP endpoint through the Gateway', () => {
     expect(reply.text).toContain('find_symbol');
   });
 
+  it('logs every tool call: project, tool, arguments, outcome, and serves it filtered and sorted', async () => {
+    const before = gateway.requestLog.size;
+    await call('find_symbol', { project: 'Alpha Shop', name: 'alphaOnly' });
+    await call('find_symbol', { project: 'nothing', name: 'x' });
+    /* a per-project URL is the same handler with the project pinned */
+    const pinned = await request(port, 'POST', '/mcp/beta-blog', token, {
+      jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'find_symbol', arguments: { name: 'betaOnly' } },
+    });
+    expect(pinned.text).toContain('betaOnly');
+    expect(gateway.requestLog.size).toBe(before + 3);
+
+    const errors = await request(port, 'GET', '/api/v1/gateway/requests?status=error&limit=1', token);
+    const failed = (errors.json as { items: Record<string, unknown>[] }).items[0]!;
+    expect(failed).toMatchObject({ tool: 'find_symbol', project: '', ok: false, args: '{"name":"x"}' });
+    expect(String(failed['error'])).toContain('unknown project');
+
+    const beta = await request(port, 'GET', `/api/v1/gateway/requests?project=${idBeta}&sort=at&order=desc&limit=1`, token);
+    const page = beta.json as { total: number; items: Record<string, unknown>[]; facets: { tools: string[] } };
+    expect(page.items[0]).toMatchObject({ project: idBeta, tool: 'find_symbol', ok: true, args: '{"name":"betaOnly"}' });
+    expect(typeof page.items[0]!['durationMs']).toBe('number');
+    expect(page.items[0]!['resultBytes']).toBeGreaterThan(0);
+    expect(page.facets.tools).toContain('find_symbol');
+
+    const stats = await request(port, 'GET', '/api/v1/gateway/stats?window=1h', token);
+    const summary = stats.json as { total: number; errors: number; byTool: { name: string }[]; timeline: unknown[] };
+    expect(summary.total).toBeGreaterThanOrEqual(3);
+    expect(summary.errors).toBeGreaterThanOrEqual(1);
+    expect(summary.byTool[0]!.name).toBe('find_symbol');
+    expect(summary.timeline).toHaveLength(24);
+
+    expect((await request(port, 'GET', '/api/v1/gateway/requests')).status).toBe(401);
+  });
+
   it('serves the settings page without a token, like the dashboard', async () => {
     const page = await request(port, 'GET', '/open.html');
     expect(page.status).toBe(200);

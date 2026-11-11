@@ -253,9 +253,15 @@ export class RequestLog {
     return this.entries.length;
   }
 
-  query(query: RequestQuery = {}): RequestPage {
+  /**
+   * `visible` limits the log to the projects a caller may see; calls that
+   * never resolved to a project (project '') are shown to everyone who can
+   * read the log, since they carry no project data.
+   */
+  query(query: RequestQuery = {}, visible: (project: string) => boolean = () => true): RequestPage {
     const needle = query.q?.trim().toLowerCase();
-    const matched = this.entries.filter(entry => {
+    const scoped = this.entries.filter(entry => entry.project === '' || visible(entry.project));
+    const matched = scoped.filter(entry => {
       if (query.project && entry.project !== query.project) return false;
       if (query.tool && entry.tool !== query.tool) return false;
       if (query.client && entry.client !== query.client) return false;
@@ -287,7 +293,7 @@ export class RequestLog {
     const limit = Math.min(500, Math.max(1, Math.floor(query.limit ?? 50)));
     const offset = Math.max(0, Math.floor(query.offset ?? 0));
     const distinct = (pick: (entry: RequestLogEntry) => string): string[] =>
-      Array.from(new Set(this.entries.map(pick).filter(text => text !== ''))).sort();
+      Array.from(new Set(scoped.map(pick).filter(text => text !== ''))).sort();
     return {
       total: matched.length,
       offset,
@@ -301,10 +307,12 @@ export class RequestLog {
     };
   }
 
-  stats(windowMs: number): RequestStats {
+  stats(windowMs: number, visible: (project: string) => boolean = () => true): RequestStats {
     const end = this.now();
     const start = end - windowMs;
-    const inWindow = this.entries.filter(entry => entry.at >= start && entry.at <= end);
+    const inWindow = this.entries.filter(
+      entry => entry.at >= start && entry.at <= end && (entry.project === '' || visible(entry.project))
+    );
     const errors = inWindow.filter(entry => !entry.ok).length;
     const bucketMs = windowMs / TIMELINE_BUCKETS;
     const timeline = Array.from({ length: TIMELINE_BUCKETS }, (_, index) => ({

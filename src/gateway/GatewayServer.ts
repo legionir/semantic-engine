@@ -38,6 +38,7 @@ import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
 import { generateToken } from '../cli/HttpGuard';
 import { readBody } from './gatewayHttp';
+import { RequestLog, RequestQuery, RequestSortKey } from './RequestLog';
 import { parseUrlSafely, respondInternalError, safeDecode } from '../server/httpRequestUtils';
 import { healthPayload, metricsPayload, projectEntry } from './gatewayPayloads';
 
@@ -71,6 +72,41 @@ interface SseClient {
   readonly res: http.ServerResponse;
 }
 
+const STATS_WINDOWS: Readonly<Record<string, number>> = {
+  '1h': 3_600_000,
+  '24h': 86_400_000,
+  '7d': 7 * 86_400_000,
+};
+
+/** Query-string filters of `GET /api/v1/gateway/requests`; unknown or malformed values are ignored. */
+function requestQueryFrom(params: URLSearchParams): RequestQuery {
+  const text = (key: string): string | undefined => params.get(key)?.trim() || undefined;
+  const number = (key: string): number | undefined => {
+    const raw = params.get(key);
+    if (raw === null || raw.trim() === '') return undefined;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : undefined;
+  };
+  const status = text('status');
+  const order = text('order');
+  const query: { -readonly [K in keyof RequestQuery]: RequestQuery[K] } = {};
+  const assign = <K extends keyof RequestQuery>(key: K, value: RequestQuery[K] | undefined): void => {
+    if (value !== undefined) query[key] = value;
+  };
+  assign('project', text('project'));
+  assign('tool', text('tool'));
+  assign('client', text('client'));
+  assign('q', text('q'));
+  assign('status', status === 'ok' || status === 'error' ? status : undefined);
+  assign('from', number('from'));
+  assign('to', number('to'));
+  assign('sort', text('sort') as RequestSortKey | undefined);
+  assign('order', order === 'asc' || order === 'desc' ? order : undefined);
+  assign('limit', number('limit'));
+  assign('offset', number('offset'));
+  return query;
+}
+
 export class GatewayServer {
   readonly auth: GatewayAuth;
   private readonly bootstrapToken: string;
@@ -85,6 +121,8 @@ export class GatewayServer {
   private readonly configs: WorkerConfigStore;
   private readonly startedAt: number;
   private readonly mcp: GatewayMcp;
+  /** Agent tool calls, for the console's Activity and Stats tabs. */
+  readonly requestLog: RequestLog;
   private readonly operations = new OperationTracker();
   /** The last gateway events, so the dashboard can show history it did not witness. */
   private readonly recentEvents: Record<string, unknown>[] = [];
@@ -100,7 +138,16 @@ export class GatewayServer {
         onEvent: event => this.broadcast({ type: 'worker', ...event }),
       });
     this.configs = new WorkerConfigStore(this.registry);
-    this.mcp = new GatewayMcp({ registry: this.registry, supervisor: this.supervisor, auth: this.auth });
+    this.requestLog = new RequestLog({
+      filePath: path.join(options.dataRoot, 'gateway', 'requests.jsonl'),
+      onRecord: entry => this.pushSse('request', entry),
+    });
+    this.mcp = new GatewayMcp({
+      registry: this.registry,
+      supervisor: this.supervisor,
+      auth: this.auth,
+      log: this.requestLog,
+    });
     this.startedAt = Date.now();
   }
 
@@ -182,7 +229,12 @@ export class GatewayServer {
     const stamped = { ...event, at: now().toISOString() };
     this.recentEvents.push(stamped);
     if (this.recentEvents.length > 300) this.recentEvents.splice(0, this.recentEvents.length - 300);
-    const payload = `event: gateway\ndata: ${JSON.stringify(stamped)}\n\n`;
+    this.pushSse('gateway', stamped);
+  }
+
+  /** One server-sent event to every open console; not kept in `recentEvents`. */
+  private pushSse(event: string, data: unknown): void {
+    const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const client of [...this.sseClients]) {
       if (!client.res.writableEnded) client.res.write(payload);
     }
@@ -297,7 +349,32 @@ export class GatewayServer {
         this.send(res, 404, { error: resolved.error });
         return;
       }
+      /*
+      | POST goes through the same handler as `/mcp` with the project pinned,
+      | so calls on a per-project URL are logged and see the same tool list.
+      */
+      if (method === 'POST') {
+        let body: unknown;
+        try {
+          body = await readBody(req);
+        } catch (error) {
+          this.send(res, 400, { error: error instanceof Error ? error.message : String(error) });
+          return;
+        }
+        await this.mcp.handle(req, res, body, record, resolved.id);
+        return;
+      }
       await proxyToProject(this.proxyDeps(), req, res, resolved.id, record, { targetPath: '/mcp' });
+      return;
+    }
+
+    if (pathname === '/api/v1/gateway/requests' && method === 'GET') {
+      this.send(res, 200, this.requestLog.query(requestQueryFrom(url.searchParams), id => this.auth.canAccessProject(record, id)));
+      return;
+    }
+    if (pathname === '/api/v1/gateway/stats' && method === 'GET') {
+      const windowMs = STATS_WINDOWS[url.searchParams.get('window') ?? '24h'] ?? STATS_WINDOWS['24h']!;
+      this.send(res, 200, this.requestLog.stats(windowMs, id => this.auth.canAccessProject(record, id)));
       return;
     }
 
