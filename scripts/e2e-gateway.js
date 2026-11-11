@@ -133,6 +133,12 @@ async function main() {
       if (response.status() >= 400 && response.url().includes('/api/')) failing.push(`${response.status()} ${response.url()}`);
     });
     const row = id => page.locator(`#worker-rows tr[data-project="${id}"]`);
+    /* secondary actions live in the row's "More" menu: open it when the button is not on the row itself */
+    const rowAction = async (id, action) => {
+      const button = row(id).locator(`button[data-action=${action}]`);
+      if (!(await button.isVisible())) await row(id).locator('details.more > summary').click();
+      await button.click();
+    };
     const rowText = async id => ((await row(id).innerText().catch(() => '')) || '').replace(/\s+/g, ' ');
     const waitRowState = (id, state) => page.waitForFunction(([project, wanted]) => {
       const tr = document.querySelector(`#worker-rows tr[data-project="${project}"]`);
@@ -151,8 +157,22 @@ async function main() {
       return td.scrollWidth <= td.clientWidth + 1;
     }));
 
+    check('a ready row shows its daily actions and keeps the rest in one menu', await page.evaluate(() => {
+      const td = document.querySelector('#worker-rows tr td.actions');
+      const direct = Array.from(td.querySelectorAll(':scope > button')).map(b => b.dataset.action).join(',');
+      const menu = Array.from(td.querySelectorAll('details.more button')).map(b => b.dataset.action).join(',');
+      return direct === 'open,stop,reindex' && menu === 'restart,rebuild,edit,health,logs,events,mcp,remove';
+    }));
+
+    // 1b. rebuild from scratch: a reindex that ignores the cache
+    await rowAction('fix-one', 'rebuild');
+    await page.waitForFunction(() => /Index rebuilt/.test(document.body.innerText), null, { timeout: 120_000 });
+    check('Rebuild from scratch runs to completion', true);
+    await page.click('.wc-close');
+    await waitRowState('fix-one', 'ready');
+
     // 2. health detail
-    await row('fix-one').locator('button[data-action=health]').click();
+    await rowAction('fix-one', 'health');
     await page.waitForFunction(() => !document.querySelector('#health-panel').hidden);
     const health = (await page.textContent('#health-panel')).replace(/\s+/g, ' ');
     check('health detail shows counters', /files: \d+/.test(health) && /symbols: \d+/.test(health), health.slice(0, 200));
@@ -193,7 +213,7 @@ async function main() {
       && config.cache?.mode === 'full' && config.artifactLocation === 'external', JSON.stringify(config.scan));
 
     // 4. edit: Edit configuration opens the settings page, which holds the worker form
-    await row('fix-two').locator('button[data-action=edit]').click();
+    await rowAction('fix-two', 'edit');
     await page.waitForURL(/\/open\.html\?project=fix-two/, { timeout: 15_000 });
     await page.waitForSelector('#wc-form #field-maxDepth', { timeout: 15_000 });
     check('the edit form is filled from the stored config', (await page.inputValue('#field-maxDepth')) === '6'
@@ -210,7 +230,7 @@ async function main() {
     check('an edit is persisted', edited.config?.watchOptions?.debounceMs === 900, JSON.stringify(edited.config?.watchOptions));
 
     // 5. stop / start: each opens a progress overlay with the log tail
-    await row('fix-two').locator('button[data-action=stop]').click();
+    await rowAction('fix-two', 'stop');
     await page.waitForSelector('.wc-overlay .wc-close', { timeout: 15_000 });
     await page.waitForFunction(() => /Stopped in/.test(document.querySelector('.wc-overlay .wc-status')?.textContent || ''), null, { timeout: 60_000 });
     await page.click('.wc-overlay .wc-close');
@@ -218,7 +238,7 @@ async function main() {
     check('stop puts the instance in the stopped state', true);
     check('a stopped instance offers Start but not Stop', (await row('fix-two').locator('button[data-action=start]').count()) === 1
       && (await row('fix-two').locator('button[data-action=stop]').count()) === 0);
-    await row('fix-two').locator('button[data-action=start]').click();
+    await rowAction('fix-two', 'start');
     await page.waitForFunction(() => /Started in/.test(document.querySelector('.wc-overlay .wc-status')?.textContent || ''), null, { timeout: 120_000 });
     // the log tail is fetched after the status line reaches "Started": give it a moment to arrive
     await page.waitForFunction(() => (document.querySelector('.wc-overlay .wc-log')?.textContent || '').trim() !== '', null, { timeout: 15_000 }).catch(() => undefined);
@@ -229,7 +249,7 @@ async function main() {
     check('start brings it back', true);
 
     // 6. dashboard
-    await row('fix-two').locator('button[data-action=open]').click();
+    await rowAction('fix-two', 'open');
     await page.waitForURL(/\/visualizer\?project=fix-two/, { timeout: 15_000 });
     await page.waitForFunction(() => /Nodes:\s*[1-9]/.test(document.body.innerText), null, { timeout: 30_000 });
     check('Open dashboard lands on that project\'s visualizer, authenticated and non-empty', true);
@@ -238,7 +258,7 @@ async function main() {
     await page.goto(`${base}/gateway?token=${TOKEN}`);
     await waitRowState('fix-two', 'ready');
     page.once('dialog', dialog => dialog.accept());
-    await row('fix-two').locator('button[data-action=remove]').click();
+    await rowAction('fix-two', 'remove');
     await page.waitForFunction(() => !document.querySelector('#worker-rows tr[data-project="fix-two"]'), null, { timeout: 30_000 });
     check('remove deletes the instance', true);
 

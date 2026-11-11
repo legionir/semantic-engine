@@ -299,13 +299,15 @@ export async function runWorker(
       method: 'POST',
       pattern: '/internal/reindex',
       permission: 'semantic:index',
-      handler: async () => {
+      handler: async ctx => {
         if (reindexing) {
           return { status: 409, json: { ok: false, error: 'an index run is already in progress' } };
         }
         reindexing = true;
         const reindexStartedAt = Date.now();
-        void runIndex(args, context)
+        /* `?full=1` rebuilds from scratch: the extraction cache is ignored and rewritten */
+        const runArgs = ctx.query['full'] === '1' ? { ...args, options: { ...args.options, full: true } } : args;
+        void runIndex(runArgs, context)
           .then(result => {
             indexDurationMs = Date.now() - reindexStartedAt;
             if (result.code !== EXIT.ok) indexFailures += 1;

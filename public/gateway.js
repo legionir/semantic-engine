@@ -37,7 +37,7 @@ const GatewayUi = (function () {
         { name: "autoStart", section: "project", type: "checkbox", configPath: "autoStart", label: "Start with the Gateway" },
         { name: "watch", section: "watch", type: "checkbox", configPath: "watch", label: "Keep the index up to date" },
 
-        { name: "vectors", section: "indexing", type: "checkbox", configPath: "indexing.vectors", label: "Build vectors" },
+        { name: "vectors", section: "indexing", type: "checkbox", configPath: "indexing.vectors", label: "Build vectors for semantic search" },
         { name: "blueprint", section: "indexing", type: "checkbox", configPath: "indexing.blueprint", label: "Build blueprint" },
         { name: "git", section: "indexing", type: "checkbox", configPath: "indexing.git", label: "Collect Git metadata" },
         { name: "treeSitter", section: "indexing", type: "checkbox", configPath: "indexing.treeSitter", label: "Use Tree-sitter" },
@@ -61,7 +61,7 @@ const GatewayUi = (function () {
         { name: "allowRemote", section: "security", type: "checkbox", configPath: "security.allowRemote", label: "Allow remote connections" },
         { name: "tokenEnvVar", section: "security", type: "text", configPath: "security.tokenEnvVar", label: "Token environment variable" },
 
-        { name: "embeddingEnabled", section: "embedding", type: "checkbox", configPath: "embedding.enabled", label: "Enable embeddings" },
+        { name: "embeddingEnabled", section: "embedding", type: "checkbox", configPath: "embedding.enabled", label: "Use a custom embedding model (otherwise the built-in one)" },
         { name: "embeddingProvider", section: "embedding", type: "select", configPath: "embedding.provider", label: "Provider", options: ["local", "ollama", "openai-compatible"] },
         { name: "embeddingModel", section: "embedding", type: "text", configPath: "embedding.model", label: "Model" },
         { name: "embeddingBaseUrl", section: "embedding", type: "text", configPath: "embedding.baseUrl", label: "Base URL" },
@@ -131,18 +131,23 @@ const GatewayUi = (function () {
         embeddingNormalize: true
     };
 
+    /*
+    | `primary` actions are buttons on the row; the rest sit in its "More" menu,
+    | so a row shows what is used daily and nothing is more than one click away.
+    */
     const WORKER_ACTIONS = [
-        { id: "open", label: "Open dashboard" },
-        { id: "start", label: "Start" },
-        { id: "stop", label: "Stop" },
-        { id: "restart", label: "Restart" },
-        { id: "reindex", label: "Reindex" },
-        { id: "progress", label: "Show progress" },
+        { id: "open", label: "Open dashboard", primary: true },
+        { id: "start", label: "Start", primary: true },
+        { id: "stop", label: "Stop", primary: true },
+        { id: "reindex", label: "Reindex", primary: true, title: "Update the index: only files that changed are re-read" },
+        { id: "progress", label: "Show progress", primary: true },
+        { id: "restart", label: "Restart worker", title: "Stop and start the worker process; the index is kept" },
+        { id: "rebuild", label: "Rebuild from scratch", title: "Reindex every file, ignoring what is cached. Slower; use it if the index looks wrong" },
         { id: "edit", label: "Edit configuration" },
         { id: "health", label: "Health detail" },
         { id: "logs", label: "View logs" },
         { id: "events", label: "View events" },
-        { id: "mcp", label: "Open MCP endpoint" },
+        { id: "mcp", label: "MCP endpoint" },
         { id: "remove", label: "Remove project" }
     ];
 
@@ -166,8 +171,8 @@ const GatewayUi = (function () {
     | progress only the read-only views plus "Show progress".
     */
     const ACTIONS_BY_PHASE = {
-        ready: ["open", "stop", "restart", "reindex", "edit", "health", "logs", "events", "mcp", "remove"],
-        degraded: ["open", "stop", "restart", "reindex", "edit", "health", "logs", "events", "mcp", "remove"],
+        ready: ["open", "stop", "restart", "reindex", "rebuild", "edit", "health", "logs", "events", "mcp", "remove"],
+        degraded: ["open", "stop", "restart", "reindex", "rebuild", "edit", "health", "logs", "events", "mcp", "remove"],
         indexing: ["progress", "open", "edit", "health", "logs", "events", "mcp"],
         starting: ["progress", "edit", "logs", "events"],
         restarting: ["progress", "edit", "logs", "events"],
@@ -438,11 +443,18 @@ const GatewayUi = (function () {
                 "</td>";
         }).join("");
 
-        const actions = actionsFor(phase).map(function (action) {
+        const button = function (action) {
             return '<button class="action" data-action="' + escape(action.id) +
-                '" data-project="' + escape(worker.projectId) + '">' +
+                '" data-project="' + escape(worker.projectId) + '"' +
+                (action.title ? ' title="' + escape(action.title) + '"' : "") + ">" +
                 escape(action.label) + "</button>";
-        }).join("");
+        };
+        const available = actionsFor(phase);
+        const more = available.filter(function (action) { return !action.primary; });
+        const actions = available.filter(function (action) { return action.primary; }).map(button).join("") +
+            (more.length === 0 ? "" :
+                '<details class="more"><summary aria-label="More actions for ' + escape(worker.name || worker.projectId) +
+                '">More</summary><div class="more-menu">' + more.map(button).join("") + "</div></details>");
 
         return '<tr class="' + stateClass(worker) + '" data-project="' + escape(worker.projectId) + '">' +
             cells +
@@ -1215,7 +1227,16 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
         function render() {
             const stats = GatewayUi.summarize(workers);
             els.cards.innerHTML = GatewayUi.renderSummaryCards(stats);
+            /* a refresh redraws the rows: keep the "More" menu the user has open */
+            const openMenu = els.rows.querySelector("details.more[open]");
+            const openProject = openMenu ? openMenu.closest("tr").dataset.project : null;
             els.rows.innerHTML = workers.map(GatewayUi.renderWorkerRow).join("");
+            if (openProject) {
+                Array.prototype.forEach.call(els.rows.querySelectorAll("tr"), function (tr) {
+                    const menu = tr.dataset.project === openProject ? tr.querySelector("details.more") : null;
+                    if (menu) { menu.open = true; placeMenu(menu); }
+                });
+            }
             $("empty-hint").hidden = workers.length > 0;
         }
 
@@ -1580,7 +1601,32 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
         els.rows.addEventListener("click", function (event) {
             const button = event.target.closest("button[data-action]");
             if (!button) return;
+            const menu = button.closest("details.more");
+            if (menu) menu.open = false;
             act(button.dataset.action, button.dataset.project);
+        });
+        /* the menu is fixed-positioned under its button, kept inside the window */
+        function placeMenu(menu) {
+            const panel = menu.querySelector(".more-menu");
+            const anchor = menu.querySelector("summary").getBoundingClientRect();
+            const below = anchor.bottom + 6 + panel.offsetHeight <= window.innerHeight;
+            panel.style.top = (below ? anchor.bottom + 6 : Math.max(8, anchor.top - 6 - panel.offsetHeight)) + "px";
+            panel.style.left = Math.max(8, Math.min(anchor.right - panel.offsetWidth, window.innerWidth - panel.offsetWidth - 8)) + "px";
+        }
+        els.rows.addEventListener("toggle", function (event) {
+            if (event.target.matches && event.target.matches("details.more") && event.target.open) placeMenu(event.target);
+        }, true);
+        const closeMenus = function () {
+            Array.prototype.forEach.call(document.querySelectorAll("details.more[open]"), function (menu) { menu.open = false; });
+        };
+        window.addEventListener("scroll", closeMenus, true);
+        window.addEventListener("resize", closeMenus);
+        document.addEventListener("keydown", function (event) { if (event.key === "Escape") closeMenus(); });
+        /* one open "More" menu at a time; a click elsewhere closes it */
+        document.addEventListener("click", function (event) {
+            Array.prototype.forEach.call(document.querySelectorAll("details.more[open]"), function (menu) {
+                if (!menu.contains(event.target)) menu.open = false;
+            });
         });
 
 

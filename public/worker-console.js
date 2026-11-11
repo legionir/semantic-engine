@@ -94,7 +94,8 @@ const WorkerConsole = (function () {
         start: { busy: "Starting the worker", done: "Started", title: "Start" },
         stop: { busy: "Stopping the worker", done: "Stopped", title: "Stop" },
         restart: { busy: "Restarting the worker", done: "Restarted", title: "Restart" },
-        reindex: { busy: "Indexing the project", done: "Index rebuilt", title: "Reindex" }
+        reindex: { busy: "Indexing the project", done: "Index updated", title: "Reindex" },
+        rebuild: { busy: "Rebuilding the index from scratch", done: "Index rebuilt", title: "Rebuild from scratch" }
     };
 
     function makeApi(token) {
@@ -185,7 +186,9 @@ const WorkerConsole = (function () {
 
         let operation;
         try {
-            const reply = await ctx.api("/api/v1/gateway/projects/" + id + "/" + action + "?async=1", { method: "POST" });
+            /* "rebuild" is a reindex that ignores the cache of unchanged files */
+            const path = action === "rebuild" ? "reindex?async=1&full=1" : action + "?async=1";
+            const reply = await ctx.api("/api/v1/gateway/projects/" + id + "/" + path, { method: "POST" });
             operation = reply.operation;
         } catch (error) {
             view.setStatus(error.message, "bad");
@@ -482,7 +485,20 @@ const WorkerConsole = (function () {
             return; /* a single-project server: there is no worker to configure */
         }
         const ctx = { api: api, token: token, onChange: null };
-        await mountPanel(host, ctx);
+        const mounted = await mountPanel(host, ctx);
+        /*
+        | Under a Gateway the worker card is the one place that indexes a
+        | project, with the options the worker runs with. The page's own index
+        | button would start a second run with the form's options instead.
+        */
+        if (mounted) {
+            ["startIndexBtn", "cancelIndexBtn"].forEach(function (id) {
+                const button = document.getElementById(id);
+                if (button) button.style.display = "none";
+            });
+            const hint = document.getElementById("gatewayIndexHint");
+            if (hint) hint.hidden = false;
+        }
     }
 
     if (typeof document !== "undefined") {

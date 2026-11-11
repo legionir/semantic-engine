@@ -405,7 +405,10 @@ export class WorkerSupervisor {
    * reindex با سقف هم‌زمانی. `CapacityError` همان چیزی است که Gateway به
    * ۴۲۹ ترجمه می‌کند.
    */
-  async reindex(projectId: string): Promise<{ status: number; json: Record<string, unknown> }> {
+  async reindex(
+    projectId: string,
+    options: { readonly full?: boolean } = {}
+  ): Promise<{ status: number; json: Record<string, unknown> }> {
     const entry = this.workers.get(projectId);
     if (!entry) throw new WorkerStartError(projectId, 'not running');
 
@@ -416,9 +419,35 @@ export class WorkerSupervisor {
     }
 
     this.activeIndexJobs += 1;
+    let accepted = false;
     try {
-      const reply = await entry.process.request('POST', '/internal/reindex');
+      const reply = await entry.process.request('POST', options.full ? '/internal/reindex?full=1' : '/internal/reindex');
+      accepted = reply.status === 202;
       return { status: reply.status, json: reply.json };
+    } finally {
+      /*
+      | The worker answers 202 and indexes in the background. The slot is held
+      | until that run ends; releasing it on the 202 meant the cap never
+      | limited how many projects were indexing at once.
+      */
+      if (accepted) void this.releaseIndexSlotWhenIdle(projectId);
+      else this.activeIndexJobs -= 1;
+    }
+  }
+
+  private async releaseIndexSlotWhenIdle(projectId: string): Promise<void> {
+    const deadline = Date.now() + 60 * 60 * 1000;
+    try {
+      for (;;) {
+        await new Promise<void>(resolve => {
+          const timer = setTimeout(resolve, 1000);
+          timer.unref?.();
+        });
+        const entry = this.workers.get(projectId);
+        if (!entry || entry.process.exitCode !== null || Date.now() > deadline) return;
+        const health = await entry.process.health().catch(() => null);
+        if (health && (health.queueSize ?? 0) === 0) return;
+      }
     } finally {
       this.activeIndexJobs -= 1;
     }

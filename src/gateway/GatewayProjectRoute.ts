@@ -185,7 +185,10 @@ export async function handleGatewayProjectRoute(
   | the log tail); without it the request behaves as it always did and answers
   | when the action is done (a reindex answers when the worker has accepted it).
   */
-  const asyncMode = parseUrlSafely(req.url, 'http://gateway.local')?.searchParams.get('async') === '1';
+  const query = parseUrlSafely(req.url, 'http://gateway.local')?.searchParams;
+  const asyncMode = query?.get('async') === '1';
+  /* reindex only: ignore the extraction cache and rebuild every file */
+  const wantsFullRebuild = query?.get('full') === '1';
   const operationId = deps.operations.begin(projectId, action);
   if (operationId === undefined) {
     const running = deps.operations.running(projectId);
@@ -211,7 +214,7 @@ export async function handleGatewayProjectRoute(
       case 'reindex': {
         const worker = deps.supervisor.get(projectId);
         const failuresBefore = await indexFailures(worker);
-        const result = await deps.supervisor.reindex(projectId);
+        const result = await deps.supervisor.reindex(projectId, { full: wantsFullRebuild });
         if (result.status !== 202) {
           throw Object.assign(
             new Error(String(result.json['error'] ?? `the worker answered ${result.status}`)),

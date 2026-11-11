@@ -147,7 +147,7 @@ tr.state-degraded td:first-child { border-left: 3px solid var(--degraded); }
 tr.state-crashed td:first-child { border-left: 3px solid var(--crashed); }
 tr.state-stopped td:first-child { border-left: 3px solid var(--line); }
 
-table.workers td.actions { white-space: normal; max-width: none; min-width: 320px; overflow: visible; text-overflow: clip; }
+table.workers td.actions { white-space: nowrap; max-width: none; overflow: visible; text-overflow: clip; }
 
 button {
   background: var(--panel-2);
@@ -476,3 +476,24 @@ svg.chart { max-height: 260px; }
   .bar-tools { width: 100%; }
   .bar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 }
+
+/* row actions: the daily ones as buttons, the rest in a menu */
+td.actions > .action { margin-right: 6px; }
+details.more { display: inline-block; position: relative; }
+details.more > summary {
+  list-style: none; cursor: pointer; display: inline-block; padding: 7px 12px; font-size: 12px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-sm); user-select: none;
+}
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::after { content: " ▾"; color: var(--muted); }
+details.more > summary:hover, details.more[open] > summary { border-color: var(--accent); }
+details.more > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.more-menu {
+  /* fixed, placed by script: the table scrolls sideways and would clip an absolute menu */
+  position: fixed; z-index: 30; min-width: 200px; padding: 6px;
+  display: grid; gap: 2px; background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--r-md); box-shadow: var(--sh-2);
+}
+.more-menu .action { text-align: left; border-color: transparent; background: none; width: 100%; }
+.more-menu .action:hover { background: var(--accent-soft); }
+.more-menu .action[data-action="remove"] { color: var(--crashed); }

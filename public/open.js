@@ -324,7 +324,7 @@ function syncDefaultModelToggle() {
 /*
 | SE-UI-001 — a project switch must leave NO trace of the previous project.
 | Previously a failed POST /projects kept state.projectId, the badge and the
-| visualizer link pointing at the OLD project — so "Start indexing" would
+| visualizer link pointing at the OLD project — so "Reindex" would
 | index the project the user believed they had left, and the dashboard link
 | opened the wrong project. A successfully-opened but not-yet-indexed project
 | also kept the old visualizer href. Now the selection is reset to a coherent
