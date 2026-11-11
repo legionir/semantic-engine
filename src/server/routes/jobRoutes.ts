@@ -11,10 +11,7 @@ import { RouteDefinition } from '../types';
 import { ProjectService } from '../../services/ProjectService';
 import { JobManager } from '../../runtime/JobManager';
 import { SseManager } from '../SseManager';
-import { createExtractors } from '../../pipeline/ExtractorFactory';
-import { IndexPipeline } from '../../pipeline/IndexPipeline';
-import { OutputWriter, INDEX_FILE_NAME } from '../../pipeline/OutputWriter';
-import { VectorIndexer } from '../../vector/VectorIndexer';
+import { runIndexJob } from '../../pipeline/runIndexJob';
 import { IEmbeddingGenerator } from '../../vector/EmbeddingGenerator';
 import { createEmbeddingGenerator } from '../../vector/createEmbeddingGenerator';
 import { assertResolvedFetchableUrl } from '../../services/providers/EmbeddingProviderService';
@@ -73,6 +70,9 @@ function buildEmbeddingGenerator(
   });
 }
 
+/** Steps `IndexPipeline` reports in a full run; used to scale the progress bar. */
+const PIPELINE_STEPS = 8;
+
 type IndexJobData = {
   readonly scan?: IndexRequestBody['scan'];
   readonly output?: IndexRequestBody['output'];
@@ -109,39 +109,33 @@ function createIndexRunner(
   const wantBlueprint = output.blueprint !== false;
 
   return async (token, updateProgress) => {
-    updateProgress('scanning', 10);
-    const extractors = createExtractors({
+    /* the pipeline reports its own steps; each one moves the bar forward */
+    let step = 0;
+    updateProgress('Starting', 2);
+    const result = await runIndexJob({
       workspaceRoot: project.rootPath,
+      outputDir: path.dirname(project.indexPath),
+      scannerConfig,
       treeSitter,
+      /* the form decides: a generator builds vectors, none turns them off */
+      embeddingGenerator,
       lspDiagnostics: lsp.diagnostics === true,
-    });
-    const outputDir = path.dirname(project.indexPath);
-    const vectorIndexer = embeddingGenerator ? new VectorIndexer({ embeddingGenerator }) : null;
-    const pipeline = new IndexPipeline({
-      workspaceRoot: project.rootPath,
-      outputPath: path.join(outputDir, INDEX_FILE_NAME),
-      symbolExtractors: extractors.symbols,
-      dependencyExtractors: extractors.dependencies,
-      ...(Object.keys(scannerConfig).length > 0 ? { scannerConfig } : {}),
-      ...(vectorIndexer ? { vectorIndexer } : {}),
-      ...(project.index?.vectorChunks ? { previousVectorChunks: project.index.vectorChunks } : {}),
-      ...(extractors.diagnosticsSource
-        ? { diagnosticsSource: extractors.diagnosticsSource }
-        : {}),
       ...(lsp.budgetMs ? { diagnosticsBudgetMs: lsp.budgetMs } : {}),
+      blueprint: wantBlueprint,
       token,
+      progress: {
+        report: update => {
+          if (!update.message) return;
+          step += 1;
+          updateProgress(update.message, Math.min(95, Math.round((step / PIPELINE_STEPS) * 95)));
+        },
+      },
     });
-    updateProgress('symbols', 40);
-    const { projectIndex, stats } = await pipeline.run();
-    updateProgress('graphs', 70);
-    const writer = new OutputWriter({ outputDir, blueprint: wantBlueprint });
-    updateProgress('finalizing', 90);
-    await writer.write(projectIndex);
     reloadProject(project.id);
     return {
-      files: stats?.files ?? 0,
-      symbols: stats?.symbols ?? 0,
-      vectorChunks: stats?.vectorChunks ?? 0,
+      files: result.files,
+      symbols: result.symbols,
+      vectorChunks: result.vectorChunks,
       embeddingModel: embeddingGenerator?.modelName ?? null,
       treeSitter,
     };

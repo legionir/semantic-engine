@@ -6,16 +6,8 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
-import { IndexPipeline } from '../../pipeline/IndexPipeline';
-import { ExtractionCache } from '../../pipeline/ExtractionCache';
-import { createExtractors } from '../../pipeline/ExtractorFactory';
-import { OutputWriter, INDEX_FILE_NAME } from '../../pipeline/OutputWriter';
-import { GitInfoCollector } from '../../core/git';
-import { VectorIndexer } from '../../vector/VectorIndexer';
-import { IEmbeddingGenerator } from '../../vector/EmbeddingGenerator';
+import { IndexBusyError, readPreviousIndex, runIndexJob } from '../../pipeline/runIndexJob';
 import { resolveVectorPlan } from '../embeddingFromArgs';
-import { ProjectIndex } from '../../core/types/project-index.types';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
 import { loadGlobalConfig, scannerOverridesFrom } from '../../core/config/GlobalConfig';
@@ -77,15 +69,7 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
   | خودکار حفظ می‌شود تا یک refresh معمولیِ index vectorها را
   | ناخواسته حذف نکند؛ `--no-vectors` برای خاموش‌کردن صریح است.
   */
-  const existingIndexPath = path.join(outputDir, INDEX_FILE_NAME);
-  let previousIndex: ProjectIndex | null = null;
-  if (fs.existsSync(existingIndexPath)) {
-    try {
-      previousIndex = JSON.parse(fs.readFileSync(existingIndexPath, 'utf8')) as ProjectIndex;
-    } catch {
-      previousIndex = null;
-    }
-  }
+  const previousIndex = readPreviousIndex(outputDir);
   /*
   | `--embedding-provider` صریح یعنی کاربر embedding می‌خواهد، پس vectorها هم
   | روشن می‌شوند؛ در غیر این صورت همان رفتار قبلی (flag یا ایندکس قبلی).
@@ -104,92 +88,56 @@ export async function runIndex(args: ParsedArgs, context: CommandContext): Promi
   const diagnosticsBudget = stringOption(args.options, 'diagnosticsBudget');
 
   /*
-  | یک بار و پیش از scan ساخته می‌شود تا خطای provider یا کلید API همان‌جا
-  | دیده شود، نه بعد از خواندن کل مخزن.
+  | `--full` ignores the extraction cache (and rebuilds it); `--no-cache`
+  | neither reads nor writes it.
   */
-  const embeddingGenerator: IEmbeddingGenerator | undefined = plannedGenerator;
+  const cache = !boolOption(args.options, 'cache', true)
+    ? 'off'
+    : boolOption(args.options, 'full', false) ? 'rebuild' : 'reuse';
 
-  const extractors = createExtractors({
-    workspaceRoot: root,
-    treeSitter: boolOption(args.options, 'treeSitter', true),
-    logger: context.logger,
-    lspDiagnostics: wantsLspDiagnostics,
-  });
-  if (wantsLspDiagnostics && !extractors.diagnosticsSource) {
-    context.logger.warn(
-      'diagnostics requested but no language server is usable — index will carry no LSP diagnostics'
-    );
-  }
-
-  /*
-  | کش استخراج هر فایل. `--full` کش را نادیده می‌گیرد (و دوباره می‌سازد)؛
-  | `--no-cache` اصلاً نه می‌خواند نه می‌نویسد.
-  */
-  const extractionCache = extractors.fingerprint && boolOption(args.options, 'cache', true)
-    ? new ExtractionCache(projectPaths.extractionCachePath, extractors.fingerprint, {
-        reuse: !boolOption(args.options, 'full', false),
-      })
-    : null;
-
+  let result;
   try {
-    const { projectIndex, stats } = await new IndexPipeline({
+    result = await runIndexJob({
       workspaceRoot: root,
-      outputPath: path.join(outputDir, INDEX_FILE_NAME),
-      symbolExtractors: extractors.symbols,
-      dependencyExtractors: extractors.dependencies,
-      logger: context.logger,
-      extractionCache,
-      /*
-      | git به‌طور پیش‌فرض روشن است چون یک ایندکس بدون تاریخچه، نصف
-      | سیگنال‌های رتبه‌بندی را ندارد. `--no-git` برای مخزنی که git
-      | نیست، یا برای خروجی قطعی.
-      */
-      ...(Object.keys(scanOverrides).length > 0 ? { scannerConfig: scanOverrides } : {}),
-      gitCollector: wantsGit ? new GitInfoCollector(root) : null,
-      vectorIndexer: wantsVectors
-        ? new VectorIndexer({ embeddingGenerator })
-        : null,
-      ...(previousIndex?.vectorChunks
-        ? { previousVectorChunks: previousIndex.vectorChunks }
-        : {}),
-      ...(extractors.diagnosticsSource
-        ? { diagnosticsSource: extractors.diagnosticsSource }
-        : {}),
-      ...(diagnosticsBudget ? { diagnosticsBudgetMs: Number(diagnosticsBudget) } : {}),
-      pretty,
-    }).run();
-
-    const written = await new OutputWriter({
       outputDir,
       logger: context.logger,
+      cache,
+      scannerConfig: scanOverrides,
+      git: wantsGit,
+      treeSitter: boolOption(args.options, 'treeSitter', true),
+      /* the generator is built before the scan, so a bad provider or key fails early */
+      embeddingGenerator: wantsVectors ? plannedGenerator : null,
+      vectors: wantsVectors,
+      lspDiagnostics: wantsLspDiagnostics,
+      ...(diagnosticsBudget ? { diagnosticsBudgetMs: Number(diagnosticsBudget) } : {}),
       pretty,
       blueprint: wantsBlueprint,
-      ...(projectIndex.git?.commit ? { gitCommit: projectIndex.git.commit } : {}),
-    }).write(projectIndex);
-
-    return {
-      code: EXIT.ok,
-      json: {
-        ok: true,
-        root,
-        files: stats.files,
-        symbols: stats.symbols,
-        durationMs: stats.durationMs,
-        ...(stats.extractionCache ? { extractionCache: stats.extractionCache } : {}),
-        indexPath: written.indexPath,
-        blueprintPath: written.blueprintPath,
-        artifactRoot: outputDir,
-        artifactLocation: projectPaths.location,
-        ...(migration.migrated
-          ? { migratedFrom: migration.from, migrationMode: 'copy-readonly-legacy' }
-          : {}),
-      },
-      text:
-        `indexed ${stats.files} files, ${stats.symbols} symbols in ${stats.durationMs}ms\n` +
-        `  ${written.indexPath}` +
-        (written.blueprintPath ? `\n  ${written.blueprintPath}` : ''),
-    };
-  } finally {
-    extractors.dispose();
+    });
+  } catch (error) {
+    if (error instanceof IndexBusyError) return { code: EXIT.failure, error: error.message };
+    throw error;
   }
+
+  return {
+    code: EXIT.ok,
+    json: {
+      ok: true,
+      root,
+      files: result.files,
+      symbols: result.symbols,
+      durationMs: result.durationMs,
+      ...(result.extractionCache ? { extractionCache: result.extractionCache } : {}),
+      indexPath: result.indexPath,
+      blueprintPath: result.blueprintPath,
+      artifactRoot: outputDir,
+      artifactLocation: projectPaths.location,
+      ...(migration.migrated
+        ? { migratedFrom: migration.from, migrationMode: 'copy-readonly-legacy' }
+        : {}),
+    },
+    text:
+      `indexed ${result.files} files, ${result.symbols} symbols in ${result.durationMs}ms\n` +
+      `  ${result.indexPath}` +
+      (result.blueprintPath ? `\n  ${result.blueprintPath}` : ''),
+  };
 }

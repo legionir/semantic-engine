@@ -8,10 +8,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { IndexPipeline } from '../../pipeline/IndexPipeline';
-import { ExtractionCache } from '../../pipeline/ExtractionCache';
+import { runIndexJob } from '../../pipeline/runIndexJob';
 import { createExtractors } from '../../pipeline/ExtractorFactory';
-import { OutputWriter, INDEX_FILE_NAME } from '../../pipeline/OutputWriter';
+import { INDEX_FILE_NAME } from '../../pipeline/OutputWriter';
 import { WatchPipeline } from '../../pipeline/WatchPipeline';
 import { IncrementalEngine } from '../../incremental/IncrementalEngine';
 import { VectorIndexer } from '../../vector/VectorIndexer';
@@ -19,7 +18,6 @@ import { resolveVectorPlan } from '../embeddingFromArgs';
 import { projectPathsFromArgs } from '../projectPathsFromArgs';
 import { mergeScanOverrides, parseScanFlags } from '../scanFlags';
 import { ProjectIndex } from '../../core/types/project-index.types';
-import { GitInfoCollector } from '../../core/git';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
 import { loadGlobalConfig, scannerOverridesFrom } from '../../core/config/GlobalConfig';
@@ -168,46 +166,30 @@ export async function runWatch(args: ParsedArgs, context: CommandContext): Promi
       projectIndex = existingIndex;
       indexedFiles = projectIndex.files.length;
     } else {
-      const extractionCache = extractors.fingerprint && boolOption(args.options, 'cache', true)
-        ? new ExtractionCache(watchPaths.extractionCachePath, extractors.fingerprint, {
-            reuse: !boolOption(args.options, 'full', false),
-          })
-        : null;
-      const indexed = await new IndexPipeline({
-        extractionCache,
+      /* the first run is the same full index `semantic-engine index` does */
+      const indexed = await runIndexJob({
         workspaceRoot: root,
-        outputPath: indexPath,
-        symbolExtractors: extractors.symbols,
-        dependencyExtractors: extractors.dependencies,
-        logger: context.logger,
-        ...(Object.keys(scanOverrides).length > 0 ? { scannerConfig: scanOverrides } : {}),
-        gitCollector: wantsGit ? new GitInfoCollector(root) : null,
-        vectorIndexer,
-        ...(existingIndex?.vectorChunks
-          ? { previousVectorChunks: existingIndex.vectorChunks }
-          : {}),
-        /*
-        | diagnostics فقط در ایندکس اولیه گرفته می‌شود؛ batchهای افزایشی
-        | زبان‌سرور اجرا نمی‌کنند و diagnostics فایلِ دست‌خورده پاک می‌شود
-        | (SE-INC-11) تا هشدار کهنه گزارش نشود.
-        */
-        ...(extractors.diagnosticsSource
-          ? { diagnosticsSource: extractors.diagnosticsSource }
-          : {}),
-        ...(diagnosticsBudget ? { diagnosticsBudgetMs: Number(diagnosticsBudget) } : {}),
-        pretty,
-      }).run();
-
-      projectIndex = indexed.projectIndex;
-      indexedFiles = indexed.stats.files;
-
-      await new OutputWriter({
         outputDir,
         logger: context.logger,
+        cache: !boolOption(args.options, 'cache', true)
+          ? 'off'
+          : boolOption(args.options, 'full', false) ? 'rebuild' : 'reuse',
+        scannerConfig: scanOverrides,
+        git: wantsGit,
+        treeSitter: boolOption(args.options, 'treeSitter', true),
+        embeddingGenerator: embeddingGenerator ?? null,
+        /*
+        | Diagnostics are collected by the first run only; incremental batches
+        | do not run the language server, and a touched file's diagnostics are
+        | cleared (SE-INC-11) so no stale warning is reported.
+        */
+        lspDiagnostics: wantsLspDiagnostics,
+        ...(diagnosticsBudget ? { diagnosticsBudgetMs: Number(diagnosticsBudget) } : {}),
         pretty,
         blueprint: wantsBlueprint,
-        ...(projectIndex.git?.commit ? { gitCommit: projectIndex.git.commit } : {}),
-      }).write(projectIndex);
+      });
+      projectIndex = indexed.projectIndex;
+      indexedFiles = indexed.files;
     }
 
     const engine = new IncrementalEngine({
