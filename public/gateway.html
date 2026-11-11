@@ -38,14 +38,18 @@
       <button id="new-worker" class="primary has-icon">
         <svg class="ic" aria-hidden="true"><use href="#g-plus"/></svg><span>New worker</span>
       </button>
-      <button id="refresh" class="has-icon">
-        <svg class="ic" aria-hidden="true"><use href="#g-refresh"/></svg><span>Refresh</span>
-      </button>
     </nav>
   </div>
 </header>
 
+<nav class="views" role="tablist" aria-label="Sections">
+  <button id="tab-workers" class="tab active" role="tab" aria-selected="true" aria-controls="view-workers">Workers</button>
+  <button id="tab-activity" class="tab" role="tab" aria-selected="false" aria-controls="view-activity">Activity</button>
+  <button id="tab-stats" class="tab" role="tab" aria-selected="false" aria-controls="view-stats">Stats</button>
+</nav>
+
 <main>
+<div id="view-workers" class="view" role="tabpanel" aria-labelledby="tab-workers">
   <section id="cards" class="cards" aria-label="Totals"></section>
 
   <section class="panel">
@@ -70,6 +74,64 @@
     </table>
     </div>
   </section>
+</div>
+
+<div id="view-activity" class="view" role="tabpanel" aria-labelledby="tab-activity" hidden>
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Agent requests</h2>
+      <label class="live"><input type="checkbox" id="filter-live" checked> Live</label>
+    </div>
+    <div class="filters">
+      <input type="search" id="filter-q" placeholder="Search tool, arguments or error" aria-label="Search requests">
+      <select id="filter-project" aria-label="Project"><option value="">All projects</option></select>
+      <select id="filter-tool" aria-label="Tool"><option value="">All tools</option></select>
+      <select id="filter-status" aria-label="Status">
+        <option value="">Any status</option>
+        <option value="ok">Succeeded</option>
+        <option value="error">Failed</option>
+      </select>
+      <select id="filter-client" aria-label="Client"><option value="">All clients</option></select>
+      <select id="filter-range" aria-label="Time range">
+        <option value="">All time</option>
+        <option value="1h">Last hour</option>
+        <option value="24h">Last 24 hours</option>
+        <option value="7d">Last 7 days</option>
+      </select>
+      <button type="button" id="filter-clear" hidden>Clear filters</button>
+    </div>
+    <div class="table-scroll">
+    <table class="workers requests">
+      <thead id="request-head"></thead>
+      <tbody id="request-rows"></tbody>
+    </table>
+    </div>
+    <p id="request-empty" class="muted empty" hidden></p>
+    <div id="request-pager" class="pager"></div>
+  </section>
+</div>
+
+<div id="view-stats" class="view" role="tabpanel" aria-labelledby="tab-stats" hidden>
+  <div class="panel-head">
+    <h2>Agent usage</h2>
+    <div id="stat-window" class="segmented" role="group" aria-label="Period">
+      <button type="button" data-window="1h" aria-pressed="false">1 hour</button>
+      <button type="button" data-window="24h" class="active" aria-pressed="true">24 hours</button>
+      <button type="button" data-window="7d" aria-pressed="false">7 days</button>
+    </div>
+  </div>
+  <section id="stat-tiles" class="cards" aria-label="Totals for the period"></section>
+  <section class="panel">
+    <h2>Tool calls over time</h2>
+    <div id="stat-timeline"></div>
+  </section>
+  <div class="split">
+    <section class="panel"><h2>By tool</h2><div id="stat-tools"></div></section>
+    <section class="panel"><h2>By project</h2><div id="stat-projects"></div></section>
+    <section class="panel"><h2>By client</h2><div id="stat-clients"></div></section>
+  </div>
+  <div id="chart-tip" class="chart-tip" hidden></div>
+</div>
 </main>
 
 <!-- New worker / Edit configuration -->

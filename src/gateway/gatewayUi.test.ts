@@ -523,3 +523,98 @@ describe('gateway console — LSP health row', () => {
     expect(lspState(undefined)).toBe('unknown');
   });
 });
+
+describe('Activity and Stats rendering', () => {
+  const view = ui as unknown as {
+    formatDuration(ms: number): string;
+    formatBytes(bytes: number): string;
+    buildRequestQuery(state: Record<string, unknown>, now?: number): string;
+    nextSort(state: Record<string, unknown>, key: string): { sort: string; order: string };
+    renderRequestHead(state: Record<string, unknown>): string;
+    renderRequestRow(entry: Record<string, unknown>, names?: Record<string, string>, now?: number): string;
+    renderRequestDetail(entry: Record<string, unknown>, names?: Record<string, string>): string;
+    renderPager(page: Record<string, unknown>): string;
+    renderOptions(values: string[], selected: string, all: string, labels?: Record<string, string>): string;
+    renderStatTiles(stats: Record<string, unknown>): string;
+    renderTimeline(stats: Record<string, unknown>): string;
+    renderGroupTable(groups: Record<string, unknown>[], labels?: Record<string, string>): string;
+  };
+  const entry = {
+    id: 7, at: 1_700_000_000_000, project: 'prj-a', tool: 'find_symbol', args: '{"name":"<b>"}',
+    durationMs: 1234, ok: false, error: 'NOT_FOUND: <x>', resultBytes: 2048, key: 'admin', client: 'claude-code/2',
+  };
+
+  it('formats durations and sizes for reading', () => {
+    expect(view.formatDuration(12)).toBe('12 ms');
+    expect(view.formatDuration(1234)).toBe('1.23 s');
+    expect(view.formatDuration(65_000)).toBe('1 m 5 s');
+    expect(view.formatBytes(512)).toBe('512 B');
+    expect(view.formatBytes(2048)).toBe('2.0 KB');
+  });
+
+  it('turns the filter state into the request query, dropping empty filters', () => {
+    const query = view.buildRequestQuery(
+      { q: 'a b', project: '', tool: 'search', status: 'error', client: '', range: '1h', sort: 'durationMs', order: 'desc', limit: 50, offset: 100 },
+      10_000_000
+    );
+    expect(query).toBe('q=a%20b&tool=search&status=error&from=6400000&sort=durationMs&order=desc&limit=50&offset=100');
+  });
+
+  it('sorts numbers largest first on the first click and flips on the second', () => {
+    expect(view.nextSort({ sort: 'at', order: 'desc' }, 'durationMs')).toEqual({ sort: 'durationMs', order: 'desc' });
+    expect(view.nextSort({ sort: 'durationMs', order: 'desc' }, 'durationMs')).toEqual({ sort: 'durationMs', order: 'asc' });
+    expect(view.nextSort({ sort: 'at', order: 'desc' }, 'tool')).toEqual({ sort: 'tool', order: 'asc' });
+    const head = view.renderRequestHead({ sort: 'tool', order: 'asc' });
+    expect(head).toContain('aria-sort="ascending"');
+    expect(head).toContain('data-sort="durationMs"');
+  });
+
+  it('renders a request row and its detail with the project name, escaped', () => {
+    const row = view.renderRequestRow(entry, { 'prj-a': 'Alpha <Shop>' });
+    expect(row).toContain('Alpha &lt;Shop&gt;');
+    expect(row).toContain('{&quot;name&quot;:&quot;&lt;b&gt;&quot;}');
+    expect(row).toContain('is-error');
+    expect(row).toContain('1.23 s');
+    expect(row).not.toContain('<b>');
+    const detail = view.renderRequestDetail(entry, { 'prj-a': 'Alpha' });
+    expect(detail).toContain('NOT_FOUND: &lt;x&gt;');
+    expect(detail).toContain('Alpha (prj-a)');
+    expect(view.renderRequestRow({ ...entry, project: '', ok: true })).toContain('pill-ok');
+  });
+
+  it('pages and lists filter options', () => {
+    const pager = view.renderPager({ total: 120, offset: 50, items: new Array(50) });
+    expect(pager).toContain('51–100 of 120');
+    expect(pager).not.toContain('disabled');
+    expect(view.renderPager({ total: 3, offset: 0, items: new Array(3) })).toMatch(/data-page="prev" disabled.*data-page="next" disabled/);
+    expect(view.renderPager({ total: 0, offset: 0, items: [] })).toBe('');
+    expect(view.renderOptions(['a', 'b'], 'b', 'All', { a: 'Apple' })).toBe(
+      '<option value="">All</option><option value="a">Apple</option><option value="b" selected>b</option>'
+    );
+  });
+
+  it('renders stat tiles, a timeline with one bar per bucket, and group tables', () => {
+    const stats = {
+      windowMs: 3_600_000, total: 1500, errors: 30, errorRate: 0.02, avgMs: 40, p50Ms: 30, p95Ms: 2500, resultBytes: 3_000_000,
+      timeline: [{ at: 0, count: 0, errors: 0 }, { at: 150_000, count: 4, errors: 1 }, { at: 300_000, count: 2, errors: 2 }],
+    };
+    const tiles = view.renderStatTiles(stats);
+    expect(tiles).toContain('1,500');
+    expect(tiles).toContain('2.0%');
+    expect(tiles).toContain('30 failed');
+    expect(tiles).toContain('2.50 s');
+    expect(tiles).toContain('2.9 MB');
+
+    const chart = view.renderTimeline(stats);
+    expect(chart.match(/<g class="bar"/g)).toHaveLength(3);
+    expect(chart.match(/class="bar-ok"/g)).toHaveLength(1);
+    expect(chart.match(/class="bar-bad"/g)).toHaveLength(2);
+    expect(chart).toContain('4 calls · 1 failed');
+    expect(chart).toContain('Succeeded');
+
+    const table = view.renderGroupTable([{ name: 'prj-a', count: 10, errors: 1, avgMs: 20, p95Ms: 90 }], { 'prj-a': 'Alpha' });
+    expect(table).toContain('Alpha');
+    expect(table).toContain('width:100%');
+    expect(view.renderGroupTable([])).toContain('No calls in this period.');
+  });
+});

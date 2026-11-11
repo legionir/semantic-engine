@@ -786,6 +786,226 @@ const GatewayUi = (function () {
         };
     }
 
+    /* ── Activity (agent tool calls) and Stats ───────────────────────── */
+
+    const REQUEST_COLUMNS = [
+        { key: "at", label: "Time" },
+        { key: "project", label: "Project" },
+        { key: "tool", label: "Tool" },
+        { key: null, label: "Arguments" },
+        { key: "status", label: "Status" },
+        { key: "durationMs", label: "Duration", numeric: true },
+        { key: "resultBytes", label: "Size", numeric: true },
+        { key: "client", label: "Client" }
+    ];
+
+    const TIME_RANGES = [
+        { id: "", label: "All time", ms: 0 },
+        { id: "1h", label: "Last hour", ms: 3600000 },
+        { id: "24h", label: "Last 24 hours", ms: 86400000 },
+        { id: "7d", label: "Last 7 days", ms: 604800000 }
+    ];
+
+    function formatDuration(ms) {
+        if (ms < 1000) return Math.round(ms) + " ms";
+        if (ms < 60000) return (ms / 1000).toFixed(ms < 10000 ? 2 : 1) + " s";
+        return Math.floor(ms / 60000) + " m " + Math.round((ms % 60000) / 1000) + " s";
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / 1048576).toFixed(1) + " MB";
+    }
+
+    function formatCount(value) {
+        return String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function pad2(value) { return (value < 10 ? "0" : "") + value; }
+
+    /* Local wall-clock time; the date is added only when it is not today. */
+    function formatTime(at, now) {
+        const date = new Date(at);
+        const today = new Date(now === undefined ? Date.now() : now);
+        const clock = pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds());
+        const sameDay = date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() &&
+            date.getDate() === today.getDate();
+        return sameDay ? clock : date.getFullYear() + "-" + pad2(date.getMonth() + 1) + "-" + pad2(date.getDate()) + " " + clock;
+    }
+
+    /*
+    | The filter state of the Activity tab, as the query string of
+    | GET /api/v1/gateway/requests. `range` becomes an absolute `from`.
+    */
+    function buildRequestQuery(state, now) {
+        const params = [];
+        const add = function (key, value) {
+            if (value !== undefined && value !== null && value !== "") params.push(key + "=" + encodeURIComponent(value));
+        };
+        add("q", state.q);
+        add("project", state.project);
+        add("tool", state.tool);
+        add("status", state.status);
+        add("client", state.client);
+        const range = TIME_RANGES.filter(function (item) { return item.id === state.range; })[0];
+        if (range && range.ms > 0) add("from", (now === undefined ? Date.now() : now) - range.ms);
+        add("sort", state.sort);
+        add("order", state.order);
+        add("limit", state.limit);
+        add("offset", state.offset);
+        return params.join("&");
+    }
+
+    /* Clicking a column: first click sorts by it (numbers and time largest first), a second click flips. */
+    function nextSort(state, key) {
+        if (state.sort === key) return { sort: key, order: state.order === "asc" ? "desc" : "asc" };
+        const numeric = key === "at" || key === "durationMs" || key === "resultBytes";
+        return { sort: key, order: numeric ? "desc" : "asc" };
+    }
+
+    function renderRequestHead(state) {
+        return "<tr>" + REQUEST_COLUMNS.map(function (column) {
+            if (!column.key) return "<th>" + escape(column.label) + "</th>";
+            const active = state.sort === column.key;
+            const aria = active ? (state.order === "asc" ? "ascending" : "descending") : "none";
+            const arrow = active ? (state.order === "asc" ? "▲" : "▼") : "";
+            return '<th aria-sort="' + aria + '"' + (column.numeric ? ' class="num"' : "") + ">" +
+                '<button type="button" class="sort" data-sort="' + column.key + '">' + escape(column.label) +
+                '<span class="sort-arrow" aria-hidden="true">' + arrow + "</span></button></th>";
+        }).join("") + "</tr>";
+    }
+
+    function renderRequestRow(entry, projectNames, now) {
+        const name = entry.project ? ((projectNames || {})[entry.project] || entry.project) : "—";
+        const status = entry.ok
+            ? '<span class="pill pill-ok">OK</span>'
+            : '<span class="pill pill-bad">Error</span>';
+        return '<tr class="request-row' + (entry.ok ? "" : " is-error") + '" data-id="' + escape(entry.id) + '" tabindex="0" aria-expanded="false">' +
+            '<td class="mono">' + escape(formatTime(entry.at, now)) + "</td>" +
+            "<td>" + escape(name) + "</td>" +
+            '<td class="mono">' + escape(entry.tool) + "</td>" +
+            '<td class="mono args">' + escape(entry.args) + "</td>" +
+            "<td>" + status + "</td>" +
+            '<td class="num">' + escape(formatDuration(entry.durationMs)) + "</td>" +
+            '<td class="num">' + escape(formatBytes(entry.resultBytes)) + "</td>" +
+            '<td class="client">' + escape(entry.client) + "</td>" +
+            "</tr>";
+    }
+
+    function renderRequestDetail(entry, projectNames) {
+        const rows = [
+            ["When", new Date(entry.at).toISOString()],
+            ["Project", entry.project ? ((projectNames || {})[entry.project] || entry.project) + " (" + entry.project + ")" : "not resolved"],
+            ["Tool", entry.tool],
+            ["Arguments", entry.args],
+            ["Duration", formatDuration(entry.durationMs)],
+            ["Answer size", formatBytes(entry.resultBytes)],
+            ["API key", entry.key],
+            ["Client", entry.client]
+        ];
+        if (!entry.ok) rows.splice(4, 0, ["Error", entry.error || "the tool reported an error"]);
+        return '<tr class="request-detail"><td colspan="' + REQUEST_COLUMNS.length + '"><dl>' +
+            rows.map(function (row) {
+                return "<dt>" + escape(row[0]) + '</dt><dd class="mono">' + escape(row[1]) + "</dd>";
+            }).join("") + "</dl></td></tr>";
+    }
+
+    function renderOptions(values, selected, allLabel, labels) {
+        return '<option value="">' + escape(allLabel) + "</option>" + (values || []).map(function (value) {
+            return '<option value="' + escape(value) + '"' + (value === selected ? " selected" : "") + ">" +
+                escape((labels || {})[value] || value) + "</option>";
+        }).join("");
+    }
+
+    function renderPager(page) {
+        if (!page || page.total === 0) return "";
+        const first = page.offset + 1;
+        const last = Math.min(page.total, page.offset + page.items.length);
+        return '<span class="muted">' + formatCount(first) + "–" + formatCount(last) + " of " + formatCount(page.total) + "</span>" +
+            '<button type="button" data-page="prev"' + (page.offset <= 0 ? " disabled" : "") + ">Previous</button>" +
+            '<button type="button" data-page="next"' + (last >= page.total ? " disabled" : "") + ">Next</button>";
+    }
+
+    function renderStatTiles(stats) {
+        const tiles = [
+            { key: "calls", label: "Tool calls", value: formatCount(stats.total) },
+            { key: "errors", label: "Error rate", value: (stats.errorRate * 100).toFixed(stats.errorRate > 0 && stats.errorRate < 0.1 ? 1 : 0) + "%", note: formatCount(stats.errors) + " failed" },
+            { key: "p50", label: "Median time", value: formatDuration(stats.p50Ms) },
+            { key: "p95", label: "95th percentile", value: formatDuration(stats.p95Ms) },
+            { key: "bytes", label: "Data returned", value: formatBytes(stats.resultBytes) }
+        ];
+        return tiles.map(function (tile) {
+            return '<div class="card" data-key="' + tile.key + '">' +
+                '<span class="card-value">' + escape(tile.value) + "</span>" +
+                '<span class="card-label">' + escape(tile.label) + (tile.note ? " · " + escape(tile.note) : "") + "</span></div>";
+        }).join("");
+    }
+
+    function bucketLabel(at, windowMs) {
+        const date = new Date(at);
+        if (windowMs > 86400000) return (date.getMonth() + 1) + "/" + date.getDate() + " " + pad2(date.getHours()) + ":00";
+        return pad2(date.getHours()) + ":" + pad2(date.getMinutes());
+    }
+
+    /*
+    | Calls over time: one bar per bucket, the failed share stacked on top in
+    | the status colour. Each bar carries its numbers for the hover tooltip.
+    */
+    function renderTimeline(stats) {
+        const W = 720, H = 180, left = 34, bottom = 22, top = 8;
+        const buckets = stats.timeline || [];
+        const max = Math.max(1, Math.max.apply(null, buckets.map(function (b) { return b.count; })));
+        const plotH = H - bottom - top;
+        const slot = (W - left) / Math.max(1, buckets.length);
+        const barW = Math.max(2, slot - 4);
+        const y = function (value) { return top + plotH - (value / max) * plotH; };
+        const ticks = [0, max / 2, max].filter(function (value, index, all) { return all.indexOf(value) === index; });
+        let out = '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Tool calls over time">';
+        ticks.forEach(function (value) {
+            out += '<line class="grid" x1="' + left + '" x2="' + W + '" y1="' + y(value).toFixed(1) + '" y2="' + y(value).toFixed(1) + '"/>' +
+                '<text class="axis" x="' + (left - 6) + '" y="' + (y(value) + 3).toFixed(1) + '" text-anchor="end">' + formatCount(value) + "</text>";
+        });
+        buckets.forEach(function (bucket, index) {
+            const x = left + index * slot + (slot - barW) / 2;
+            const ok = bucket.count - bucket.errors;
+            const tip = bucketLabel(bucket.at, stats.windowMs) + " · " + formatCount(bucket.count) + " calls" +
+                (bucket.errors ? " · " + formatCount(bucket.errors) + " failed" : "");
+            out += '<g class="bar" data-tip="' + escape(tip) + '">' +
+                '<rect class="hit" x="' + (left + index * slot).toFixed(1) + '" y="' + top + '" width="' + slot.toFixed(1) + '" height="' + plotH + '"/>';
+            if (ok > 0) {
+                out += '<rect class="bar-ok" x="' + x.toFixed(1) + '" y="' + y(ok).toFixed(1) + '" width="' + barW.toFixed(1) +
+                    '" height="' + Math.max(1, (ok / max) * plotH).toFixed(1) + '" rx="3"/>';
+            }
+            if (bucket.errors > 0) {
+                const gap = ok > 0 ? 2 : 0;
+                out += '<rect class="bar-bad" x="' + x.toFixed(1) + '" y="' + y(bucket.count).toFixed(1) + '" width="' + barW.toFixed(1) +
+                    '" height="' + Math.max(1, (bucket.errors / max) * plotH - gap).toFixed(1) + '" rx="3"/>';
+            }
+            out += "</g>";
+            if (index % 6 === 0) {
+                out += '<text class="axis" x="' + (x + barW / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' +
+                    escape(bucketLabel(bucket.at, stats.windowMs)) + "</text>";
+            }
+        });
+        return out + "</svg>" +
+            '<div class="legend"><span><i class="swatch swatch-ok"></i>Succeeded</span><span><i class="swatch swatch-bad"></i>Failed</span></div>';
+    }
+
+    function renderGroupTable(groups, labels, emptyText) {
+        if (!groups || groups.length === 0) return '<p class="muted">' + escape(emptyText || "No calls in this period.") + "</p>";
+        const max = groups[0].count || 1;
+        return '<table class="groups"><thead><tr><th>Name</th><th class="num">Calls</th><th class="num">Failed</th><th class="num">Average</th><th class="num">p95</th></tr></thead><tbody>' +
+            groups.slice(0, 10).map(function (group) {
+                return "<tr><td><span class=\"group-name\">" + escape((labels || {})[group.name] || group.name) + "</span>" +
+                    '<span class="meter"><i style="width:' + Math.max(2, Math.round((group.count / max) * 100)) + '%"></i></span></td>' +
+                    '<td class="num">' + formatCount(group.count) + "</td>" +
+                    '<td class="num' + (group.errors ? " bad" : "") + '">' + formatCount(group.errors) + "</td>" +
+                    '<td class="num">' + escape(formatDuration(group.avgMs)) + "</td>" +
+                    '<td class="num">' + escape(formatDuration(group.p95Ms)) + "</td></tr>";
+            }).join("") + "</tbody></table>";
+    }
+
     return {
         WORKER_FORM_FIELDS,
         WORKER_TABLE_COLUMNS,
@@ -814,7 +1034,22 @@ const GatewayUi = (function () {
         withToken,
         connectSnippets,
         renderLogLines,
-        renderEvents
+        renderEvents,
+        REQUEST_COLUMNS,
+        TIME_RANGES,
+        formatDuration,
+        formatBytes,
+        formatTime,
+        buildRequestQuery,
+        nextSort,
+        renderRequestHead,
+        renderRequestRow,
+        renderRequestDetail,
+        renderOptions,
+        renderPager,
+        renderStatTiles,
+        renderTimeline,
+        renderGroupTable
     };
 })();
 
@@ -1348,8 +1583,174 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
             act(button.dataset.action, button.dataset.project);
         });
 
+
+        /* ── tabs: Workers / Activity / Stats ───────────────────────── */
+
+        const VIEWS = ["workers", "activity", "stats"];
+        let view = "workers";
+        const activity = { q: "", project: "", tool: "", status: "", client: "", range: "", sort: "at", order: "desc", limit: 50, offset: 0 };
+        let activityPage = null;
+        let activityOpen = null;
+        let activityTimer = null;
+        let statsWindow = "24h";
+
+        function projectNames() {
+            const names = {};
+            workers.forEach(function (worker) { names[worker.projectId || worker.id] = worker.name; });
+            return names;
+        }
+
+        function showView(next) {
+            view = VIEWS.indexOf(next) === -1 ? "workers" : next;
+            VIEWS.forEach(function (name) {
+                $("view-" + name).hidden = name !== view;
+                const tab = $("tab-" + name);
+                tab.classList.toggle("active", name === view);
+                tab.setAttribute("aria-selected", name === view ? "true" : "false");
+            });
+            if (location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
+            if (view === "activity") loadActivity();
+            if (view === "stats") loadStats();
+        }
+
+        function renderActivity() {
+            const page = activityPage;
+            const names = projectNames();
+            $("request-head").innerHTML = GatewayUi.renderRequestHead(activity);
+            $("request-rows").innerHTML = page.items.map(function (entry) {
+                const row = GatewayUi.renderRequestRow(entry, names);
+                return entry.id === activityOpen
+                    ? row.replace('aria-expanded="false"', 'aria-expanded="true"') + GatewayUi.renderRequestDetail(entry, names)
+                    : row;
+            }).join("");
+            const filtered = activity.q || activity.project || activity.tool || activity.status || activity.client || activity.range;
+            $("request-empty").hidden = page.total > 0;
+            $("request-empty").textContent = filtered
+                ? "No call matches these filters."
+                : "No tool calls yet. Connect an AI client with Connect AI; every call it makes appears here.";
+            $("request-pager").innerHTML = GatewayUi.renderPager(page);
+            $("filter-project").innerHTML = GatewayUi.renderOptions(page.facets.projects, activity.project, "All projects", names);
+            $("filter-tool").innerHTML = GatewayUi.renderOptions(page.facets.tools, activity.tool, "All tools");
+            $("filter-client").innerHTML = GatewayUi.renderOptions(page.facets.clients, activity.client, "All clients");
+            $("filter-clear").hidden = !filtered;
+        }
+
+        async function loadActivity() {
+            try {
+                activityPage = await api("/api/v1/gateway/requests?" + GatewayUi.buildRequestQuery(activity));
+                renderActivity();
+            } catch (error) {
+                $("request-empty").hidden = false;
+                $("request-empty").textContent = "Could not load the request log: " + error.message;
+            }
+        }
+
+        /* a burst of calls becomes one reload */
+        function scheduleActivity() {
+            if (activityTimer) return;
+            activityTimer = setTimeout(function () {
+                activityTimer = null;
+                if (view === "activity" && $("filter-live").checked && activity.offset === 0) loadActivity();
+                if (view === "stats") loadStats();
+            }, 600);
+        }
+
+        async function loadStats() {
+            try {
+                const stats = await api("/api/v1/gateway/stats?window=" + statsWindow);
+                const names = projectNames();
+                $("stat-tiles").innerHTML = GatewayUi.renderStatTiles(stats);
+                $("stat-timeline").innerHTML = stats.total > 0
+                    ? GatewayUi.renderTimeline(stats)
+                    : '<p class="muted">No tool calls in this period.</p>';
+                $("stat-tools").innerHTML = GatewayUi.renderGroupTable(stats.byTool);
+                $("stat-projects").innerHTML = GatewayUi.renderGroupTable(stats.byProject, names);
+                $("stat-clients").innerHTML = GatewayUi.renderGroupTable(stats.byClient);
+            } catch (error) {
+                $("stat-timeline").innerHTML = '<p class="muted">Could not load statistics: ' + GatewayUi.escape(error.message) + "</p>";
+            }
+        }
+
+        VIEWS.forEach(function (name) {
+            $("tab-" + name).addEventListener("click", function () { showView(name); });
+        });
+
+        ["project", "tool", "status", "client", "range"].forEach(function (key) {
+            $("filter-" + key).addEventListener("change", function (event) {
+                activity[key] = event.target.value;
+                activity.offset = 0;
+                loadActivity();
+            });
+        });
+        let searchTimer = null;
+        $("filter-q").addEventListener("input", function (event) {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                activity.q = event.target.value.trim();
+                activity.offset = 0;
+                loadActivity();
+            }, 250);
+        });
+        $("filter-clear").addEventListener("click", function () {
+            ["q", "project", "tool", "status", "client", "range"].forEach(function (key) {
+                activity[key] = "";
+                $("filter-" + key).value = "";
+            });
+            activity.offset = 0;
+            loadActivity();
+        });
+        $("request-head").addEventListener("click", function (event) {
+            const button = event.target.closest("button[data-sort]");
+            if (!button) return;
+            Object.assign(activity, GatewayUi.nextSort(activity, button.dataset.sort), { offset: 0 });
+            loadActivity();
+        });
+        function toggleRequest(row) {
+            const id = Number(row.dataset.id);
+            activityOpen = activityOpen === id ? null : id;
+            renderActivity();
+        }
+        $("request-rows").addEventListener("click", function (event) {
+            const row = event.target.closest("tr.request-row");
+            if (row) toggleRequest(row);
+        });
+        $("request-rows").addEventListener("keydown", function (event) {
+            const row = event.target.closest("tr.request-row");
+            if (row && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault();
+                toggleRequest(row);
+            }
+        });
+        $("request-pager").addEventListener("click", function (event) {
+            const button = event.target.closest("button[data-page]");
+            if (!button || !activityPage) return;
+            activity.offset = Math.max(0, activity.offset + (button.dataset.page === "next" ? activity.limit : -activity.limit));
+            loadActivity();
+        });
+        $("stat-window").addEventListener("click", function (event) {
+            const button = event.target.closest("button[data-window]");
+            if (!button) return;
+            statsWindow = button.dataset.window;
+            Array.prototype.forEach.call($("stat-window").querySelectorAll("button"), function (item) {
+                item.classList.toggle("active", item === button);
+                item.setAttribute("aria-pressed", item === button ? "true" : "false");
+            });
+            loadStats();
+        });
+
+        /* one tooltip for every chart bar */
+        const tip = $("chart-tip");
+        $("stat-timeline").addEventListener("mousemove", function (event) {
+            const bar = event.target.closest("g.bar");
+            if (!bar) { tip.hidden = true; return; }
+            tip.textContent = bar.dataset.tip;
+            tip.hidden = false;
+            tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, event.clientX + 12) + "px";
+            tip.style.top = (event.clientY - 34) + "px";
+        });
+        $("stat-timeline").addEventListener("mouseleave", function () { tip.hidden = true; });
+
         $("connect-ai").addEventListener("click", function () { showConnect(); });
-        $("refresh").addEventListener("click", function () { refresh(); });
         $("settings-link").setAttribute("href", GatewayUi.withToken("/open.html", token));
 
         /* the version and the stable facts about this Gateway */
@@ -1374,13 +1775,14 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
                     } catch (e) { /* a malformed event is ignored */ }
                 }
             });
+            source.addEventListener("request", scheduleActivity);
             source.onerror = function () {
                 source.close();
                 setTimeout(connectEvents, 5000);
             };
         }
 
-        refresh();
+        refresh().then(function () { showView(location.hash.slice(1)); });
         connectEvents();
         setInterval(refresh, 30000);
     })();

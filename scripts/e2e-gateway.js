@@ -242,6 +242,56 @@ async function main() {
     await page.waitForFunction(() => !document.querySelector('#worker-rows tr[data-project="fix-two"]'), null, { timeout: 30_000 });
     check('remove deletes the instance', true);
 
+    // 8. agent activity: calls made over MCP show up, filter, sort and count
+    const mcpCall = (name, args) => page.evaluate(async ({ url, token, name, args }) => {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } }),
+      });
+    }, { url: `${base}/mcp`, token: TOKEN, name, args });
+    await mcpCall('find_symbol', { project: 'fix-one', name: 'a' });
+    await mcpCall('project_info', { project: 'fix-one' });
+    await mcpCall('find_symbol', { project: 'no-such-project', name: 'a' });
+
+    await page.click('#tab-activity');
+    await page.waitForFunction(() => document.querySelectorAll('#request-rows tr.request-row').length === 3, null, { timeout: 15_000 });
+    check('activity lists every agent call', true);
+    const firstRequest = await page.locator('#request-rows tr.request-row').first().innerText();
+    check('newest call is first and failed calls are marked', firstRequest.includes('find_symbol') && firstRequest.includes('Error'), firstRequest);
+
+    await page.selectOption('#filter-status', 'error');
+    await page.waitForFunction(() => document.querySelectorAll('#request-rows tr.request-row').length === 1);
+    await page.locator('#request-rows tr.request-row').first().click();
+    const detail = await page.locator('tr.request-detail').innerText();
+    check('a row opens to its details, with the error text', detail.includes('unknown project'), detail.slice(0, 200));
+    await page.click('#filter-clear');
+    await page.waitForFunction(() => document.querySelectorAll('#request-rows tr.request-row').length === 3);
+    check('clearing filters restores the list', true);
+
+    await page.selectOption('#filter-tool', 'project_info');
+    await page.waitForFunction(() => document.querySelectorAll('#request-rows tr.request-row').length === 1);
+    check('filtering by tool narrows the list', true);
+    await page.click('#filter-clear');
+    await page.fill('#filter-q', 'no-such');
+    await page.waitForFunction(() => document.querySelectorAll('#request-rows tr.request-row').length === 1);
+    check('search matches the error text', true);
+    await page.fill('#filter-q', '');
+    await page.waitForFunction(() => document.querySelectorAll('#request-rows tr.request-row').length === 3);
+
+    await page.click('button[data-sort="tool"]');
+    await page.waitForFunction(() => document.querySelector('th[aria-sort="ascending"] button[data-sort="tool"]'));
+    const toolsAsc = await page.locator('#request-rows tr.request-row td:nth-child(3)').allInnerTexts();
+    check('sorting by a column orders the rows', toolsAsc.join(',') === 'find_symbol,find_symbol,project_info', toolsAsc.join(','));
+
+    await page.click('#tab-stats');
+    await page.waitForSelector('#stat-timeline svg.chart');
+    check('stats count the calls and the failures',
+      (await page.locator('#stat-tiles .card[data-key="calls"] .card-value').innerText()) === '3'
+      && (await page.locator('#stat-tiles .card[data-key="errors"] .card-label').innerText()).includes('1 failed'));
+    check('stats break the calls down by tool', (await page.locator('#stat-tools').innerText()).includes('find_symbol'));
+    check('no section widens the page', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+
     check('no failing API calls from the console', failing.length === 0, failing.join('; '));
     check('no script errors', pageErrors.length === 0, pageErrors.join('; '));
   } catch (error) {
