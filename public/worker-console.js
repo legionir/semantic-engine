@@ -98,18 +98,6 @@ const WorkerConsole = (function () {
         rebuild: { busy: "Rebuilding the index from scratch", done: "Index rebuilt", title: "Rebuild from scratch" }
     };
 
-    function makeApi(token) {
-        return async function api(path, options) {
-            const headers = Object.assign({}, token ? { Authorization: "Bearer " + token } : {}, (options && options.headers) || {});
-            const res = await fetch(path, Object.assign({}, options || {}, { headers: headers }));
-            const text = await res.text();
-            let body = null;
-            try { body = text ? JSON.parse(text) : null; } catch (e) { body = { raw: text }; }
-            if (!res.ok) throw new Error((body && (body.error || body.raw)) || String(res.status));
-            return body;
-        };
-    }
-
     /* ── the overlay: progress bar + log tail ──────────────────────── */
 
     function openActivity(config) {
@@ -371,6 +359,10 @@ const WorkerConsole = (function () {
             return values;
         }
 
+        const requestPreview = ui.makePreview(ctx.api, function (text) {
+            host.querySelector("#wc-preview").textContent = text;
+        });
+
         function updatePreview() {
             ui.syncEmbeddingSection(host);
             const values = formValues();
@@ -378,11 +370,11 @@ const WorkerConsole = (function () {
             const errorNode = host.querySelector("#wc-errors");
             if (!formBlocked) errorNode.textContent = errors.map(function (e) { return e.field + ": " + e.message; }).join(" — ");
             const config = ui.formToConfig(values);
-            let text = ui.commandPreview(config);
+            let note = "";
             if (values.vectors && !ui.ownEmbedding(config)) {
-                text += "\n# embeddings: " + (describeEmbedding(settings) || "the model chosen in Settings") + " (used because this project sets none of its own)";
+                note = "\n# embeddings: " + (describeEmbedding(settings) || "the model chosen in Settings") + " (used because this project sets none of its own)";
             }
-            host.querySelector("#wc-preview").textContent = text;
+            requestPreview(config, note);
         }
 
         async function loadForm() {
@@ -480,7 +472,7 @@ const WorkerConsole = (function () {
         if (!host || typeof GatewayUi === "undefined") return;
         const params = new URLSearchParams(location.search);
         const token = params.get("token") || localStorage.getItem("se.token") || localStorage.getItem("se.gateway.token") || "";
-        const api = makeApi(token);
+        const api = SemanticApi.makeApi(token);
         try {
             await api("/api/v1/gateway/info");
         } catch (error) {
@@ -512,7 +504,6 @@ const WorkerConsole = (function () {
         formatElapsed: formatElapsed,
         inheritedValues: inheritedValues,
         describeEmbedding: describeEmbedding,
-        makeApi: makeApi,
         openActivity: openActivity,
         runOperation: runOperation,
         mountPanel: mountPanel

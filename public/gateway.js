@@ -18,7 +18,7 @@
 |      DOM at load time, so Node can require this file and test it. The
 |      browser bootstrap runs only when `document` exists.
 |
-| The command preview is built from the same argv rules the Gateway uses; it is
+| The command preview comes from the Gateway (the argv it would spawn); it is
 | display-only and is never executed.
 |--------------------------------------------------------------------------|
 */
@@ -351,79 +351,24 @@ const GatewayUi = (function () {
     }
 
     /*
-    | پیش‌نمایش argv — فقط برای نمایش. همان قواعد workerArgv: پرچم‌های
-    | boolean به‌شکل `--x`/`--no-x`، و هیچ shell string.
+    | Command preview — display only. The Gateway builds it from the very argv
+    | it would spawn (POST /api/v1/gateway/command-preview), so the browser
+    | keeps no second copy of the flag rules. Calls are debounced and a late
+    | answer to an older form state is dropped.
     */
-    function commandPreview(config) {
-        const argv = ["semantic-engine", "worker"];
-        // Display-only quoting, identical to commandPreview() in workerArgv.ts.
-        const quote = function (value) {
-            return /^[A-Za-z0-9_@%+=:,./-]+$/.test(value) ? value : "'" + value.replace(/'/g, "'\\''") + "'";
+    function makePreview(api, render, delayMs) {
+        let timer = null;
+        let latest = 0;
+        return function (config, suffix) {
+            if (timer) clearTimeout(timer);
+            const ticket = ++latest;
+            timer = setTimeout(function () {
+                api("/api/v1/gateway/command-preview", { method: "POST", json: config })
+                    .then(function (answer) { return answer.preview + (suffix || ""); })
+                    .catch(function (error) { return "# no preview yet: " + error.message; })
+                    .then(function (text) { if (ticket === latest) render(text); });
+            }, delayMs === undefined ? 200 : delayMs);
         };
-        const push = function (flag, value) {
-            if (value === undefined || value === null || value === "") return;
-            argv.push("--" + flag, quote(String(value)));
-        };
-        const bool = function (flag, value) {
-            argv.push(value ? "--" + flag : "--no-" + flag);
-        };
-
-        push("project-id", config.projectId);
-        push("root", config.rootPath);
-        push("data-dir", config.dataDir);
-        push("out", config.outOverride);
-
-        const indexing = config.indexing || {};
-        bool("vectors", Boolean(indexing.vectors));
-        bool("blueprint", indexing.blueprint !== false);
-        bool("git", indexing.git !== false);
-        bool("tree-sitter", indexing.treeSitter !== false);
-        bool("pretty", indexing.pretty !== false);
-
-        push("artifact-location", config.artifactLocation);
-        const scan = config.scan || {};
-        if (scan.useGitignore === false) argv.push("--no-gitignore");
-        if (scan.skipHiddenDirectories === false) argv.push("--no-skip-hidden");
-        if (Number(scan.maxDepth) > 0) push("max-depth", scan.maxDepth);
-        if (scan.maxFileSizeMb !== undefined && Number(scan.maxFileSizeMb) !== 5) push("max-file-size-mb", scan.maxFileSizeMb);
-        push("ignore", scan.ignore);
-        const diagnostics = config.diagnostics || {};
-        if (diagnostics.lsp) argv.push("--lsp-diagnostics");
-        push("diagnostics-budget", diagnostics.budgetMs);
-        const cacheMode = (config.cache || {}).mode;
-        if (cacheMode === "full") argv.push("--full");
-        if (cacheMode === "off") argv.push("--no-cache");
-
-        const watchOptions = config.watchOptions || {};
-        if (config.watch === false) argv.push("--no-watch");
-        push("debounce", watchOptions.debounceMs);
-        push("blueprint-mode", watchOptions.blueprintMode);
-        if (watchOptions.skipInitialIndex) argv.push("--skip-initial-index");
-
-        const service = config.service || {};
-        push("host", service.host);
-        push("port", service.port);
-        push("ui-port", service.uiPort);
-        push("mcp-port", service.mcpPort);
-        if (service.transport === "socket") push("socket", service.socketPath);
-        if (service.http) argv.push("--http");
-        if (service.stdio) argv.push("--stdio");
-        if (service.web) argv.push("--web");
-
-        const security = config.security || {};
-        if (security.gatewayManaged) argv.push("--gateway-managed");
-        if (security.allowRemote) argv.push("--allow-remote");
-
-        const embedding = config.embedding || {};
-        if (ownEmbedding(config)) {
-            push("embedding-provider", embedding.provider);
-            push("embedding-model", embedding.model);
-            push("embedding-base-url", embedding.baseUrl);
-            push("embedding-api-key-env", embedding.apiKeyEnvVar);
-            bool("embedding-normalize", embedding.normalize !== false);
-        }
-
-        return argv.join(" ");
     }
 
     function summarize(workers) {
@@ -1051,7 +996,7 @@ const GatewayUi = (function () {
         formToConfig,
         configToForm,
         validateForm,
-        commandPreview,
+        makePreview,
         summarize,
         stateClass,
         renderWorkerRow,
@@ -1134,14 +1079,7 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
         let infoState = null;
         let followTimer = null;
 
-        async function api(path, options) {
-            const res = await fetch(path, Object.assign({ headers: headers() }, options || {}));
-            const text = await res.text();
-            let body = null;
-            try { body = text ? JSON.parse(text) : null; } catch (e) { body = { raw: text }; }
-            if (!res.ok) throw new Error((body && (body.error || body.raw)) || res.status);
-            return body;
-        }
+        const api = SemanticApi.makeApi(function () { return token; });
 
         /* ── modal plumbing ─────────────────────────────────────────── */
 
@@ -1285,6 +1223,8 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
             return values;
         }
 
+        const requestPreview = GatewayUi.makePreview(api, function (text) { els.preview.textContent = text; });
+
         function updatePreview() {
             GatewayUi.syncEmbeddingSection(els.formFields);
             const values = formValues();
@@ -1295,7 +1235,7 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
                     .map(function (e) { return e.field + ": " + e.message; })
                     .join(" — ");
             }
-            els.preview.textContent = GatewayUi.commandPreview(GatewayUi.formToConfig(values));
+            requestPreview(GatewayUi.formToConfig(values));
         }
 
         async function save(start) {
@@ -1316,7 +1256,7 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
             try {
                 await api(request.url, {
                     method: request.method,
-                    headers: Object.assign({ "Content-Type": "application/json" }, headers()),
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(request.body)
                 });
                 els.formErrors.textContent = "";

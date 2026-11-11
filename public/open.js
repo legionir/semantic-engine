@@ -41,20 +41,10 @@ function authHeaders(extra) {
   return h;
 }
 
-async function api(method, path, body) {
-  const opts = { method, headers: authHeaders(body ? { "Content-Type": "application/json" } : {}) };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(path, opts);
-  let json = null;
-  try { json = await res.json(); } catch { /* no body */ }
-  if (!res.ok) {
-    const msg = (json && (json.error || json.message)) || (res.status + " " + res.statusText);
-    const err = new Error(msg);
-    err.status = res.status;
-    err.payload = json;
-    throw err;
-  }
-  return json;
+/* The shared wrapper from api.js; this page calls it as api(method, path, body). */
+const request = SemanticApi.makeApi(() => state.token);
+function api(method, path, body) {
+  return request(path, body ? { method, json: body } : { method });
 }
 
 // ── status / health ─────────────────────────────────────────────────────

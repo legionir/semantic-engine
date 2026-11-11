@@ -19,7 +19,6 @@ const ui = require(path.join(__dirname, '..', '..', 'public', 'gateway.js')) as 
   formToConfig(values: Record<string, unknown>): Record<string, unknown>;
   configToForm(config: unknown): Record<string, unknown>;
   validateForm(values: Record<string, unknown>): { field: string; message: string }[];
-  commandPreview(config: Record<string, unknown>): string;
   summarize(workers: Record<string, unknown>[]): Record<string, number>;
   stateClass(worker: Record<string, unknown>): string;
   renderWorkerRow(worker: Record<string, unknown>): string;
@@ -159,34 +158,6 @@ describe('gateway console — preview and rendering', () => {
     security: { gatewayManaged: true, tokenEnvVar: 'SE_TOKEN' },
     embedding: { provider: 'ollama', baseUrl: 'http://127.0.0.1:11434', normalize: true },
   };
-
-  it('previews the same flags the worker accepts', () => {
-    const preview = ui.commandPreview(config);
-
-    expect(preview.startsWith('semantic-engine worker ')).toBe(true);
-    expect(preview).toContain('--project-id prj-app-12345678');
-    expect(preview).toContain('--root /srv/app');
-    expect(preview).toContain('--data-dir /srv/data');
-    expect(preview).toContain('--vectors');
-    expect(preview).not.toContain('sqlite');
-    expect(preview).toContain('--debounce 250');
-    expect(preview).toContain('--blueprint-mode threshold');
-    expect(preview).toContain('--gateway-managed');
-    expect(preview).toContain('--embedding-provider ollama');
-    expect(preview).toContain('--embedding-normalize');
-  });
-
-  it('never previews a secret value, only the variable name', () => {
-    const preview = ui.commandPreview(config);
-    expect(preview).not.toContain('SE_TOKEN');
-    expect(preview).not.toMatch(/sk-/);
-  });
-
-  it('has no shell metacharacters in the flags it emits', () => {
-    for (const part of ui.commandPreview(config).split(' ')) {
-      if (part.startsWith('--')) expect(part).toMatch(/^--[a-z0-9-]+$/);
-    }
-  });
 
   it('renders one row per worker, with its state and actions', () => {
     const workers = Array.from({ length: 10 }, (_unused, index) => ({

@@ -28,12 +28,14 @@ import { CapacityError, LockHeldError, WorkerSupervisor, WorkerSummary } from '.
 import { handleProjectHealth, proxyToProject, ProxyDeps } from './GatewayProxyRoutes';
 import { handleGatewayProjectRoute, handleRegisterProject, ProjectRouteDeps } from './GatewayProjectRoute';
 import { handleGatewayUpgrade } from './GatewayUpgrade';
-import { serveGatewayUi } from './GatewayUi';
+import { StaticAssetServer } from '../server/StaticAssetServer';
 import { GatewayMcp, resolveProject } from './GatewayMcp';
 import { OperationTracker } from './OperationTracker';
 import { packageVersion } from '../host/version';
 import * as fs from 'fs';
 import { WorkerConfigStore } from './WorkerConfigStore';
+import { createWorkerConfig } from './WorkerConfigSchema';
+import { commandPreview } from './workerArgv';
 import { ProjectWorkerConfig } from './types';
 import { ApiKeyRecord, PermissionScope } from '../security/rbac/types';
 import { generateToken } from '../cli/HttpGuard';
@@ -296,7 +298,7 @@ export class GatewayServer {
     | می‌شوند (دقیقاً مثل سرور پلتفرم)؛ همهٔ داده‌ها از همان APIهای
     | توکن‌دار می‌آیند.
     */
-    if (method === 'GET' && serveGatewayUi(this.uiDir, pathname, res)) return;
+    if (method === 'GET' && (await this.assets.serve(pathname, res))) return;
 
     const auth = this.auth.verify(req, url.searchParams.get('token') ?? undefined);
     if (!auth.authenticated || !auth.record) {
@@ -375,6 +377,21 @@ export class GatewayServer {
     if (pathname === '/api/v1/gateway/stats' && method === 'GET') {
       const windowMs = STATS_WINDOWS[url.searchParams.get('window') ?? '24h'] ?? STATS_WINDOWS['24h']!;
       this.send(res, 200, this.requestLog.stats(windowMs, id => this.auth.canAccessProject(record, id)));
+      return;
+    }
+
+    /*
+    | The command the form would run, for display. Built by the same
+    | `workerArgv` the supervisor spawns with, so the console keeps no second
+    | copy of the flag rules. Nothing is executed or stored.
+    */
+    if (pathname === '/api/v1/gateway/command-preview' && method === 'POST') {
+      try {
+        const config = createWorkerConfig((await readBody(req)) as never);
+        this.send(res, 200, { preview: commandPreview(config) });
+      } catch (error) {
+        this.send(res, 400, { error: error instanceof Error ? error.message : String(error) });
+      }
       return;
     }
 
@@ -534,8 +551,15 @@ export class GatewayServer {
     }
   }
 
-  private get uiDir(): string {
-    return this.options.staticDir ?? path.resolve(__dirname, '..', '..', 'public');
+  private assetServer?: StaticAssetServer;
+
+  /** Same file server as a worker; only the page `/` opens differs. */
+  private get assets(): StaticAssetServer {
+    this.assetServer ??= new StaticAssetServer(
+      this.options.staticDir ?? path.resolve(__dirname, '..', '..', 'public'),
+      { home: 'gateway.html', projectDeepLinks: true }
+    );
+    return this.assetServer;
   }
 
   private openSse(req: http.IncomingMessage, res: http.ServerResponse): void {
