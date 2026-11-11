@@ -315,3 +315,19 @@
   .model-item { grid-template-columns: auto 1fr; }
   .model-action { grid-column: 2; grid-row: auto; }
 }
+
+/* ── groups of cards, and the Advanced fold ───────────────────────────── */
+.section-title {
+  margin: 10px 0 -6px; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted-2);
+}
+.wizard > .section-title:first-child { margin-top: 0; }
+details.advanced > summary {
+  cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 0;
+}
+details.advanced > summary::-webkit-details-marker { display: none; }
+details.advanced > summary::before { content: "▸"; color: var(--muted); }
+details.advanced[open] > summary::before { content: "▾"; }
+details.advanced[open] > summary { margin-bottom: 12px; }
+details.advanced > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }

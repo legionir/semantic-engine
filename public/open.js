@@ -53,13 +53,16 @@ async function checkHealth() {
     await api("GET", "/health");
     setStatus("done", "connected");
   } catch (e) {
-    setStatus("failed", "connection failed");
+    setStatus("failed", "Can't reach the server",
+      "The page loaded but /health did not answer. Check that the semantic-engine process is still running, then reload.");
   }
 }
-function setStatus(cls, text) {
+function setStatus(cls, text, hint) {
   const dot = $("statusDot");
   dot.className = "dot " + cls;
   $("statusText").textContent = text;
+  /* the longer explanation sits in the tooltip, so the bar stays one line */
+  $("statusText").title = hint || "";
 }
 
 // ── file browser ────────────────────────────────────────────────────────
@@ -528,7 +531,8 @@ async function pollJob() {
       log("bad", "job " + job.status + (job.error ? ": " + job.error : ""));
       $("startIndexBtn").disabled = false;
       $("cancelIndexBtn").hidden = true;
-      setStatus("failed", "indexing failed");
+      setStatus("failed", "Indexing failed — see the log below",
+        job.error || "The job ended without finishing; the log lists the last steps.");
       return;
     }
     setTimeout(pollJob, 900);

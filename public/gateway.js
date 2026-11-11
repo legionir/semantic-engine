@@ -85,9 +85,7 @@ const GatewayUi = (function () {
 
     const WORKER_TABLE_COLUMNS = [
         { key: "name", label: "Project" },
-        { key: "projectId", label: "Project id" },
         { key: "rootPath", label: "Root path" },
-        { key: "pid", label: "PID" },
         { key: "state", label: "State" },
         { key: "indexState", label: "Index" },
         { key: "restartCount", label: "Restarts" },
@@ -398,8 +396,15 @@ const GatewayUi = (function () {
         const cells = WORKER_TABLE_COLUMNS.map(function (column) {
             if (column.key === "state") {
                 return '<td data-key="state" data-phase="' + escape(phase) + '">' +
+                    '<span class="badge badge-' + escape(stateClass(worker).replace("state-", "")) + '">' +
                     (BUSY_PHASES.indexOf(phase) !== -1 ? '<span class="spin" aria-hidden="true"></span>' : "") +
-                    escape(phase) + "</td>";
+                    escape(phase) + "</span></td>";
+            }
+            if (column.key === "name") {
+                /* the minor facts (id, PID) sit under the name instead of in columns */
+                const detail = "id " + worker.projectId + (worker.pid ? " · pid " + worker.pid : "");
+                return '<td data-key="name"><span class="proj-name">' + escape(worker.name || worker.projectId) +
+                    '</span><span class="proj-sub">' + escape(detail) + "</span></td>";
             }
             const value = worker[column.key];
             return '<td data-key="' + escape(column.key) + '">' +

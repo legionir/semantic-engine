@@ -497,3 +497,25 @@ details.more > summary:focus-visible { outline: 2px solid var(--accent); outline
 .more-menu .action { text-align: left; border-color: transparent; background: none; width: 100%; }
 .more-menu .action:hover { background: var(--accent-soft); }
 .more-menu .action[data-action="remove"] { color: var(--crashed); }
+
+/* ── project cell, state badge, empty guide ───────────────────────────── */
+td[data-key="name"] { white-space: normal; }
+.proj-name { display: block; font-weight: 600; color: var(--text); }
+.proj-sub { display: block; font-size: 11px; color: var(--muted-2); font-family: var(--mono); }
+.badge {
+  display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--r-pill);
+  font-size: 12px; font-weight: 600; border: 1px solid currentColor;
+}
+.badge-ready { color: var(--ready); background: rgba(55,211,154,.10); }
+.badge-indexing { color: var(--indexing); background: rgba(240,182,74,.10); }
+.badge-degraded { color: var(--degraded); background: rgba(245,147,75,.10); }
+.badge-crashed { color: var(--crashed); background: rgba(248,113,122,.10); }
+.badge-stopped { color: var(--muted); background: var(--panel-2); }
+.empty-guide {
+  padding: 22px 24px; border: 1px dashed var(--line); border-radius: var(--r-md);
+  background: var(--panel-2); margin-bottom: 14px;
+}
+.empty-guide[hidden] { display: none; }
+.empty-guide h3 { margin: 0 0 10px; font-size: 15px; }
+.empty-guide ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.8; }
+.empty-guide b { color: var(--text); }

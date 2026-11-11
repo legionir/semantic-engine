@@ -54,15 +54,20 @@
 
   <section class="panel">
     <h2>Workers</h2>
-    <p id="empty-hint" class="muted" hidden>No project yet. Press <b>New worker</b> and give it a folder.</p>
+    <div id="empty-hint" class="empty-guide" hidden>
+      <h3>Add your first project</h3>
+      <ol>
+        <li><b>New worker</b> — give it a name and the folder of your code.</li>
+        <li><b>Save &amp; start</b> — the project is indexed; the State column shows when it is ready.</li>
+        <li><b>Connect AI</b> — copy the snippet for Claude, Cursor, VS Code or Codex.</li>
+      </ol>
+    </div>
     <div class="table-scroll">
     <table class="workers">
       <thead>
         <tr>
           <th>Project</th>
-          <th>Project id</th>
           <th>Root path</th>
-          <th>PID</th>
           <th>State</th>
           <th>Index</th>
           <th>Restarts</th>

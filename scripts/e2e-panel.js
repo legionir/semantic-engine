@@ -149,6 +149,8 @@ async function main() {
     check('models directory lives under the data dir', (await page.textContent('#modelsDirCode')).startsWith(dataDir));
 
     // 2. settings save + reload
+    // scan parameters sit behind the Advanced fold
+    await page.click('#cardScan details.advanced > summary');
     await page.fill('#maxDepth', '7');
     await page.fill('#extraIgnore', '**/*.snap, vendor/**');
     await page.uncheck('#skipHidden');

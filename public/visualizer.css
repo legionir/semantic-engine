@@ -707,3 +707,11 @@
   border-color: var(--accent, #6ea8fe);
   color: var(--accent, #6ea8fe);
 }
+
+/* phones: the tab row scrolls inside itself instead of widening the page */
+@media (max-width: 640px) {
+  .views-nav { margin-left: 0; max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+  .view-tab { white-space: nowrap; flex: 0 0 auto; }
+  .mode-switch { max-width: 100%; }
+}
+.view-tab:focus-visible, .mode-btn:focus-visible { outline: 2px solid var(--accent, #58a6ff); outline-offset: 2px; }

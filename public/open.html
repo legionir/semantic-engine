@@ -51,6 +51,7 @@
 <main class="open-main">
   <div class="wizard">
 
+    <h2 class="section-title" id="grpProject">Project</h2>
     <!-- Worker · shown only when this server is a Gateway; see worker-console.js -->
     <section class="card" id="cardWorker" hidden></section>
 
@@ -95,6 +96,7 @@
       </div>
     </section>
 
+    <h2 class="section-title" id="grpIndex">Index</h2>
     <!-- 2 · Scanning -->
     <section class="card" id="cardScan">
       <div class="card-head">
@@ -103,8 +105,8 @@
       </div>
 
       <div class="form-stack">
-        <div class="group">
-          <h3 class="group-title">Parameters</h3>
+        <details class="group advanced">
+          <summary class="group-title">Advanced <span class="muted">parser, depth, file size, ignore patterns</span></summary>
           <div class="grid-2">
             <div class="field">
               <label class="field-label" for="scanEngine">Parser</label>
@@ -126,7 +128,7 @@
               <input type="text" id="extraIgnore" class="text-input" placeholder="**/*.snap, vendor/**" spellcheck="false">
             </div>
           </div>
-        </div>
+        </details>
 
         <div class="group">
           <h3 class="group-title">Options</h3>
@@ -144,6 +146,7 @@
       </div>
     </section>
 
+    <h2 class="section-title" id="grpModels">Models</h2>
     <!-- 3 · Embeddings -->
     <section class="card" id="cardEmbedding">
       <div class="card-head">
@@ -204,10 +207,13 @@
             </div>
           </div>
 
-          <div class="check-list single">
-            <label class="check-item"><input type="checkbox" id="normalizeVectors" checked>
-              <span><b>Normalise vectors</b><small>Recommended for cosine similarity</small></span></label>
-          </div>
+          <details class="group advanced">
+            <summary class="group-title">Advanced</summary>
+            <div class="check-list single">
+              <label class="check-item"><input type="checkbox" id="normalizeVectors" checked>
+                <span><b>Normalise vectors</b><small>Recommended for cosine similarity</small></span></label>
+            </div>
+          </details>
           <p class="hint muted" id="providerHint"></p>
         </div>
       </div>
