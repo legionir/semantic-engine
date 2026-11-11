@@ -1,0 +1,8 @@
+{
+  "name": "semantic-engine",
+  "description": "Code-structure tools for the open project: symbol lookup, callers and dependents, impact of a change, linked tests and bounded source reads, answered from a local index.",
+  "version": "0.1.0",
+  "author": { "name": "legionir" },
+  "repository": "https://github.com/legionir/semantic-engine",
+  "keywords": ["mcp", "code-intelligence", "index", "impact-analysis"]
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Regenerates docs/AI-TOOLS.md and the tool catalogue inside
- * skills/semantic-engine/SKILL.md from the tool registry (needs `npm run build`).
+ * from the tool registry (needs `npm run build`).
  *
  *   node scripts/gen-ai-tools-doc.js          write both files
  *   node scripts/gen-ai-tools-doc.js --check  exit 1 when a file is out of date
@@ -20,7 +20,7 @@ if (!fs.existsSync(dist('ai/AiToolRegistry.js'))) {
 
 const { AiToolRegistry } = require(dist('ai/AiToolRegistry'));
 const { ProjectIndexReader } = require(dist('ai/ProjectIndexReader'));
-const { renderToolReference, renderSkillCatalog } = require(dist('ai/tools/renderToolDocs'));
+const { renderToolReference } = require(dist('ai/tools/renderToolDocs'));
 
 /** Every tool, including the opt-in groups, so the documents describe the full surface. */
 function listAllTools() {
@@ -48,26 +48,14 @@ const referenceHeader = [
   '',
   `${tools.length} tools. They are served over MCP (\`tools/list\`, \`tools/call\`). Through the gateway each tool also takes a \`project\` parameter.`,
   '',
-  'Every result is `{ success, items[], metadata, context? }` with `projectId` and `indexGeneration` added by the server; see the skill (`skills/semantic-engine/SKILL.md`) for how to read `truncated`, empty results and `warnings`.',
+  'Results are sent as readable text. Tools marked advanced are listed only with `--all-tools`; edit and experimental tools only when enabled. The Claude Code plugin is in `plugin/`.',
   '',
 ].join('\n');
 
 const referencePath = path.join(root, 'docs', 'AI-TOOLS.md');
-const skillPath = path.join(root, 'skills', 'semantic-engine', 'SKILL.md');
 const reference = `${referenceHeader}\n${renderToolReference(tools)}\n`;
 
-const skill = fs.readFileSync(skillPath, 'utf8');
-const begin = '<!-- tools:begin -->';
-const end = '<!-- tools:end -->';
-const from = skill.indexOf(begin);
-const to = skill.indexOf(end);
-if (from === -1 || to === -1 || to < from) {
-  console.error(`${skillPath} needs ${begin} and ${end} markers`);
-  process.exit(2);
-}
-const nextSkill = `${skill.slice(0, from + begin.length)}\n${renderSkillCatalog(tools)}\n${skill.slice(to)}`;
-
-const targets = [[referencePath, reference], [skillPath, nextSkill]];
+const targets = [[referencePath, reference]];
 if (process.argv.includes('--check')) {
   const stale = targets.filter(([file, content]) => !fs.existsSync(file) || fs.readFileSync(file, 'utf8') !== content);
   if (stale.length > 0) {

@@ -904,28 +904,45 @@ GET    /projects/:id                                deep link به داشبور�
 
 ---
 
-## ۱۱. اتصال به Structured AI و کلاینت‌های خارجی MCP
+## ۱۱. اتصال به Claude Code و کلاینت‌های MCP
 
-### اتصال ایجنت‌های Structured AI
-ایجنت‌ها از طریق کلاینت سبک `agent/lib/semantic.js` به صورت پیش‌فرض با کانال Stdio پروسه را در پس‌زمینه اجرا می‌کنند. ابزارهای زیر مستقیماً در دسترس مدل هستند:
-`code_find_symbol` · `code_search` · `code_file_summary` · `code_dependencies` · `code_impact` · `code_find_tests` · `code_config_usage` · `code_context` · `code_diagnostics` · `code_callers` · `code_definition` · `code_rename` · `code_simulate_mutation` · `code_architecture_violations` · `code_git_hotspots`.
+### پلاگین Claude Code (پیشنهادی)
 
-### اتصال کلاینت‌های خارجی (Claude Desktop / Cursor / VSCode Cline)
-باینری MCP را در فایل پیکربندی کلاینت خود قرار دهید:
+پلاگین، سرور MCP و skill را با هم نصب می‌کند و برای هر پوشه‌ای که باز شود همان پروژه را ایندکس و سرو می‌کند:
+
+```bash
+npm install && npm run build && npm link     # فرمان semantic-engine روی PATH
+```
+
+```
+/plugin install semantic-engine --marketplace legionir/semantic-engine
+```
+
+اولین اجرا پروژه را ایندکس می‌کند. اگر فرمان روی `PATH` نیست، مسیر کامل آن را در متغیر `SEMANTIC_ENGINE_BIN` بگذارید. برای آزمودن نسخهٔ محلی: `claude --plugin-dir ./plugin`.
+
+### ثبت دستی
+
+```bash
+claude mcp add semantic-engine -- semantic-engine serve --stdio --root /path/to/project
+```
+
+برای کلاینت‌های دیگر (Claude Desktop، Cursor، Cline):
 ```json
 {
   "mcpServers": {
     "semantic-engine": {
-      "command": "node",
-      "args": [
-        "/path/to/semantic-engine/dist/ai/mcp/cli.js",
-        "--root",
-        "/path/to/project"
-      ]
+      "command": "semantic-engine",
+      "args": ["serve", "--stdio", "--root", "/path/to/project"]
     }
   }
 }
 ```
+
+### ابزارهایی که مدل می‌بیند
+
+`project_info` · `find_context` · `search` · `find_symbol` · `explain_symbol` · `file_outline` · `read_code` · `list_files` · `impact` · `find_tests` · `git_history`
+
+ابزارهای تخصصی (`get_config_usage`، `detect_architecture_violations`، `diagnostics_get`، `structural_rule_test`، `syntax_tree_dump`) با `--all-tools` فهرست می‌شوند. نتیجه‌ها متن خوانا هستند؛ `SEMANTIC_ENGINE_MCP_STRUCTURED=on` خروجی JSON و `structuredContent` را برمی‌گرداند. مرجع کامل: `docs/AI-TOOLS.md`.
 
 ---
 
@@ -973,7 +990,7 @@ artifactهای جدید، snapshot تازه را دریافت می‌کنند.
 
 ## امنیت سرور HTTP (HTTP Server Security)
 
-هر دو سرور HTTP — پلتفرم (`serve --ui`) و MCP (`semantic-engine-mcp --http`) — پیش‌فرض **فقط روی `127.0.0.1`** گوش می‌دهند و **توکن لازم دارند**.
+هر دو سرور HTTP — پلتفرم (`serve --ui`) و MCP (`serve --http`) — پیش‌فرض **فقط روی `127.0.0.1`** گوش می‌دهند و **توکن لازم دارند**.
 
 ```bash
 # توکن مشخص؛ اگر ندهید یکی ساخته و چاپ می‌شود

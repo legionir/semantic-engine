@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { AiToolRegistry } from '../AiToolRegistry';
 import { ProjectIndexReader } from '../ProjectIndexReader';
-import { renderSkillCatalog, renderToolReference } from './renderToolDocs';
+import { renderToolReference } from './renderToolDocs';
 import { TOOL_DOCS } from './toolDocs';
 import { ProjectIndex } from '../../core/types/project-index.types';
 
@@ -80,12 +80,22 @@ describe('checked-in documents match the registry', () => {
     expect(text).toContain(`${tools.length} tools.`);
   });
 
-  it('the skill catalogue is current and the skill has valid frontmatter', () => {
-    const skill = fs.readFileSync(path.join(ROOT, 'skills', 'semantic-engine', 'SKILL.md'), 'utf8');
-    expect(skill).toContain(renderSkillCatalog(tools));
+  it('ships a plugin whose skill names only tools a model is offered', () => {
+    const skill = fs.readFileSync(path.join(ROOT, 'plugin', 'skills', 'semantic-engine', 'SKILL.md'), 'utf8');
     const front = /^---\nname: semantic-engine\ndescription: (.+)\n---\n/.exec(skill);
     expect(front).not.toBeNull();
     expect(front![1]!.length).toBeGreaterThan(80);
     expect(front![1]!.length).toBeLessThan(1024);
+
+    const offered = new Set(tools.map(tool => tool.name));
+    const mentioned = Array.from(skill.matchAll(/`([a-z]+(?:_[a-z]+)+)`/g), match => match[1]!);
+    expect(mentioned.length).toBeGreaterThan(8);
+    expect(mentioned.filter(name => !offered.has(name))).toEqual([]);
+
+    const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'plugin', '.claude-plugin', 'plugin.json'), 'utf8'));
+    const market = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'marketplace.json'), 'utf8'));
+    expect(market.plugins[0]).toMatchObject({ name: manifest.name, source: './plugin' });
+    const mcp = JSON.parse(fs.readFileSync(path.join(ROOT, 'plugin', '.mcp.json'), 'utf8'));
+    expect(mcp.mcpServers['semantic-engine'].args).toEqual(['serve', '--stdio', '--root', '${CLAUDE_PROJECT_DIR}']);
   });
 });

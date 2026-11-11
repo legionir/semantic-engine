@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "semantic-engine": {
+      "command": "${SEMANTIC_ENGINE_BIN:-semantic-engine}",
+      "args": ["serve", "--stdio", "--root", "${CLAUDE_PROJECT_DIR}"]
+    }
+  }
+}

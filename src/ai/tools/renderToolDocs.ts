@@ -95,27 +95,3 @@ export function renderToolReference(tools: readonly ListedTool[]): string {
   }
   return out.join('\n');
 }
-
-/** Compact catalogue for the skill: one line of purpose, one line of parameters. */
-export function renderSkillCatalog(tools: readonly ListedTool[]): string {
-  const out: string[] = [];
-  for (const [group, list] of grouped(tools)) {
-    out.push(`### ${GROUP_TITLES[group] ?? group}\n`);
-    for (const tool of list) {
-      const doc = TOOL_DOCS[tool.name];
-      const props = (tool.inputSchema['properties'] ?? {}) as Record<string, Prop>;
-      const required = new Set((tool.inputSchema['required'] as string[] | undefined) ?? []);
-      const alternatives = new Set(oneOfRequired(tool.inputSchema));
-      const params = Object.keys(props).map(name => {
-        const mark = required.has(name) ? '' : alternatives.has(name) ? '*' : '?';
-        return `\`${name}${mark}\``;
-      });
-      out.push(`- **\`${tool.name}\`** — ${doc?.use ?? tool.description}`);
-      out.push(`  - Parameters: ${params.length > 0 ? params.join(', ') : 'none'}`);
-      if (doc) out.push(`  - Returns: ${doc.returns}`);
-    }
-    out.push('');
-  }
-  out.push('Parameter marks: no mark = required, `?` = optional, `*` = give at least one of the starred parameters. Full types, ranges and meanings: `docs/AI-TOOLS.md`.');
-  return out.join('\n');
-}

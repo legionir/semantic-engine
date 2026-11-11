@@ -1,0 +1,12 @@
+{
+  "name": "semantic-engine",
+  "description": "Semantic Engine plugin for Claude Code",
+  "owner": { "name": "legionir" },
+  "plugins": [
+    {
+      "name": "semantic-engine",
+      "source": "./plugin",
+      "description": "Code-structure tools for the open project, answered from a local index."
+    }
+  ]
+}
