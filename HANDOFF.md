@@ -334,7 +334,6 @@ Entry point: `src/server/HttpServer.ts`
 - `GET /health`
 - `GET /ready`
 - `GET /metrics`
-- `GET /api/v1/system`
 - role listing و auth verification طبق `authRoutes.ts`
 
 `/health` فقط liveness است. `/ready` وضعیت internal server dependencies مانند project root، job queue، registry و SSE manager را بررسی می‌کند.
@@ -408,7 +407,7 @@ Registry و handlerهای AI در `src/ai/` قرار دارند. MCP server پر
 
 ### Source import
 
-`SourceSecurityGuard.ts` و `SourceSyncService.ts`:
+`SourceSecurityGuard.ts` (مسیرهای HTTP نوشتن/همگام‌سازی سورس و `SourceSyncService` حذف شده‌اند؛ گارد برای ابزارهای خواندن AI می‌ماند):
 
 - lexical traversal check
 - canonical realpath check
@@ -524,7 +523,7 @@ npm audit --omit=dev
 | Export | `src/export/**/*.test.ts` |
 | HTTP/security | `src/server/**/*.test.ts`, `src/security/**/*.test.ts` |
 | Chat | `src/services/chat/ProjectChatService.test.ts` |
-| Source security | `src/services/source/SourceSyncService.test.ts` |
+| Source security | `src/security/ReadBoundary.phase0.test.ts` |
 | Jobs | `src/runtime/JobManager.test.ts` |
 | Contracts | `src/core/types/*Sync.test.ts`, `src/host/configSchemaSync.test.ts` |
 
@@ -582,7 +581,7 @@ Testهای project-index و golden را فقط بعد از review تغییر د�
 9. `src/pipeline/IndexPipeline.ts`
 10. `src/pipeline/OutputWriter.ts`
 11. `src/services/ProjectService.ts`
-12. `src/services/source/SourceSyncService.ts`
+12. `src/services/source/SourceSecurityGuard.ts`
 13. `src/services/providers/EmbeddingProviderService.ts`
 14. تست‌های `src/server`, `src/runtime`, `src/pipeline` و `src/services/source`
 15. `contracts/*.json`

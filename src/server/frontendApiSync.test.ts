@@ -65,7 +65,7 @@ describe('public/*.js ↔ backend routes', () => {
     .map(f => path.join(ROOT, 'public', f));
 
   it('finds a believable number of backend routes', () => {
-    expect(patterns.length).toBeGreaterThan(60);
+    expect(patterns.length).toBeGreaterThan(50);
   });
 
   it('every API literal in the UI resolves to a backend route', () => {

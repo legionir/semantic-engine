@@ -11,7 +11,6 @@
  *
  *   - core/config/ProjectPaths.ts   — the resolver itself
  *   - core/config/defaultIgnorePatterns.ts — `.semantic-engine` as a scan-ignore entry
- *   - services/source/SourceSyncService.ts — skip-list while mirroring a tree
  */
 
 const fs = require('fs');
@@ -27,7 +26,6 @@ const LITERAL = /['"`]\.semantic-engine['"`]/;
 const ALLOWLIST = new Set([
   path.join('core', 'config', 'ProjectPaths.ts'),
   path.join('core', 'config', 'defaultIgnorePatterns.ts'),
-  path.join('services', 'source', 'SourceSyncService.ts'),
 ]);
 
 function walk(dir, out = []) {

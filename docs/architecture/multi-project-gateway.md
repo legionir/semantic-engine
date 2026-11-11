@@ -264,7 +264,7 @@ them; nothing else in the request pipeline changes.
 | transport | TCP on `--host`/`--port` | Unix socket (`socketPath`) or loopback TCP |
 | auth | `requireAuth: false` routes are open | **every** route needs the internal token |
 | `Origin` | judged (loopback only) | not judged, but `X-Forwarded-*` must be present |
-| `POST /api/v1/projects`, `PATCH`/`DELETE /api/v1/projects/:id`, `import-bundle`, `source/upload` | available | **403** |
+| `POST /api/v1/projects`, `PATCH`/`DELETE /api/v1/projects/:id` | available | **403** |
 | `path`/`rootPath`/`root`/`workspaceRoot` in a body | accepted | 403 unless inside the workspace root |
 | `/api/v1/fs/browse` | may roam (the UI's project picker needs it) | confined to the workspace subtree, checked after `realpath` |
 
@@ -336,8 +336,7 @@ and when no `dataRoot` is configured nothing is persisted at all. Per-project
 **Gate** — `scripts/check-artifact-location.js` (wired into `npm run
 test:gate`) fails when any non-test source file builds a path from the literal
 `'.semantic-engine'` outside the allowlist
-(`core/config/ProjectPaths.ts`, `core/config/defaultIgnorePatterns.ts`,
-`services/source/SourceSyncService.ts`). Only the exact directory name counts,
+(`core/config/ProjectPaths.ts`, `core/config/defaultIgnorePatterns.ts`). Only the exact directory name counts,
 so `doctor`'s temporary `.semantic-engine-doctor-<pid>` write probe is not
 flagged.
 

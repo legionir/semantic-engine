@@ -476,30 +476,11 @@ GET    /projects/:id                                deep link به داشبور�
 
 ---
 
-### ۰۱. System & Status API
-وضعیت عملیاتی، قابلیت‌های فعال و سازگاری انجین را برمی‌گرداند.
+### ۰۱. Health & Status API
+زنده‌بودن و آمادگی سرور. این سه مسیر بدون توکن باز هستند.
 
-* **مسیر:** `GET /api/v1/system`
+* **مسیرها:** `GET /health` · `GET /ready` · `GET /metrics`
 * **سطح دسترسی:** عمومی (Public)
-* **نمونه پاسخ:**
-```json
-{
-  "name": "@aicoder/semantic-engine",
-  "version": "2.0.0",
-  "apiVersion": "v1",
-  "status": "operational",
-  "capabilities": {
-    "semanticSearch": true,
-    "graphQuery": true,
-    "lspLiveDiagnostics": true,
-    "multiLanguageWasm": true,
-    "layeredGraph": true,
-    "contextAssembly": true,
-    "sseEvents": true
-  },
-  "supportedLanguages": ["typescript", "javascript", "python", "go", "java", "rust", "cpp", "csharp", "php", "ruby"]
-}
-```
 
 ---
 
@@ -577,27 +558,6 @@ GET    /projects/:id                                deep link به داشبور�
   "dependencies": 8,
   "languages": ["python"],
   "stats": { "lastIndexedAt": "2026-08-20T11:20:55.820Z" }
-}
-```
-
----
-
-### ۰۵. Source & Remote Sync API
-همگام‌سازی سورس از گیت ریموت، آپلود فایل و واردسازی پکیج‌های چندفایلی.
-
-* **مسیرها:**
-  - `POST /api/v1/projects/:id/source/sync` (دریافت تغییرات با Git URL / Webhook)
-  - `PUT /api/v1/projects/:id/files/:filePath` (به‌روزرسانی امن یک فایل با گارد ضد Path Traversal)
-  - `POST /api/v1/projects/import-bundle` (آپلود پکیج فایل‌ها به صورت مستقیم)
-* **نمونه ورودی Import Bundle:**
-```json
-{
-  "projectId": "virtual-service",
-  "name": "Virtual Service",
-  "files": {
-    "src/app.ts": "export const app = 'online';",
-    "src/helper.ts": "export function help() { return true; }"
-  }
 }
 ```
 
@@ -810,30 +770,10 @@ GET    /projects/:id                                deep link به داشبور�
 
 ---
 
-### ۱۲. History & Git Hotspots API
-تحلیل داده‌های گیت، ماتریس نقاط پرخطر و فایل‌های هم‌تغییر.
-
-* **مسیرها:**
-  - `GET /api/v1/projects/:id/history/hotspots` (رتبه‌بندی فایل‌ها بر پایه `Churn × Complexity`)
-  - `GET /api/v1/projects/:id/history/co-churn/:filePath` (فایل‌هایی که همواره با هم کامیت می‌شوند)
-  - `POST /api/v1/projects/:id/history/record-commit`
-* **نمونه پاسخ Hotspots:**
-```json
-{
-  "projectId": "prj-python-service",
-  "hotspots": [
-    { "filePath": "auth/jwt_handler.py", "commitsCount": 12, "churnScore": 84, "complexity": 4, "hotspotScore": 336 }
-  ]
-}
-```
-
----
-
 ### ۱۳. Dashboard Visualization API
 تأمین داده‌های چندلایه‌ای برای بوم گراف وب‌داشبورد (LoD Views).
 
 * **مسیرها:**
-  - `GET /api/v1/projects/:id/dashboard/overview` (خلاصه وضعیت، آمار و سلامت پروژه)
   - `GET /api/v1/projects/:id/visualization/architecture` (نمای معماری سطح ۱)
   - `GET /api/v1/projects/:id/visualization/module/:moduleId` (نمای ماژول سطح ۲)
   - `GET /api/v1/projects/:id/visualization/workflow/:workflowId` (جریان اجرای فرایندها)
@@ -1002,7 +942,7 @@ semantic-engine serve --ui --host 0.0.0.0 --allow-remote --token "..."
 
 مهارهای فعال:
 
-* **توکن اجباری** روی همهٔ مسیرها، جز `/health`، `/ready`، `/metrics` و `/api/v1/system`. مسیری که فراموش کند اعلام کند، **بسته** است نه باز.
+* **توکن اجباری** روی همهٔ مسیرها، جز `/health`، `/ready` و `/metrics`. مسیری که فراموش کند اعلام کند، **بسته** است نه باز.
 * **بررسی `Origin`** روی هر دو سرور، برای جلوگیری از DNS-rebinding؛ `Access-Control-Allow-Origin` فقط همان origin محلیِ پذیرفته‌شده را بازتاب می‌دهد.
 * **سقف اندازهٔ بدنه** (پیش‌فرض ۴MB) با پاسخ `413`.
 * **مسدودسازی آدرس‌های متادیتای ابر و link-local** در اندپوینت کشف مدل، تا `baseUrl` دلخواه به SSRF تبدیل نشود.

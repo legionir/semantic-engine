@@ -2,8 +2,8 @@
  * F-0011 — repo-wide scan: no authenticating mutating (POST/PUT/PATCH/DELETE)
  * route may fall through to `HttpServer.defaultPermission`.
  *
- * Before this fix, destructive/admin routes (project create/patch/delete,
- * source import-bundle) relied on the method-based default
+ * Before this fix, destructive/admin routes (project create/patch/delete)
+ * relied on the method-based default
  * (`GET -> project:read`, everything else -> `project:write`). That meant a
  * plain `project:write` token could delete a whole project, and the intent of
  * each route was invisible in its declaration. Every mutating route now names
@@ -76,10 +76,9 @@ describe('F-0011 — destructive/admin routes never use the method default', () 
     }
   });
 
-  it('history record-commit (a state write) is gated behind project:write', () => {
-    const rec = server
-      .getRegisteredRoutes()
-      .find((r: RouteDefinition) => r.method === 'POST' && r.pattern.endsWith('/history/record-commit'));
-    expect(rec?.permission).toBe('project:write');
+  it('the routes nothing called are gone (source write/sync, history, dashboard, system)', () => {
+    const removed = /\/source\/|\/import-bundle$|\/files\/:filePath$|\/history\/|\/dashboard\/|^\/api\/v1\/system$/;
+    const left = server.getRegisteredRoutes().filter((r: RouteDefinition) => removed.test(r.pattern));
+    expect(left.map(r => `${r.method} ${r.pattern}`)).toEqual([]);
   });
 });

@@ -1,11 +1,10 @@
 /**
  * Phase 0 — read/write boundary of source ingestion (`SourceSecurityGuard`).
  *
- * `SourceSecurityGuard` is the confinement code that actually ships in the
- * source-sync path, so this suite executes it against a real directory tree:
- * traversal, an escaping symlink, a symlink cycle, blocked extensions, the
- * per-file and per-bundle byte caps, and the "nothing is written before every
- * path is validated" rule of `SourceSyncService.importBundle`.
+ * `SourceSecurityGuard` is the confinement code the AI read tools ship with,
+ * so this suite executes it against a real directory tree: traversal, an
+ * escaping symlink, a symlink cycle, blocked extensions, and the per-file and
+ * total byte caps.
  *
  * The same rules also exist in `core/contracts/fileProvider.ts` for the
  * CodeIntel read port. The duplication is deliberate and recorded as D-0007;
@@ -17,7 +16,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { DEFAULT_SECURITY_POLICY, SourceSecurityGuard } from '../services/source/SourceSecurityGuard';
-import { SourceSyncService } from '../services/source/SourceSyncService';
 
 let root: string;
 let outside: string;
@@ -155,52 +153,5 @@ describe('SourceSecurityGuard — extensions and size caps', () => {
     const result = limited.validateTotalSize(11);
     expect(result.ok).toBe(false);
     expect(result.reason).toMatch(/exceeds limit/iu);
-  });
-});
-
-describe('SourceSyncService — the boundary is enforced before anything is written', () => {
-  test('a bundle that traverses an escaping symlink writes nothing at all', async () => {
-    fs.symlinkSync(outside, path.join(root, 'linked'), 'dir');
-    const service = new SourceSyncService();
-
-    await expect(
-      service.importBundle('p1', root, {
-        'src/ok.ts': 'export const ok = true;\n',
-        'linked/secret.ts': 'overwritten\n',
-      })
-    ).rejects.toThrow(/symlink|violation/iu);
-
-    expect(fs.readFileSync(path.join(outside, 'secret.ts'), 'utf8')).toBe(
-      'export const leaked = true;\n'
-    );
-    expect(fs.existsSync(path.join(root, 'src', 'ok.ts'))).toBe(false);
-  });
-
-  test('a bundle with a blocked extension is refused before staging', async () => {
-    const service = new SourceSyncService();
-    await expect(
-      service.importBundle('p1', root, { 'tools/payload.exe': 'MZ' })
-    ).rejects.toThrow(/extension|violation/iu);
-    expect(fs.readdirSync(root).some(name => name.startsWith('.source-sync-'))).toBe(false);
-  });
-
-  test('a bundle whose total size exceeds the cap is refused', async () => {
-    const service = new SourceSyncService();
-    const huge = 'x'.repeat(11 * 1024 * 1024);
-    await expect(service.importBundle('p1', root, { 'src/huge.ts': huge })).rejects.toThrow(
-      /exceeds limit/iu
-    );
-    expect(fs.existsSync(path.join(root, 'src', 'huge.ts'))).toBe(false);
-  });
-
-  test('a valid bundle is written and leaves no staging directory behind', async () => {
-    const service = new SourceSyncService();
-    const result = await service.importBundle('p1', root, {
-      'src/a.ts': 'export const a = 2;\n',
-      'src/new.ts': 'export const fresh = true;\n',
-    });
-    expect(result.filesSynced).toBe(2);
-    expect(fs.readFileSync(path.join(root, 'src', 'new.ts'), 'utf8')).toContain('fresh');
-    expect(fs.readdirSync(root).some(name => name.startsWith('.source-sync-'))).toBe(false);
   });
 });

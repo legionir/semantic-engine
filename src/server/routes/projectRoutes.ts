@@ -1,4 +1,4 @@
-/** Project and dashboard routes backed only by ProjectService data. */
+/** Project routes backed only by ProjectService data. */
 
 import { RouteDefinition } from '../types';
 import { ProjectService } from '../../services/ProjectService';
@@ -120,59 +120,6 @@ export function createProjectRoutes(projectService: ProjectService): RouteDefini
           return { status: 404, json: { error: `Project not found: ${ctx.params.id}` } };
         }
         return { status: 200, json: { deleted: true, id: project.id } };
-      },
-    },
-    {
-      method: 'GET',
-      pattern: '/api/v1/projects/:id/dashboard/overview',
-      handler: async ctx => {
-        const project = find(ctx.params.id);
-        if (!project) return { status: 404, json: { error: `Project not found: ${ctx.params.id}` } };
-        const files = project.reader?.getAllFiles() ?? [];
-        const languages = Array.from(new Set(files.map(f => f.language).filter((language): language is string => Boolean(language))));
-        const dependencyGraph = project.index?.graphs?.dependencyGraph ?? [];
-        const chunks = Array.isArray(project.index?.vectorChunks)
-          ? project.index.vectorChunks.length
-          : unavailable('vector chunk index is not available');
-
-        return {
-          status: 200,
-          json: {
-            project: { id: project.id, name: project.name, rootPath: project.rootPath },
-            // Index state is real; no health service is attached to this route.
-            health: { ...unavailable('ProjectService does not expose runtime health metrics'), indexState: project.status },
-            statistics: {
-              files: project.stats.filesCount,
-              symbols: project.stats.symbolsCount,
-              dependencies: project.stats.dependenciesCount,
-              chunks,
-            },
-            languages,
-            topFiles: files.slice(0, 5).map(f => ({ path: f.path, size: f.size })),
-            hotspots: unavailable('history service is not attached to dashboard routes'),
-            recentChanges: unavailable('recent-change service is not attached to dashboard routes'),
-            indexStatus: { state: project.status, lastIndexedAt: project.stats.lastIndexedAt },
-            graphStats: { nodesCount: project.stats.symbolsCount + project.stats.filesCount, edgesCount: dependencyGraph.length },
-          },
-        };
-      },
-    },
-    {
-      method: 'GET',
-      pattern: '/api/v1/projects/:id/dashboard/dependencies',
-      handler: async ctx => {
-        const project = find(ctx.params.id);
-        if (!project) return { status: 404, json: { error: `Project not found: ${ctx.params.id}` } };
-        return { status: 200, json: { projectId: project.id, dependencies: project.index?.graphs?.dependencyGraph ?? [] } };
-      },
-    },
-    {
-      method: 'GET',
-      pattern: '/api/v1/projects/:id/dashboard/metrics',
-      handler: async ctx => {
-        const project = find(ctx.params.id);
-        if (!project) return { status: 404, json: { error: `Project not found: ${ctx.params.id}` } };
-        return { status: 200, json: { projectId: project.id, stats: project.stats } };
       },
     },
   ];

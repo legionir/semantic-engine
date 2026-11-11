@@ -139,14 +139,6 @@ describe('Platform Core V1 — HttpServer & API Gateway', () => {
     });
   }
 
-  it('GET /api/v1/system returns operational capabilities', async () => {
-    const res = await request('GET', '/api/v1/system');
-    expect(res.status).toBe(200);
-    expect(res.json.status).toBe('operational');
-    expect(res.json.capabilities.semanticSearch).toBe(true);
-    expect(res.json.capabilities.layeredGraph).toBe(true);
-  });
-
   it('GET /health and GET /ready return status healthy and ready', async () => {
     const health = await request('GET', '/health');
     expect(health.status).toBe(200);
@@ -295,7 +287,7 @@ describe('Platform Core V1 — HttpServer & API Gateway', () => {
     /*
     | مسیرهای زنده‌بودن عمداً باز می‌مانند: یک load balancer توکن ندارد.
     */
-    it.each(['/health', '/ready', '/metrics', '/api/v1/system'])(
+    it.each(['/health', '/ready', '/metrics'])(
       '%s عمداً باز می‌ماند',
       async url => {
         const res = await request('GET', url);

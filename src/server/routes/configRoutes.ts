@@ -30,9 +30,6 @@ export function createConfigRoutes(platformConfig: PlatformConfig): RouteDefinit
               */
               model: platformConfig.embeddingModel ?? null,
             },
-            database: {
-              password: '***',
-            },
           },
         };
       },

@@ -120,12 +120,7 @@ export class UserController {
     });
   }
 
-  it('1. System & Health: reports operational status', async () => {
-    const sys = await api('GET', '/api/v1/system');
-    expect(sys.status).toBe(200);
-    expect(sys.json.status).toBe('operational');
-    expect(sys.json.capabilities.graphQuery).toBe(true);
-
+  it('1. Health: reports healthy and ready', async () => {
     const health = await api('GET', '/health');
     expect(health.status).toBe(200);
     expect(health.json.status).toBe('healthy');

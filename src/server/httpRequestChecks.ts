@@ -72,8 +72,6 @@ export function isManagedBlockedRoute(config: PlatformConfig, method: string, pa
     { method: 'POST', pattern: /^\/api\/v1\/projects$/ },
     { method: 'PATCH', pattern: /^\/api\/v1\/projects\/[^/]+$/ },
     { method: 'DELETE', pattern: /^\/api\/v1\/projects\/[^/]+$/ },
-    { method: 'POST', pattern: /^\/api\/v1\/projects\/import-bundle$/ },
-    { method: 'POST', pattern: /^\/api\/v1\/projects\/[^/]+\/source\/upload$/ },
   ];
 
   return blocked.some(entry => entry.method === method && entry.pattern.test(pathname));

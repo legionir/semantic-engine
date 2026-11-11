@@ -22,7 +22,6 @@ describe('Platform Core V1 — OpenAPI Specification Sync', () => {
     const paths = Object.keys(parsed.paths);
 
     const requiredPaths = [
-      '/api/v1/system',
       '/health',
       '/ready',
       '/metrics',

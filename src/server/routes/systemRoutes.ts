@@ -1,5 +1,5 @@
 /**
- * SystemRoutes — System info, health, readiness, and metrics endpoints.
+ * SystemRoutes — health, readiness, and metrics endpoints.
  */
 
 import { RouteDefinition } from '../types';
@@ -7,7 +7,6 @@ import { RouteDefinition } from '../types';
 /*
 | مسیرهای زنده‌بودن عمداً باز می‌مانند: یک load balancer یا systemd
 | توکن ندارد، و چیزی که برمی‌گردانند دربارهٔ کد پروژه حرفی نمی‌زند.
-| `/api/v1/system` هم فقط قابلیت‌های ساخت را می‌گوید، نه محتوا را.
 */
 export interface ReadinessSnapshot {
   readonly ready: boolean;
@@ -21,32 +20,6 @@ export function createSystemRoutes(
   })
 ): RouteDefinition[] {
   return [
-    {
-      method: 'GET',
-      pattern: '/api/v1/system',
-      requireAuth: false,
-      handler: async () => {
-        return {
-          status: 200,
-          json: {
-            name: '@aicoder/semantic-engine',
-            version: '1.0.0',
-            apiVersion: 'v1',
-            status: 'operational',
-            capabilities: {
-              semanticSearch: true,
-              graphQuery: true,
-              lspLiveDiagnostics: true,
-              multiLanguageWasm: true,
-              layeredGraph: true,
-              contextAssembly: true,
-              sseEvents: true,
-            },
-            supportedLanguages: ['typescript', 'javascript', 'python', 'go', 'java', 'rust', 'html', 'css', 'json'],
-          },
-        };
-      },
-    },
     {
       method: 'GET',
       pattern: '/health',
