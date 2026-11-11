@@ -96,8 +96,8 @@ const WorkerConsole = (function () {
         start: { busy: "Starting the worker", done: "Started", title: "Start" },
         stop: { busy: "Stopping the worker", done: "Stopped", title: "Stop" },
         restart: { busy: "Restarting the worker", done: "Restarted", title: "Restart" },
-        reindex: { busy: "Indexing the project", done: "Index updated", title: "Reindex" },
-        rebuild: { busy: "Rebuilding the index from scratch", done: "Index rebuilt", title: "Rebuild from scratch" }
+        reindex: { busy: "Updating the index", done: "Index updated", title: "Update index", sub: "Only files that changed since the last run are parsed again." },
+        rebuild: { busy: "Rebuilding the index from scratch", done: "Index rebuilt", title: "Rebuild from scratch", sub: "Everything is parsed again and every chunk is re-embedded. This takes the longest." }
     };
 
     /* ── the overlay: progress bar + log tail ──────────────────────── */
@@ -215,7 +215,7 @@ const WorkerConsole = (function () {
         const id = encodeURIComponent(project.projectId);
         const view = openActivity({
             title: verbs.title + " — " + (project.name || project.projectId),
-            sub: project.rootPath || project.projectId
+            sub: (verbs.sub ? verbs.sub + " " : "") + (project.rootPath || project.projectId)
         });
         view.setStatus(verbs.busy + "…");
         view.setBar("busy");
@@ -403,8 +403,8 @@ const WorkerConsole = (function () {
             phaseNode.className = "wc-phase p-" + phase;
             phaseNode.innerHTML = (busy ? '<span class="wc-spin"></span>' : "") + esc(phase);
             actionsNode.innerHTML = ui.actionsFor(phase)
-                .filter(function (a) { return ["start", "stop", "restart", "reindex"].indexOf(a.id) !== -1; })
-                .map(function (a) { return '<button type="button" class="wc-btn' + (a.id === "start" ? " wc-primary" : a.id === "stop" ? " wc-danger" : "") + '" data-op="' + a.id + '">' + esc(a.label) + "</button>"; })
+                .filter(function (a) { return ["start", "stop", "restart", "reindex", "rebuild"].indexOf(a.id) !== -1; })
+                .map(function (a) { return '<button type="button" class="wc-btn' + (a.id === "start" ? " wc-primary" : a.id === "stop" ? " wc-danger" : "") + '" data-op="' + a.id + '"' + (a.title ? ' title="' + esc(a.title) + '"' : "") + ">" + esc(a.label) + "</button>"; })
                 .join("") +
                 (busy ? '<button type="button" class="wc-btn" data-op="watch">Show progress</button>' : "");
             host.querySelector("#wc-inherit").textContent = describeEmbedding(settings);

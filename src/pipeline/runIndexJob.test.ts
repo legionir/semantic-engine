@@ -52,4 +52,33 @@ describe('runIndexJob', () => {
     const rebuilt = (await runIndexJob({ workspaceRoot: root, outputDir, git: false, cache: 'rebuild' })).extractionCache as { hits: number };
     expect(rebuilt.hits).toBe(0);
   });
+
+  it('an update re-embeds nothing that is unchanged; a rebuild re-embeds everything', async () => {
+    let embedded = 0;
+    const generator = {
+      modelName: 'counting',
+      isReady: async () => true,
+      generate: async () => ({ embedding: [1, 2], model: 'counting', dimensions: 2 }),
+      generateBatch: async (texts: readonly string[]) => {
+        embedded += texts.length;
+        return texts.map(() => ({ embedding: [1, 2], model: 'counting', dimensions: 2 }));
+      },
+      dispose: async () => {},
+    };
+    const run = (cache?: 'rebuild') =>
+      runIndexJob({ workspaceRoot: root, outputDir, git: false, embeddingGenerator: generator, ...(cache ? { cache } : {}) });
+
+    const first = await run();
+    const firstCount = embedded;
+    expect(first.vectorChunks).toBeGreaterThan(0);
+    expect(firstCount).toBe(first.vectorChunks);
+
+    embedded = 0;
+    await run();
+    expect(embedded).toBe(0);
+
+    embedded = 0;
+    const rebuilt = await run('rebuild');
+    expect(embedded).toBe(rebuilt.vectorChunks);
+  });
 });

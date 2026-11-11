@@ -103,10 +103,13 @@ export async function runIndexJob(options: IndexJobOptions): Promise<IndexJobRes
   if (!lock.ok) throw new IndexBusyError(lock.holder?.pid ?? null);
 
   const previous = readPreviousIndex(outputDir);
-  const previousChunks: readonly VectorChunk[] | undefined = previous?.vectorChunks;
+  const cacheModeForRun = options.cache ?? 'reuse';
+  /* what the last index had; a rebuild keeps "vectors were on" but not the vectors themselves */
+  const lastChunks: readonly VectorChunk[] | undefined = previous?.vectorChunks;
+  const previousChunks: readonly VectorChunk[] | undefined = cacheModeForRun === 'rebuild' ? undefined : lastChunks;
   const wantsVectors =
     options.embeddingGenerator !== null &&
-    (options.embeddingGenerator !== undefined || options.vectors === true || Boolean(previousChunks));
+    (options.embeddingGenerator !== undefined || options.vectors === true || Boolean(lastChunks));
 
   const extractors = createExtractors({
     workspaceRoot,
