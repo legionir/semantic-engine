@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import { AiTool, AiToolInput, AiToolOutput } from './types';
 import { ProjectIndexReader } from '../ProjectIndexReader';
-import { FileEntry, SymbolEntry } from '../../core/types/project-index.types';
+import { FileEntry } from '../../core/types/project-index.types';
 import { makeHandle, parseHandle, sanitizeKeyPart } from '../../core/contracts/codeintel';
 import { isDeniedPath } from '../../core/contracts/fileProvider';
 import { SourceSecurityGuard } from '../../services/source/SourceSecurityGuard';
@@ -12,7 +12,6 @@ const DEFAULT_MAX_RESULT_BYTES = 256_000;
 const DEFAULT_MAX_TOKENS = 4_000;
 
 function tokens(text: string): number { return Math.ceil(text.length / 4); }
-function hash8(text: string): string { return crypto.createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 8); }
 function fail(error: string): AiToolOutput { return { success: false, error, items: [] }; }
 /** Says what was looked up and how a valid path is written, so the caller can correct itself. */
 function notFoundSource(input: Record<string, unknown>, fromHandle?: string): string {
