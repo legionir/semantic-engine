@@ -37,6 +37,13 @@ export interface WorkerHealthSnapshot {
   readonly blueprint?: boolean;
   readonly memoryMb?: number;
   readonly queueSize?: number;
+  readonly indexCheck?: {
+    readonly checkedAt: string;
+    readonly ok: boolean;
+    readonly issues: readonly { readonly code: string; readonly severity: 'rebuild' | 'warn'; readonly message: string }[];
+    readonly autoRebuilt: boolean;
+    readonly reason?: string;
+  };
   readonly indexProgress?: { readonly message: string; readonly percent: number | null; readonly startedAt: string };
   readonly lastIndexedAt?: string;
   readonly indexError?: string;

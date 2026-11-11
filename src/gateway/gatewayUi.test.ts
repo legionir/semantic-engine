@@ -588,3 +588,23 @@ describe('Activity and Stats rendering', () => {
     expect(view.renderGroupTable([])).toContain('No calls in this period.');
   });
 });
+
+describe('gateway console — the index check badge', () => {
+  const row = (indexCheck: unknown) =>
+    ui.renderWorkerRow({ projectId: 'p1', name: 'P', rootPath: '/r', state: 'ready', phase: 'ready', indexCheck } as never);
+
+  it('shows nothing for a clean or missing check', () => {
+    expect(row(null)).not.toContain('needs attention');
+    expect(row({ ok: true, issues: [], autoRebuilt: false })).not.toContain('needs attention');
+  });
+
+  it('shows what is wrong, and whether a rebuild would help', () => {
+    const fixable = row({ ok: false, autoRebuilt: true, issues: [{ code: 'orphan-symbols', severity: 'rebuild', message: '3 symbols are orphans' }] });
+    expect(fixable).toContain('needs attention');
+    expect(fixable).toContain('3 symbols are orphans');
+    expect(fixable).toContain('Use Rebuild from scratch');
+
+    const unfixable = row({ ok: false, autoRebuilt: false, issues: [{ code: 'no-symbols', severity: 'warn', message: 'no symbols' }] });
+    expect(unfixable).toContain('A rebuild would not fix this');
+  });
+});

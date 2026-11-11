@@ -510,6 +510,7 @@ td[data-key="name"] { white-space: normal; }
 .badge-indexing { color: var(--indexing); background: rgba(240,182,74,.10); }
 .badge-degraded { color: var(--degraded); background: rgba(245,147,75,.10); }
 .badge-crashed { color: var(--crashed); background: rgba(248,113,122,.10); }
+.badge-warn { color: var(--degraded); background: rgba(245,147,75,.10); margin-left: 6px; cursor: help; }
 .badge-stopped { color: var(--muted); background: var(--panel-2); }
 .empty-guide {
   padding: 22px 24px; border: 1px dashed var(--line); border-radius: var(--r-md);

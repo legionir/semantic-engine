@@ -18,9 +18,11 @@
  */
 
 import * as fs from 'fs';
+import * as path from 'path';
 import { EXIT, ParsedArgs, boolOption, stringOption } from '../args';
 import { CommandContext, CommandResult } from './types';
 import { runIndex } from './index-command';
+import { INDEX_CHECK_FILE, IndexCheckRecord, readIndexCheck } from '../../pipeline/runIndexJob';
 import { artifactLocationFromArgs, projectPathsFromArgs } from '../projectPathsFromArgs';
 import { DEFAULT_HOST, generateToken } from '../HttpGuard';
 import { spawnService, stopChild, StartedChild } from './serviceSupervisor';
@@ -48,6 +50,8 @@ interface WorkerStatus {
   readonly memoryMb: number;
   readonly queueSize: number;
   /** The reindex in progress, when there is one: what it is doing and how far along it is (0–100). */
+  /** What the last index run found when it checked its own result (absent before the first run). */
+  readonly indexCheck?: IndexCheckRecord;
   readonly indexProgress?: { readonly message: string; readonly percent: number | null; readonly startedAt: string };
   readonly lastIndexedAt?: string;
   /** Why the index is `stale`: the real load error, so a 503 is never unexplained. */
@@ -198,6 +202,18 @@ export async function runWorker(
   const startedAt = Date.now();
   let watcher: StartedChild | null = null;
   let reindexing = false;
+  /* the check record changes only when a run ends: re-read it only then */
+  let checkCache: { mtimeMs: number; record: IndexCheckRecord | null } | null = null;
+  const currentCheck = (): IndexCheckRecord | undefined => {
+    const file = path.join(path.dirname(paths.indexPath), INDEX_CHECK_FILE);
+    try {
+      const mtimeMs = fs.statSync(file).mtimeMs;
+      if (!checkCache || checkCache.mtimeMs !== mtimeMs) checkCache = { mtimeMs, record: readIndexCheck(path.dirname(paths.indexPath)) };
+    } catch {
+      checkCache = null;
+    }
+    return checkCache?.record ?? undefined;
+  };
   let indexProgress: { message: string; percent: number | null; startedAt: string } | null = null;
   /* سنجه‌های فاز ۱۳ — چیزی که فقط این پروسه می‌داند. */
   let activeRequests = 0;
@@ -230,6 +246,7 @@ export async function runWorker(
       memoryMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       queueSize: reindexing ? 1 : 0,
       ...(reindexing && indexProgress ? { indexProgress: { ...indexProgress } } : {}),
+      ...(currentCheck() ? { indexCheck: currentCheck()! } : {}),
       lsp: {
         enabled: lspEnabled,
         ...(current?.index?.diagnosticsRun ? { run: { ...current.index.diagnosticsRun } } : {}),

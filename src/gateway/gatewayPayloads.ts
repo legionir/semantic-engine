@@ -89,6 +89,8 @@ export function projectEntry(
     operation,
     /* what a running reindex reports about itself: a step and a real percent, or null */
     indexProgress: snapshot?.indexProgress ?? null,
+    /* the run's own verdict on its result: warnings to show, or a note that it rebuilt itself */
+    indexCheck: snapshot?.indexCheck ?? null,
     indexState: snapshot?.indexState ?? '',
     name: registered?.name ?? id,
     rootPath: registered?.rootPath ?? '',

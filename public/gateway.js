@@ -391,6 +391,26 @@ const GatewayUi = (function () {
         return "state-stopped";
     }
 
+    /*
+    | The run checks its own result. A problem it could not fix shows as a badge on
+    | the row, with the reasons in the tooltip, so nobody has to guess that "the
+    | index looks wrong". A clean record, or none yet, shows nothing.
+    */
+    function indexCheckText(check) {
+        if (!check || !check.issues || check.issues.length === 0) return "";
+        return check.issues.map(function (issue) { return issue.message; }).join("; ");
+    }
+
+    function indexCheckBadge(check) {
+        const text = indexCheckText(check);
+        if (!text) return "";
+        const fixable = check.issues.some(function (issue) { return issue.severity === "rebuild"; });
+        const advice = fixable
+            ? " — Use Rebuild from scratch."
+            : " — A rebuild would not fix this: check the files or the parser.";
+        return ' <span class="badge badge-warn" title="' + escape("Index check: " + text + advice) + '">needs attention</span>';
+    }
+
     function renderWorkerRow(worker) {
         const phase = phaseOf(worker);
         const cells = WORKER_TABLE_COLUMNS.map(function (column) {
@@ -398,7 +418,7 @@ const GatewayUi = (function () {
                 return '<td data-key="state" data-phase="' + escape(phase) + '">' +
                     '<span class="badge badge-' + escape(stateClass(worker).replace("state-", "")) + '">' +
                     (BUSY_PHASES.indexOf(phase) !== -1 ? '<span class="spin" aria-hidden="true"></span>' : "") +
-                    escape(phase) + "</span></td>";
+                    escape(phase) + "</span>" + indexCheckBadge(worker.indexCheck) + "</td>";
             }
             if (column.key === "name") {
                 /* the minor facts (id, PID) sit under the name instead of in columns */
@@ -1005,6 +1025,7 @@ const GatewayUi = (function () {
         summarize,
         stateClass,
         renderWorkerRow,
+        indexCheckText,
         renderSummaryCards,
         renderFormFields,
         ownEmbedding,

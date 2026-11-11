@@ -447,6 +447,7 @@ export class GatewayServer {
           indexing: entry['indexing'],
           operation: entry['operation'],
           indexProgress: entry['indexProgress'],
+          indexCheck: entry['indexCheck'],
           state: entry['state'],
           stats: entry['stats'],
         });

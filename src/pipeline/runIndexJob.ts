@@ -27,6 +27,7 @@ import { ExtractionCache } from './ExtractionCache';
 import { createExtractors } from './ExtractorFactory';
 import { IndexPipeline } from './IndexPipeline';
 import { INDEX_FILE_NAME, OutputWriter } from './OutputWriter';
+import { checkIndexIntegrity, IntegrityIssue, needsRebuild } from './indexIntegrity';
 
 export interface IndexJobOptions {
   readonly workspaceRoot: string;
@@ -57,7 +58,29 @@ export interface IndexJobOptions {
   readonly progress?: ProgressLike;
 }
 
+/** What the run's own check found; kept next to the index so the console can show it. */
+export interface IndexCheckRecord {
+  readonly checkedAt: string;
+  /** No issue of any kind left after the run. */
+  readonly ok: boolean;
+  readonly issues: readonly IntegrityIssue[];
+  /** The run started (or restarted) a full index by itself because of `reason`. */
+  readonly autoRebuilt: boolean;
+  readonly reason?: string;
+}
+
+export const INDEX_CHECK_FILE = 'index-check.json';
+
+export function readIndexCheck(outputDir: string): IndexCheckRecord | null {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(outputDir, INDEX_CHECK_FILE), 'utf8')) as IndexCheckRecord;
+  } catch {
+    return null;
+  }
+}
+
 export interface IndexJobResult {
+  readonly check?: IndexCheckRecord;
   readonly projectIndex: ProjectIndex;
   readonly files: number;
   readonly symbols: number;
@@ -103,10 +126,9 @@ export async function runIndexJob(options: IndexJobOptions): Promise<IndexJobRes
   if (!lock.ok) throw new IndexBusyError(lock.holder?.pid ?? null);
 
   const previous = readPreviousIndex(outputDir);
-  const cacheModeForRun = options.cache ?? 'reuse';
+  const requestedCache = options.cache ?? 'reuse';
   /* what the last index had; a rebuild keeps "vectors were on" but not the vectors themselves */
   const lastChunks: readonly VectorChunk[] | undefined = previous?.vectorChunks;
-  const previousChunks: readonly VectorChunk[] | undefined = cacheModeForRun === 'rebuild' ? undefined : lastChunks;
   const wantsVectors =
     options.embeddingGenerator !== null &&
     (options.embeddingGenerator !== undefined || options.vectors === true || Boolean(lastChunks));
@@ -121,24 +143,25 @@ export async function runIndexJob(options: IndexJobOptions): Promise<IndexJobRes
     logger?.warn('diagnostics requested but no language server is usable — index will carry no LSP diagnostics');
   }
 
-  const cacheMode = options.cache ?? 'reuse';
-  const extractionCache =
-    extractors.fingerprint && cacheMode !== 'off'
+  const cacheFor = (mode: 'reuse' | 'rebuild' | 'off'): ExtractionCache | null =>
+    extractors.fingerprint && mode !== 'off'
       ? new ExtractionCache(path.join(outputDir, CACHE_DIR, EXTRACTION_CACHE_FILE), extractors.fingerprint, {
-          reuse: cacheMode === 'reuse',
+          reuse: mode === 'reuse',
         })
       : null;
   const scannerConfig = options.scannerConfig ?? {};
   const pretty = options.pretty !== false;
 
-  try {
-    const { projectIndex, stats } = await new IndexPipeline({
+  const runPipeline = (mode: 'reuse' | 'rebuild' | 'off') => {
+    /* a rebuild keeps "vectors were on" but not the old vectors themselves */
+    const previousChunks = mode === 'rebuild' ? undefined : lastChunks;
+    return new IndexPipeline({
       workspaceRoot,
       outputPath: path.join(outputDir, INDEX_FILE_NAME),
       symbolExtractors: extractors.symbols,
       dependencyExtractors: extractors.dependencies,
       ...(logger ? { logger } : {}),
-      extractionCache,
+      extractionCache: cacheFor(mode),
       ...(Object.keys(scannerConfig).length > 0 ? { scannerConfig } : {}),
       gitCollector: options.git === false ? null : new GitInfoCollector(workspaceRoot),
       vectorIndexer: wantsVectors
@@ -151,6 +174,56 @@ export async function runIndexJob(options: IndexJobOptions): Promise<IndexJobRes
       ...(options.progress ? { progress: options.progress } : {}),
       pretty,
     }).run();
+  };
+
+  try {
+    /*
+    | The run checks itself, because a user cannot tell that an index looks wrong.
+    |
+    |   before: an index file that cannot be read, or that contradicts itself,
+    |           is not worth updating — start from zero at once;
+    |   after:  the new index is checked before it is written; if it contradicts
+    |           itself, one full run replaces it. Problems a rebuild cannot fix are
+    |           kept as warnings.
+    */
+    let mode = requestedCache;
+    let reason: string | undefined;
+    /* One automatic rebuild per problem: if the last one did not clear it, a rebuild cannot, so
+       stop retrying and let the warning stand until someone rebuilds by hand. */
+    const lastCheck = readIndexCheck(outputDir);
+    const autoRebuildSpent =
+      lastCheck !== null && lastCheck.autoRebuilt && lastCheck.issues.some(i => i.severity === 'rebuild');
+    const indexFile = path.join(outputDir, INDEX_FILE_NAME);
+    if (mode === 'reuse' && !autoRebuildSpent) {
+      if (previous === null && fs.existsSync(indexFile)) {
+        reason = 'the previous index could not be read';
+      } else if (previous !== null) {
+        const found = checkIndexIntegrity(previous, { expectVectors: wantsVectors }).filter(i => i.severity === 'rebuild');
+        if (found.length > 0) reason = `the previous index was inconsistent: ${found.map(i => i.message).join('; ')}`;
+      }
+      if (reason) mode = 'rebuild';
+    }
+    const announce = (why: string): void =>
+      options.progress?.report({ message: `Rebuilding from scratch: ${why}`, percent: 0 });
+    if (reason) announce(reason);
+
+    let { projectIndex, stats } = await runPipeline(mode);
+    let issues = checkIndexIntegrity(projectIndex, { expectVectors: wantsVectors });
+    if (mode !== 'rebuild' && mode !== 'off' && !autoRebuildSpent && needsRebuild(issues)) {
+      reason = `the new index was inconsistent: ${issues.filter(i => i.severity === 'rebuild').map(i => i.message).join('; ')}`;
+      logger?.warn(`index check failed, rebuilding from scratch: ${reason}`);
+      announce(reason);
+      mode = 'rebuild';
+      ({ projectIndex, stats } = await runPipeline(mode));
+      issues = checkIndexIntegrity(projectIndex, { expectVectors: wantsVectors });
+    }
+    const check: IndexCheckRecord = {
+      checkedAt: new Date().toISOString(),
+      ok: issues.length === 0,
+      issues,
+      autoRebuilt: reason !== undefined,
+      ...(reason !== undefined ? { reason } : {}),
+    };
 
     const written = await new OutputWriter({
       outputDir,
@@ -160,12 +233,19 @@ export async function runIndexJob(options: IndexJobOptions): Promise<IndexJobRes
       ...(projectIndex.git?.commit ? { gitCommit: projectIndex.git.commit } : {}),
     }).write(projectIndex);
 
+    try {
+      fs.writeFileSync(path.join(outputDir, INDEX_CHECK_FILE), JSON.stringify(check, null, 2));
+    } catch {
+      /* the record is a courtesy; a read-only artifact dir must not fail the run */
+    }
+
     return {
       projectIndex,
       files: stats.files,
       symbols: stats.symbols,
       vectorChunks: stats.vectorChunks ?? 0,
       durationMs: stats.durationMs,
+      check,
       ...(stats.extractionCache ? { extractionCache: stats.extractionCache } : {}),
       indexPath: written.indexPath,
       ...(written.blueprintPath ? { blueprintPath: written.blueprintPath } : {}),

@@ -42,6 +42,7 @@ const WorkerConsole = (function () {
         ".wc-fill.wc-bad{width:100%;background:var(--bad,#f8717a)}",
         "@keyframes wc-slide{0%{margin-left:-38%}100%{margin-left:100%}}",
         ".wc-status-ok{color:var(--ok,#37d39a)}.wc-status-bad{color:var(--bad,#f8717a)}",
+        ".wc-note{margin:10px 0 0;padding:8px 12px;border:1px solid var(--warn,#f0b64a);border-radius:8px;font-size:12px;color:var(--warn,#f0b64a);background:rgba(240,182,74,.08)}",
         ".wc-hint{margin:8px 0 0;font-size:12px;color:var(--muted,#98a2b3);min-height:1.4em;word-break:break-word}",
         ".wc-log{margin:14px 0 0;max-height:46vh;overflow:auto;padding:12px;border:1px solid var(--line,#262e3d);border-radius:8px;background:var(--bg-2,#0d1119);color:var(--muted,#98a2b3);font:12px/1.55 var(--mono,ui-monospace,Consolas,monospace);white-space:pre-wrap;word-break:break-word}",
         ".wc-btn{background:var(--panel-2,#1b212e);color:var(--text,#e8ecf4);border:1px solid var(--line,#262e3d);border-radius:8px;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer}",
@@ -113,6 +114,7 @@ const WorkerConsole = (function () {
             '<div class="wc-line"><span><span class="wc-status"></span><span class="wc-pctn"></span></span><span class="wc-elapsed"></span></div>' +
             '<div class="wc-bar"><div class="wc-fill wc-busy"></div></div>' +
             '<p class="wc-hint"></p>' +
+            '<p class="wc-note" role="status" hidden></p>' +
             '<pre class="wc-log" hidden></pre>' +
             "</div>" +
             '<div class="wc-foot"><button type="button" class="wc-btn wc-close">Run in background</button></div>' +
@@ -179,6 +181,12 @@ const WorkerConsole = (function () {
                 label.textContent = Math.round(value) + "%";
             },
             setHint: function (text) { q(".wc-hint").textContent = text || ""; },
+            /* what the run decided by itself (an automatic rebuild, a failed check); stays after the work ends */
+            setNote: function (text) {
+                const node = q(".wc-note");
+                node.textContent = text || "";
+                node.hidden = !text;
+            },
             setBar: function (kind) {
                 const fill = q(".wc-fill");
                 fill.className = "wc-fill wc-" + kind;
@@ -263,6 +271,14 @@ const WorkerConsole = (function () {
                     /* between the worker's last step and its "done": hold the bar, do not fall back to sliding */
                     view.setStatus(lastPercent === null ? verbs.busy + "…" : "Finishing…");
                     view.setPercent(lastPercent);
+                }
+                const check = status.indexCheck;
+                const checked = check && Date.parse(check.checkedAt) >= Date.parse(current.startedAt) - 1000;
+                if (current.status !== "running" && checked && check.autoRebuilt) {
+                    /* the run noticed a problem by itself and started over: say so */
+                    view.setNote("Rebuilt from scratch automatically — " + check.reason);
+                } else if (current.status !== "running" && checked && check.issues && check.issues.length > 0) {
+                    view.setNote("Index check: " + GatewayUi.indexCheckText(check));
                 }
                 const stats = status.stats && status.stats.available
                     ? status.stats.filesCount + " files · " + status.stats.symbolsCount + " symbols indexed so far"

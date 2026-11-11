@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { INDEX_LOCK_FILE } from '../gateway/ProjectLock';
 import { INDEX_FILE_NAME } from './OutputWriter';
-import { IndexBusyError, runIndexJob } from './runIndexJob';
+import { IndexBusyError, readIndexCheck, runIndexJob } from './runIndexJob';
 
 describe('runIndexJob', () => {
   let root: string;
@@ -80,5 +80,56 @@ describe('runIndexJob', () => {
     embedded = 0;
     const rebuilt = await run('rebuild');
     expect(embedded).toBe(rebuilt.vectorChunks);
+  });
+
+  describe('the run checks itself', () => {
+    const indexFile = () => path.join(outputDir, INDEX_FILE_NAME);
+    const rebuildNotes = () => {
+      const notes: string[] = [];
+      return { notes, progress: { report: (u: { message?: string }) => void (u.message?.startsWith('Rebuilding from scratch') && notes.push(u.message)) } };
+    };
+
+    it('leaves a healthy project alone: no rebuild, a clean record', async () => {
+      await job();
+      const spy = rebuildNotes();
+      const second = await runIndexJob({ workspaceRoot: root, outputDir, git: false, progress: spy.progress });
+      expect(spy.notes).toEqual([]);
+      expect(second.check).toMatchObject({ ok: true, autoRebuilt: false });
+      expect(readIndexCheck(outputDir)).toMatchObject({ ok: true, autoRebuilt: false });
+    });
+
+    it('starts from zero by itself when the previous index cannot be read', async () => {
+      await job();
+      fs.writeFileSync(indexFile(), '{ this is not json');
+      const spy = rebuildNotes();
+      const result = await runIndexJob({ workspaceRoot: root, outputDir, git: false, progress: spy.progress });
+      expect(spy.notes[0]).toMatch(/could not be read/);
+      expect(result.check).toMatchObject({ autoRebuilt: true, ok: true });
+      expect(((result.extractionCache as { hits: number }).hits)).toBe(0);
+      expect(JSON.parse(fs.readFileSync(indexFile(), 'utf8')).files).toHaveLength(1);
+    });
+
+    it('starts from zero by itself when the previous index contradicts itself', async () => {
+      await job();
+      const broken = JSON.parse(fs.readFileSync(indexFile(), 'utf8'));
+      broken.symbols[0].fileId = 'a-file-that-is-gone';
+      fs.writeFileSync(indexFile(), JSON.stringify(broken));
+      const spy = rebuildNotes();
+      const result = await runIndexJob({ workspaceRoot: root, outputDir, git: false, progress: spy.progress });
+      expect(spy.notes[0]).toMatch(/inconsistent/);
+      expect(result.check).toMatchObject({ autoRebuilt: true, ok: true });
+    });
+
+    it('does not keep rebuilding for a problem a rebuild did not clear', async () => {
+      await job();
+      fs.writeFileSync(
+        path.join(outputDir, 'index-check.json'),
+        JSON.stringify({ checkedAt: '', ok: false, autoRebuilt: true, reason: 'x', issues: [{ code: 'orphan-symbols', severity: 'rebuild', message: 'm' }] })
+      );
+      fs.writeFileSync(indexFile(), '{ broken');
+      const spy = rebuildNotes();
+      await runIndexJob({ workspaceRoot: root, outputDir, git: false, progress: spy.progress }).catch(() => undefined);
+      expect(spy.notes).toEqual([]);
+    });
   });
 });
