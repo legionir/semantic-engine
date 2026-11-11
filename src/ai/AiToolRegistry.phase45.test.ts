@@ -398,9 +398,7 @@ describe('AiToolRegistry — schema و پیاده‌سازی می‌خوانند
     | که کاری نمی‌کند، بدتر از نبودنش است: مصرف‌کننده فکر می‌کند
     | فیلتر کرده.
     */
-    const tool = registry()
-      .list()
-      .find(t => t.name === 'get_dependencies')!;
+    const tool = registry().get('get_dependencies')!;
     const source = require('fs').readFileSync(
       require('path').join(__dirname, 'tools', 'GetDependenciesTool.ts'),
       'utf8'

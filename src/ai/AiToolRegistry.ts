@@ -246,13 +246,19 @@ export class AiToolRegistry {
       .map(t => this.describe(t));
   }
 
-  /** True when `list()` offers the tool: what a remote caller may invoke. */
+  /** True when `list()` offers the tool. */
   isListed(name: string): boolean {
-    const tool = this.tools.get(name);
-    if (!tool || tool.isAvailable?.() === false) return false;
-    if (INTERNAL_TOOLS.has(name)) return false;
-    if (ADVANCED_TOOLS.has(name)) return this.options.allTools === true;
-    return true;
+    return this.isCallable(name) && this.tools.get(name)?.isAvailable?.() !== false;
+  }
+
+  /**
+   * True when a remote caller may invoke the tool. Wider than `isListed` by
+   * the tools that are registered but switched off (guarded edits): calling
+   * one answers an explicit DISABLED, which is more useful than "not found".
+   */
+  isCallable(name: string): boolean {
+    if (!this.tools.has(name) || INTERNAL_TOOLS.has(name)) return false;
+    return !ADVANCED_TOOLS.has(name) || this.options.allTools === true;
   }
 
   private describe(tool: AiTool): { name: string; description: string; inputSchema: Record<string, unknown> } {

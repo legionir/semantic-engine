@@ -38,6 +38,9 @@ import { parseIndexGeneration } from '../../core/config/indexGeneration';
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 
+/* These suites assert on the raw result object, so ask for the JSON envelope. */
+process.env['SEMANTIC_ENGINE_MCP_STRUCTURED'] = 'on';
+
 /** Minimal in-memory transport pair, the same shape the MCP suite uses. */
 class InMemoryTransport implements Transport {
   onmessage?: (message: JSONRPCMessage) => void;
@@ -196,18 +199,10 @@ describe('Phase 0 — MCP tool lifecycle on a real artifact', () => {
 
     const calls: Array<[string, Record<string, unknown>]> = [
       ['find_symbol', { name: 'alpha' }],
-      /* The schemas are the shipped ones: `path` for a file summary, and
-         `id` + `direction` for dependencies. */
-      ['get_file_summary', { path: 'src/a.ts' }],
-      ['get_dependencies', { id: 'src/b.ts', direction: 'forward' }],
+      ['file_outline', { path: 'src/a.ts' }],
+      ['impact', { target: 'src/b.ts', direction: 'dependencies' }],
+      ['impact', { target: 'alpha', change: 'rename', newName: 'alphaRenamed' }],
     ];
-    if (listed.some(tool => tool.name === 'simulate_mutation')) {
-      const alpha = loadIndex().symbols.find(symbol => symbol.name === 'alpha');
-      calls.push([
-        'simulate_mutation',
-        { actionType: 'rename_symbol', targetSymbolId: alpha?.id, newName: 'alphaRenamed' },
-      ]);
-    }
 
     for (const [name, args] of calls) {
       const response = await client.request('tools/call', { name, arguments: args });

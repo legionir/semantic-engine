@@ -26,14 +26,46 @@ export interface ToolDoc {
 }
 
 const LIMIT = 'Maximum number of items to return; when more exist the result says `truncated: true` and `matchCount` holds the real total.';
-const PATH = 'Project-relative file path using forward slashes, exactly as printed by project_list_files.';
-const ID_ANY = 'A file path as printed by project_list_files, a fileId, or a symbolId taken from another tool result.';
+const PATH = 'Project-relative file path using forward slashes, exactly as printed by list_files.';
 
 export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
+  project_info: {
+    group: 'project',
+    use: 'Call this first in a session. It tells you which languages are indexed, how deep the analysis goes for each (symbols only, or call graph too) and how old the index is, so you know how far to trust the other tools.',
+    returns: 'Project root, index time, languages and per-language support (symbols / callGraph / status).',
+    params: {},
+  },
+  find_context: {
+    group: 'search',
+    use: 'Start here for a task in code you do not know: describe the task in plain words and get the files and symbols that matter, each with the reason it was chosen. One call replaces a round of Grep/Glob guesses, because it follows imports and call edges from the first hits. Set includeSource (or pass files/symbols you already know) to get the relevant source assembled within a token budget.',
+    returns: 'Candidates with a relevance score and why each was selected (search hit, architecture module, graph neighbour). With includeSource: the assembled source text of the targets, related files and tests.',
+    params: {
+      task: 'One or two sentences describing what you want to do or understand.',
+      includeSource: 'When true, return assembled source text instead of a list of candidates (default false).',
+      files: 'Project-relative paths you already know are involved; always included, and implies includeSource.',
+      symbols: 'Symbol names, ids or "path::name" you already know are involved; implies includeSource.',
+      maxTokens: 'Token budget of the assembled source (default 4000); only used with includeSource.',
+      includeTests: 'Include test files linked to the candidates.',
+      limit: 'Maximum candidates returned when listing (default 20).',
+    },
+  },
+  search: {
+    group: 'search',
+    use: 'Find code when you do not have an exact name. mode "meaning" (default) ranks symbols and files by a plain-language description, which Grep cannot do. mode "text" is a case-insensitive substring search that also reports the enclosing symbol of every hit. mode "pattern" matches syntax with metavariables (`console.log($A)`), independent of formatting. For a known identifier use find_symbol.',
+    returns: 'Ranked matches with path and line. "meaning" adds a relevance score and says in `searchMode` whether vectors were used ("keyword-only" means the index has no embeddings). "text" adds the enclosing symbol. "pattern" adds the captured metavariables.',
+    params: {
+      query: 'A description ("where are passwords hashed"), the text to find, or the syntax pattern, depending on `mode`. In a pattern `$NAME` matches one node and `$$$NAME` a list.',
+      mode: '"meaning" (default), "text" or "pattern".',
+      path: 'Restrict to file paths containing this text (a folder prefix or a file).',
+      language: 'Language id as listed by project_info, e.g. "typescript". Required for mode "pattern".',
+      kind: 'Only symbols of this kind ("function", "class", "method", ...); mode "meaning" only.',
+      limit: LIMIT,
+    },
+  },
   find_symbol: {
     group: 'navigate',
-    use: 'Locate a function, class, method or constant by (part of) its name. Use symbol_find instead when you need an exact-name lookup.',
-    returns: 'items[]: one per symbol with id, name, kind, path, line and signature in `excerpt`. The `id` can be passed to explain_symbol, impact_analysis and get_dependencies. metadata: matchCount, truncated, limit.',
+    use: 'Jump to the definition of a function, class, method or constant from (part of) its name. Unlike Grep it returns definitions only, not every mention, with kind and signature.',
+    returns: 'One line per symbol: name, kind, path:line and signature. The `id` can be passed to explain_symbol and impact.',
     params: {
       name: 'Symbol name or a fragment of it; matching is partial and case-insensitive.',
       kind: 'Restrict to symbol kinds such as "function", "class", "method", "interface", "constant"; one value or a list.',
@@ -43,98 +75,66 @@ export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
       limit: LIMIT,
     },
   },
-  get_dependencies: {
-    group: 'navigate',
-    use: 'See what a file or symbol depends on (forward) or what depends on it (backward). For "what breaks if I change this" prefer impact_analysis, which ranks by confidence.',
-    returns: 'items[]: related files, symbols or packages (kind "import", "package", "called-by"…), each with metadata.dependents. metadata: truncated, limit.',
-    params: {
-      id: ID_ANY,
-      direction: '"forward" = what this depends on; "backward" = what depends on this.',
-      level: '"file" walks import edges between files; "symbol" walks call edges between symbols.',
-      depth: 'Number of hops to follow, 1–3. Larger values grow the result quickly.',
-      kind: 'Edge kind filter; "all" (default) mixes imports, packages, dynamic imports and call edges.',
-      limit: LIMIT,
-    },
-  },
-  get_file_summary: {
-    group: 'understand',
-    use: 'Get the role, public API, imports and exports of one file in a few lines, before deciding whether to read it. Cheaper than code_read.',
-    returns: 'items[]: the file\'s symbols (id, kind, line, signature). `context`: a text card with role, language, line count, summary, public API, imports and exports.',
-    params: {
-      path: PATH,
-      fileId: 'File id from another tool result; use instead of `path`.',
-    },
-  },
-  semantic_search: {
-    group: 'search',
-    use: 'Find symbols and files from a natural-language description when you do not know their names. Ranked by keyword match, vector similarity (when the index has embeddings) and importance signals.',
-    returns: 'items[]: symbols/files with relevanceScore 0–1 and metadata.signals explaining the ranking. metadata.searchMode says what actually ran ("keyword-only" when the index has no vectors — see degradedReason); an empty result with that mode means "no keyword hit", not "nothing relevant exists".',
-    params: {
-      query: 'What you are looking for, in plain words ("where are passwords hashed").',
-      filters: 'Narrowing filters: language, kind, path (prefix/substring) and exportedOnly, same meaning as in find_symbol.',
-      limit: LIMIT,
-      mode: '"keyword", "vector" or "hybrid" (default). "vector" fails or degrades when the index has no embeddings.',
-      minScore: 'Drop results whose final ranked score is below this value (0–1).',
-      useEmbeddings: 'Set false to skip vector scoring even when embeddings exist (faster, keyword only).',
-    },
-  },
-  assemble_context: {
-    group: 'understand',
-    use: 'Build one token-budgeted bundle of the files and symbols needed for a coding task, starting from files/symbols you already know. Use discover_context first when you do not know where to start.',
-    returns: 'items[]: ranked files/symbols with metadata.section ("targetFiles", "relatedFiles", "tests"…) and graphHops. `context`: the assembled text within maxTokens. Targets and tests get a guaranteed share of the budget.',
-    params: {
-      task: 'One or two sentences describing the change; used to rank related files.',
-      targetFiles: 'Project-relative paths of files you are going to change; always included.',
-      targetSymbols: 'Symbol ids of symbols you are going to change; always included.',
-      maxTokens: 'Token budget of the assembled context (default 4000).',
-      includeTests: 'Include tests linked to the targets (default true).',
-      includeRecentChanges: 'Add recent git commits touching the targets (default false).',
-      dependencyDepth: 'How many dependency hops around the targets to include (default 1).',
-      explain: 'Add the ranking signals behind each item.',
-    },
-  },
-  discover_context: {
-    group: 'search',
-    use: 'Start here for an unfamiliar task: give only a plain-language description and get candidate files/symbols with the reason each was chosen. Returns candidates, not source text — follow with assemble_context or code_read.',
-    returns: 'items[]: candidates with relevanceScore and metadata.origin ("search", "blueprint", "graph") and graphHops; `excerpt` explains why it was selected.',
-    params: {
-      task: 'Plain-language description of what you want to do.',
-      limit: 'Maximum candidates returned (default 20).',
-      expansionDepth: 'Graph hops to expand from the seed hits (default 2).',
-      seedLimit: 'Number of search hits used as seeds (default 8).',
-      filesPerModule: 'Files taken from each matching architecture module (default 3).',
-      maxNodes: 'Ceiling on graph nodes visited during expansion (default 200).',
-      includeTests: 'Also return test files among the candidates (default false).',
-    },
-  },
-  impact_analysis: {
-    group: 'impact',
-    use: 'Before changing a file or symbol, list what depends on it (reverse dependencies), ranked by confidence. Use simulate_mutation for a rename/move/delete you are about to do.',
-    returns: 'items[]: impacted files/symbols with relevanceScore and metadata.depth, pathConfidence and `via` (how the edge was found). metadata: truncated/droppedByLimit/traversalExhausted tell whether the list is complete. An unknown id returns success:false.',
-    params: {
-      id: ID_ANY + ' A module or package id is also accepted.',
-      level: 'Result granularity: "file", "symbol" or "any".',
-      depth: 'Hops to follow upstream (default 2).',
-      limit: LIMIT,
-      minConfidence: 'Ignore edges below this confidence (0–100, default 70). 0 also includes name-match guesses.',
-    },
-  },
   explain_symbol: {
     group: 'understand',
-    use: 'Everything known about one symbol in a single call (signature, complexity, callers, callees, tests, git, diagnostics) with the confidence of each part.',
-    returns: 'items[0].metadata: signature, visibility, calls[], calledBy[], members[], complexity, referenceCount, plus per-part trust/basis; `truncated` lists which sections were cut. Diagnostics are empty unless the index was built with --lsp-diagnostics: check diagnosticsRun before reading an empty list as "clean".',
+    use: 'Everything the index knows about one symbol in a single call: signature, who calls it, what it calls, members, tests, complexity and recent git activity. Use it instead of reading the file and grepping for callers.',
+    returns: 'Signature, visibility, calls, calledBy, members, complexity and reference count, each with the confidence of the underlying edges. `truncated` lists sections that were cut. Diagnostics are empty unless the index was built with --lsp-diagnostics.',
     params: {
-      id: 'Symbol id. Give this or `name`.',
+      id: 'Symbol id from another result. Give this or `name`.',
       name: 'Symbol name when you have no id; add `path` if the name is not unique.',
       path: 'File path used only to disambiguate `name`.',
       limit: 'Maximum callers/callees/members listed per section (default 20).',
       minConfidence: 'Hide calls/callers whose edge confidence is below this (0–100, default 0).',
     },
   },
+  file_outline: {
+    group: 'understand',
+    use: 'Look at a file before deciding to read it. "summary" (default) gives its role, public API, imports and exports in a few lines; "symbols" lists every symbol with its line range; "folded" returns the source with bodies collapsed. All three cost a fraction of reading the file.',
+    returns: '"summary": a text card plus the public symbols. "symbols": name, kind, lines and signature per symbol. "folded": the source where omitted ranges are replaced by "… <line>".',
+    params: {
+      path: PATH,
+      detail: '"summary" (default), "symbols" or "folded".',
+      maxTokens: 'Token cap for the "folded" view.',
+    },
+  },
+  read_code: {
+    group: 'read',
+    use: 'Read source lines of an indexed file by line range. Use it after find_symbol, search or file_outline told you which lines matter; the line numbers those tools print can be passed straight in.',
+    returns: 'The requested lines, numbered. Without a range only the first 200 lines are returned. Errors: NOT_FOUND (unknown path), OUT_OF_RANGE (startLine is past the end of the file).',
+    params: {
+      path: PATH,
+      startLine: 'First line to read, 1-based (default 1).',
+      endLine: 'Last line to read, inclusive (default startLine + 199).',
+    },
+  },
+  list_files: {
+    group: 'project',
+    use: 'List indexed files to learn the layout or to get exact paths for the other tools. Generated, vendored and ignored files are already left out.',
+    returns: 'Files in path order with language, size and line count. `matchCount` holds the real total when the list was cut.',
+    params: {
+      path: 'Only files whose path contains this text (a folder prefix such as "src/gateway/").',
+      language: 'Only files of this language id.',
+      limit: 'Maximum files returned (default 100).',
+    },
+  },
+  impact: {
+    group: 'impact',
+    use: 'Before changing a file or symbol, see what would be affected. By default it lists what depends on the target, ranked by how certain each link is (Grep finds mentions, not dependents). direction "dependencies" lists what the target itself uses. With `change` it dry-runs a rename, move or delete and lists the references that would break; nothing is written.',
+    returns: 'Affected files and symbols with depth, confidence and how each link was found; `truncated` says whether the list is complete. With `change`: the broken references (file, line, relation) and whether the change is safe.',
+    params: {
+      target: 'A project-relative file path, a symbol name, "path::name" or an id from another result.',
+      direction: '"dependents" (default) = what depends on the target; "dependencies" = what the target depends on.',
+      change: 'Dry-run this change to a symbol: "rename", "move" or "delete".',
+      newName: 'New name; required with change "rename".',
+      newPath: 'New project-relative file path; required with change "move".',
+      depth: 'Hops to follow, 1–3 (default 2 for dependents, 1 for dependencies).',
+      limit: LIMIT,
+    },
+  },
   find_tests: {
     group: 'navigate',
     use: 'Find the test files that exercise a file or symbol, to know what to run after a change.',
-    returns: 'items[]: test files with the reason they were linked. An empty list means no test is linked in the index (naming/import heuristics), not that none exists.',
+    returns: 'Test files with the reason each was linked. An empty list means no test is linked in the index (naming/import heuristics), not that none exists.',
     params: {
       path: PATH,
       fileId: 'File id; alternative to `path`.',
@@ -142,15 +142,15 @@ export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
       limit: LIMIT,
     },
   },
-  get_recent_changes: {
+  git_history: {
     group: 'impact',
-    use: 'See the latest commits for the project (or one file) to learn what changed recently and who touched it.',
-    returns: 'items[]: commits (id = full hash, name = subject, excerpt = date | subject, source = author). metadata.isGitRepository separates "not a git repo" from "no commits"; examinedCommits and truncated describe the window.',
+    use: 'view "recent" (default): the latest commits for the project or one file, to learn what changed and who touched it. view "hotspots": files that change often and are complex, which deserve extra care or tests.',
+    returns: '"recent": commits with hash, date, subject and author; `isGitRepository` separates "not a git repo" from "no commits". "hotspots": files with commit count and score components.',
     params: {
-      workspaceRoot: 'Directory to run git in; normally omit it. Relative values resolve against the indexed project root.',
-      path: PATH,
-      limit: 'Number of most recent commits examined (default 10).',
-      since: 'ISO date (e.g. 2026-01-31); only commits after it are kept — applied within the examined window.',
+      view: '"recent" (default) or "hotspots".',
+      path: 'Only commits touching this file; view "recent" only.',
+      since: 'ISO date (e.g. 2026-01-31); only commits after it; view "recent" only.',
+      limit: 'Number of commits examined or hotspots returned (default 10).',
     },
   },
   get_config_usage: {
@@ -164,71 +164,12 @@ export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
       limit: LIMIT,
     },
   },
-  simulate_mutation: {
-    group: 'impact',
-    use: 'Dry-run a rename, delete or move in the index and list the references it would break. Writes nothing; run it before edit_plan.',
-    returns: 'metadata.diff: affectedSymbolsCount, brokenReferences[] (callerFile, callerLine, relation) and isSafe. items[] lists the broken references.',
-    params: {
-      actionType: '"rename_symbol", "delete_symbol" or "move_symbol".',
-      targetSymbolId: 'Symbol id (or "path::name") to mutate.',
-      newName: 'New name; required for rename_symbol.',
-      newPath: 'New project-relative file path; required for move_symbol.',
-    },
-  },
   detect_architecture_violations: {
     group: 'impact',
     use: 'Audit the whole project for layer bypasses (e.g. controller → repository), circular dependencies and similar rule violations.',
     returns: 'items[]: one per violation (ruleId, severity, description, suggestion). metadata.report groups circularDependencies and layerViolations; totalViolations is the count.',
     params: {
       checkCyclesOnly: 'When true, only report circular dependencies and skip layer rules.',
-    },
-  },
-  get_git_hotspots: {
-    group: 'impact',
-    use: 'Find risky files: frequently changed and complex. Good targets for extra review or tests.',
-    returns: 'metadata.hotspots[] with score components; `context` states how many were found. Empty means no history data (not a git repo, or no commits), not "no risk".',
-    params: {
-      limit: 'Maximum hotspots returned (default 10).',
-    },
-  },
-  code_read: {
-    group: 'read',
-    use: 'Read actual source text, bounded. Use after the index tools told you where to look; use code_fold first for a cheaper structural view.',
-    returns: 'items[0].excerpt: the text; metadata: handle (re-readable, bound to the file version), start/end (UTF-16 offsets), truncated, returnedTokens. Errors: NOT_FOUND, OUT_OF_RANGE, STALE_HANDLE (file changed since the handle was issued).',
-    params: {
-      path: PATH + ' Give one of path, fileId, handle.',
-      fileId: 'File id; alternative to path.',
-      handle: 'Handle from an earlier code_read/code_fold result; fails with STALE_HANDLE if the file changed.',
-      start: 'Start offset in UTF-16 code units (not bytes or lines), 0-based.',
-      end: 'End offset (exclusive) in UTF-16 code units; must be ≥ start.',
-      maxResultBytes: 'Cap on returned text size in bytes; the result says truncated:true when it cut.',
-    },
-  },
-  code_fold: {
-    group: 'read',
-    use: 'Read a file with bodies collapsed ("… 13") so you see its structure for a fraction of the tokens; then code_read the part you need.',
-    returns: 'items[0].excerpt: folded source where omitted ranges are replaced by "… <line>"; metadata has a handle and token counts.',
-    params: {
-      path: PATH + ' Give path or fileId.',
-      fileId: 'File id; alternative to path.',
-      level: 'Fold level 0–4 (default 2). 0 keeps every line (no folding); 1–2 keep each symbol\'s first and last line; 3–4 also keep the first few lines of each body.',
-      maxTokens: 'Token cap for the folded output.',
-      comments: '"strip" removes comments, "doc-only" keeps doc comments, "keep" keeps all.',
-    },
-  },
-  project_info: {
-    group: 'project',
-    use: 'Orientation call: project root, index generation/time, languages and, per language, how deep the analysis goes (symbols/callGraph/status). Call first in a session.',
-    returns: 'items[0].metadata: root, rootPath, generatedAt, snapshotId, languages[], languageSupport{lang:{symbols,callGraph,status}}, adapter status.',
-    params: {},
-  },
-  project_list_files: {
-    group: 'project',
-    use: 'List indexed files (path order) to learn the layout or get exact paths for other tools.',
-    returns: 'items[]: files with path, language, size, lines, hash, generated, binary. metadata: matchCount, truncated, limit.',
-    params: {
-      language: 'Only files of this language id.',
-      limit: 'Maximum files returned (default 1000).',
     },
   },
   diagnostics_get: {
@@ -239,69 +180,6 @@ export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
       path: PATH + ' Omit for project-wide diagnostics.',
       severity: 'Only this severity, e.g. "error" or "warning".',
       limit: 'Maximum diagnostics returned (default 1000).',
-    },
-  },
-  search_text: {
-    group: 'search',
-    use: 'Exact (case-insensitive) text search through indexed source files — for strings, log messages, TODOs. For meaning-based search use semantic_search.',
-    returns: 'items[]: one per matching line with path, line (the real line), excerpt (the line) and metadata.column / enclosingSymbol (symbol id containing the match).',
-    params: {
-      query: 'Text to find; plain substring, not a regex.',
-      path: 'Only search this file path.',
-      limit: 'Maximum matches returned (default 100).',
-    },
-  },
-  symbol_inspect: {
-    group: 'understand',
-    use: 'Identity card of one symbol: stable symbolKey, range, signature hash, confidence. Lighter than explain_symbol.',
-    returns: 'items[]: matching symbols with metadata.symbolKey, endLine, confidence, exported. NOT_FOUND when nothing matches.',
-    params: {
-      id: 'Symbol id. Give id or name.',
-      name: 'Exact symbol name when you have no id.',
-      path: 'File path to disambiguate `name`.',
-    },
-  },
-  gains_report: {
-    group: 'project',
-    use: 'Estimate how many tokens code_fold / reading by range saves compared with reading whole files.',
-    returns: 'items[]: per file fullTokensEstimate, foldedTokensBudget, avoidedTokensEstimate, compressionRatio. Estimates from line counts, not measurements.',
-    params: {
-      path: 'One file; omit for every indexed file.',
-      maxTokens: 'Folded-token budget to compare against; default is 35% of the estimated full size.',
-    },
-  },
-  code_outline: {
-    group: 'understand',
-    use: 'Structural outline (all symbols, in order) of one file. Use compact:true to save about two thirds of the tokens.',
-    returns: 'items[]: symbols with kind, line, signature and metadata.endLine/range; compact:true keeps only name, kind, lines and signature.',
-    params: {
-      path: PATH + ' Give path or fileId.',
-      fileId: 'File id; alternative to path.',
-      includeRanges: 'Include start/end line ranges (default true).',
-      compact: 'Return only name, kind, lines and signature per symbol.',
-    },
-  },
-  symbol_find: {
-    group: 'navigate',
-    use: 'Exact-name symbol lookup (case-insensitive), deterministic order. Use find_symbol for partial/fuzzy matching.',
-    returns: 'items[]: symbols with id, kind, path, line, signature; metadata: matchCount, truncated, limit.',
-    params: {
-      query: 'Symbol name (exact, case-insensitive).',
-      kind: 'Only this symbol kind.',
-      path: 'Only symbols in this file path.',
-      limit: 'Maximum results (default 100).',
-    },
-  },
-  structural_search: {
-    group: 'search',
-    use: 'Find code by syntax shape with metavariables (e.g. `console.log($A)`), which text search cannot express. Read-only.',
-    returns: 'items[]: matches with path, line and metadata.captures (metavariable → matched text), start/end offsets. Languages without a structural grammar fail explicitly.',
-    params: {
-      pattern: 'Code pattern; `$NAME` matches one node, `$$$NAME` a list.',
-      language: 'Language id of the pattern, e.g. "typescript", "python".',
-      path: 'Restrict to this file path or folder prefix.',
-      maxResults: 'Maximum matches (default 100).',
-      ruleId: 'Optional label copied onto each match as metadata.ruleId; it does not select a rule.',
     },
   },
   structural_rule_test: {
@@ -329,8 +207,8 @@ export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
     use: 'Step 1 of a guarded edit: describe text replacements and get a plan with a diff preview. Writes nothing. Listed only when the server runs with transactional edits enabled (a direct call otherwise answers DISABLED).',
     returns: 'metadata: planId, per-edit diff preview and validation. Next: edit_approve → edit_apply.',
     params: {
-      edits: 'Replacements to make. Each needs path, start/end (UTF-16 offsets from code_read), replacement text and expectedHash of the current file text so a changed file is rejected.',
-      source: '"client" for edits you wrote yourself, "structural-search" for edits derived from structural_search matches.',
+      edits: 'Replacements to make. Each needs path, start/end (UTF-16 offsets), replacement text and expectedHash of the current file text so a changed file is rejected.',
+      source: '"client" for edits you wrote yourself, "structural-search" for edits derived from pattern-search matches.',
     },
     schemaPatch: {
       edits: {
@@ -384,7 +262,7 @@ export const TOOL_DOCS: Readonly<Record<string, ToolDoc>> = {
     returns: 'items[]: references with confidence (exact/heuristic/ambiguous/unresolved) and provenance; metadata.snapshotHandle for follow-up calls. Stale handles fail closed.',
     params: {
       symbolId: 'Symbol id. Give one of symbolId, symbolKey, name.',
-      symbolKey: 'Stable symbolKey from symbol_inspect/code_outline.',
+      symbolKey: 'Stable symbolKey from a symbol result.',
       name: 'Symbol name.',
       minConfidence: 'Lowest confidence class to include.',
       limit: 'Maximum references returned.',

@@ -17,6 +17,9 @@ import { ProjectIndex } from '../../core/types/project-index.types';
 import { makeConfidence } from '../../core/types/common.types';
 import { contentHash } from '../../core/codeintel/Phase2Transactions';
 
+/* These suites assert on the raw result object, so ask for the JSON envelope. */
+process.env['SEMANTIC_ENGINE_MCP_STRUCTURED'] = 'on';
+
 const A_TS = 'import { add } from "./b";\nexport const total = add(1, 2);\n';
 const B_TS = 'export function add(a: number, b: number) {\n  return a + b;\n}\n';
 const C_PY = 'x = 1\n';
@@ -89,7 +92,7 @@ describe('MCP Phase 2/3/4 gating', () => {
       enablePhase2Edits: true,
     });
     try {
-      const search = await server.callTool('structural_search', { pattern: 'add($A, $B)', language: 'typescript', path: 'src/a.ts' });
+      const search = await server.callTool('search', { mode: 'pattern', query: 'add($A, $B)', language: 'typescript', path: 'src/a.ts' });
       expect(search.isError).toBe(false);
       expect(payload(search).items).toHaveLength(1);
 
@@ -158,6 +161,7 @@ describe('MCP Phase 2/3/4 gating', () => {
   it('runs rule packs on the ast-grep engine and fails rules honestly (F-11)', async () => {
     const server = new SemanticEngineMcpServer({
       projectIndex: createIndex(root),
+      allTools: true,
       workspaceRoot: root,
     });
     try {
@@ -176,7 +180,7 @@ describe('MCP Phase 2/3/4 gating', () => {
       expect(payload(bad).error).toContain('UNSUPPORTED_LANGUAGE');
       expect(payload(bad).error).not.toContain('INVALID_RULE_PACK');
 
-      const search = await server.callTool('structural_search', { pattern: 'x', language: 'php', path: 'src/c.php' });
+      const search = await server.callTool('search', { mode: 'pattern', query: 'x', language: 'php', path: 'src/c.php' });
       expect(search.isError).toBe(true);
       expect(payload(search).error).toContain('UNSUPPORTED_LANGUAGE');
     } finally {

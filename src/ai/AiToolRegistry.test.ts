@@ -87,18 +87,23 @@ describe('AiToolRegistry', () => {
   const reader = new ProjectIndexReader(index);
   const registry = new AiToolRegistry({ reader });
 
-  it('should list all tools', () => {
-    const tools = registry.list();
-    expect(tools.map(t => t.name)).toContain('find_symbol');
-    expect(tools.map(t => t.name)).toContain('get_dependencies');
-    expect(tools.map(t => t.name)).toContain('semantic_search');
-    expect(tools.map(t => t.name)).toContain('assemble_context');
-    expect(tools.map(t => t.name)).toContain('impact_analysis');
-    expect(tools.map(t => t.name)).toContain('find_tests');
-    expect(tools.map(t => t.name)).toContain('get_file_summary');
-    /* ابزار SQL خام حذف شده است؛ نباید ثبت شود. */
-    expect(tools.map(t => t.name)).not.toContain('query_index');
-    expect(tools.map(t => t.name)).toContain('get_recent_changes');
+  it('lists the agent-facing tools and keeps their implementations internal', () => {
+    const names = registry.list().map(t => t.name);
+    expect(names).toEqual([
+      'project_info', 'find_context', 'search', 'find_symbol', 'explain_symbol', 'file_outline',
+      'read_code', 'list_files', 'impact', 'find_tests', 'git_history',
+    ]);
+    for (const internal of ['get_dependencies', 'semantic_search', 'assemble_context', 'impact_analysis', 'get_file_summary']) {
+      expect(registry.isListed(internal)).toBe(false);
+      expect(registry.get(internal)).toBeDefined();
+    }
+  });
+
+  it('lists the specialist tools only with allTools', () => {
+    expect(registry.isListed('get_config_usage')).toBe(false);
+    const all = new AiToolRegistry({ reader, allTools: true }).list().map(t => t.name);
+    expect(all).toEqual(expect.arrayContaining(['get_config_usage', 'diagnostics_get', 'structural_rule_test']));
+    expect(all).not.toContain('code_read');
   });
 
   it('find_symbol should find by name', async () => {

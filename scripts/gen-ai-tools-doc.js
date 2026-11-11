@@ -33,6 +33,7 @@ function listAllTools() {
     reader: new ProjectIndexReader(emptyIndex),
     workspaceRoot: os.tmpdir(),
     enablePhase2Edits: true,
+    allTools: true,
     experimental: { 'semantic-graph': true, 'controlled-expansion': true },
   });
   return registry.list();

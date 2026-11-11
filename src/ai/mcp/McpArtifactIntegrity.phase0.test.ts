@@ -29,6 +29,9 @@ import { parseArgs } from '../../cli/args';
 import { runIndex } from '../../cli/commands/index-command';
 import { createLoggerFromEnv } from '../../host/Logger';
 
+/* These suites assert on the raw result object, so ask for the JSON envelope. */
+process.env['SEMANTIC_ENGINE_MCP_STRUCTURED'] = 'on';
+
 interface FindSymbolAnswer {
   success: boolean;
   items: Array<{ name: string }>;

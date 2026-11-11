@@ -10,6 +10,9 @@ import { ProjectIndex, FileEntry, SymbolEntry } from '../../core/types/project-i
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 
+/* These suites assert on the raw result object, so ask for the JSON envelope. */
+process.env['SEMANTIC_ENGINE_MCP_STRUCTURED'] = 'on';
+
 function createFile(id: string, path: string): FileEntry {
   return {
     id,
@@ -158,8 +161,11 @@ describe('SemanticEngineMcpServer', () => {
 
     const toolNames = listResponse.result.tools.map((t: any) => t.name);
     expect(toolNames).toContain('find_symbol');
-    expect(toolNames).toContain('get_config_usage');
-    expect(toolNames).toEqual(expect.arrayContaining(['code_outline', 'code_fold', 'code_read', 'symbol_find', 'symbol_inspect', 'search_text', 'diagnostics_get', 'project_info', 'project_list_files', 'gains_report']));
+    /* the agent-facing surface: one tool per intent, no internal or specialist tools */
+    expect(toolNames).toEqual([
+      'project_info', 'find_context', 'search', 'find_symbol', 'explain_symbol', 'file_outline',
+      'read_code', 'list_files', 'impact', 'find_tests', 'git_history',
+    ]);
 
     await server.close();
   });
@@ -218,7 +224,7 @@ describe('SemanticEngineMcpServer', () => {
 
   it('exposes the Phase 1 structural tools through tools/call', async () => {
     const server = new SemanticEngineMcpServer({ projectIndex: createProjectIndex() });
-    const result = await server.callTool('code_outline', { path: 'src/utils.ts' });
+    const result = await server.callTool('file_outline', { path: 'src/utils.ts', detail: 'symbols' });
     expect(result.isError).toBe(false);
     expect(result.structuredContent).toEqual(expect.objectContaining({ success: true, indexGeneration: 0 }));
     await server.close();
@@ -267,20 +273,32 @@ describe('SemanticEngineMcpServer', () => {
 });
 
 describe('structuredContent switch', () => {
-  it('sends the result once, with projectId and indexGeneration in the text, when switched off', async () => {
-    const { SemanticEngineMcpServer: Server } = await import('./SemanticEngineMcpServer');
-    const index = { schemaVersion: '2.0.0', root: 'x', rootPath: '/', generatedAt: 'g', generatorVersion: '0', languages: [], languageSupport: {}, files: [], symbols: [], graphs: { callGraph: [], typeGraph: [], dependencyGraph: [], reverseDependencyGraph: [] }, diagnostics: [], git: null, metrics: {} } as never;
-    const once = new Server({ projectIndex: index, projectId: 'p1', structuredContent: false });
-    const reply = await once.callTool('project_list_files', {});
-    expect(reply.structuredContent).toBeUndefined();
-    const body = JSON.parse((reply.content[0] as { text: string }).text);
-    expect(body.projectId).toBe('p1');
-    expect(body.indexGeneration).toBe(0);
+  const index = { schemaVersion: '2.0.0', root: 'x', rootPath: '/', generatedAt: 'g', generatorVersion: '0', languages: [], languageSupport: {}, files: [], symbols: [], graphs: { callGraph: [], typeGraph: [], dependencyGraph: [], reverseDependencyGraph: [] }, diagnostics: [], git: null, metrics: {} } as never;
 
-    const both = new Server({ projectIndex: index, projectId: 'p1' });
-    const twice = await both.callTool('project_list_files', {});
+  it('sends readable text once when switched off', async () => {
+    const { SemanticEngineMcpServer: Server } = await import('./SemanticEngineMcpServer');
+    const once = new Server({ projectIndex: index, projectId: 'p1', structuredContent: false });
+    const reply = await once.callTool('list_files', {});
+    expect(reply.structuredContent).toBeUndefined();
+    const text = (reply.content[0] as { text: string }).text;
+    expect(text).toContain('No results in the index');
+    expect(text).toContain('index generation: 0');
+    expect(() => JSON.parse(text)).toThrow();
+  });
+
+  it('sends the raw object as JSON text and as structuredContent when switched on', async () => {
+    const { SemanticEngineMcpServer: Server } = await import('./SemanticEngineMcpServer');
+    const both = new Server({ projectIndex: index, projectId: 'p1', structuredContent: true });
+    const twice = await both.callTool('list_files', {});
     expect(twice.structuredContent).toMatchObject({ projectId: 'p1', indexGeneration: 0 });
     expect(JSON.parse((twice.content[0] as { text: string }).text).projectId).toBeUndefined();
-    await once.close(); await both.close();
+  });
+
+  it('refuses a tool that is not listed, naming the ones that are', async () => {
+    const { SemanticEngineMcpServer: Server } = await import('./SemanticEngineMcpServer');
+    const server = new Server({ projectIndex: index, structuredContent: false });
+    const reply = await server.callTool('code_read', { path: 'src/a.ts' });
+    expect(reply.isError).toBe(true);
+    expect((reply.content[0] as { text: string }).text).toMatch(/not found\. Available: project_info, find_context/);
   });
 });

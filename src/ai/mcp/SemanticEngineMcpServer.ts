@@ -250,7 +250,7 @@ export class SemanticEngineMcpServer {
   async callTool(toolName: string, args: AiToolInput): Promise<CallToolResult> {
     let result: AiToolOutput;
     try {
-      result = this.registry.isListed(toolName)
+      result = this.registry.isCallable(toolName)
         ? await this.registry.executeWithValidation(toolName, args)
         : {
             success: false,

@@ -325,6 +325,7 @@ async function runStdio(
 
   const loadedBlueprint = loadBlueprintBeside(indexPath).index;
   const server = new SemanticEngineMcpServer({
+      ...(boolOption(args.options, 'all-tools', false) ? { allTools: true as const } : {}),
     projectIndex,
     workspaceRoot,
     ...(loadedBlueprint ? { blueprint: loadedBlueprint } : {}),
@@ -429,6 +430,7 @@ async function runHttp(
       const currentBlueprint = loadBlueprintBeside(indexPath).index;
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       const mcp = new SemanticEngineMcpServer({
+      ...(boolOption(args.options, 'all-tools', false) ? { allTools: true as const } : {}),
         projectIndex: currentIndex,
         workspaceRoot,
         ...(currentBlueprint ? { blueprint: currentBlueprint } : {}),

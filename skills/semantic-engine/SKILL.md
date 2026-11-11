@@ -54,102 +54,69 @@ Every answer is `{ success, items[], metadata, context? }` plus `projectId` and 
 <!-- tools:begin -->
 ### Orientation
 
-- **`project_info`** — Orientation call: project root, index generation/time, languages and, per language, how deep the analysis goes (symbols/callGraph/status). Call first in a session.
+- **`project_info`** — Call this first in a session. It tells you which languages are indexed, how deep the analysis goes for each (symbols only, or call graph too) and how old the index is, so you know how far to trust the other tools.
   - Parameters: none
-  - Returns: items[0].metadata: root, rootPath, generatedAt, snapshotId, languages[], languageSupport{lang:{symbols,callGraph,status}}, adapter status.
-- **`project_list_files`** — List indexed files (path order) to learn the layout or get exact paths for other tools.
-  - Parameters: `language?`, `limit?`
-  - Returns: items[]: files with path, language, size, lines, hash, generated, binary. metadata: matchCount, truncated, limit.
+  - Returns: Project root, index time, languages and per-language support (symbols / callGraph / status).
+- **`list_files`** — List indexed files to learn the layout or to get exact paths for the other tools. Generated, vendored and ignored files are already left out.
+  - Parameters: `path?`, `language?`, `limit?`
+  - Returns: Files in path order with language, size and line count. `matchCount` holds the real total when the list was cut.
 - **`diagnostics_get`** — Read compiler/language-server diagnostics stored in the index.
   - Parameters: `path?`, `severity?`, `limit?`
   - Returns: items[]: diagnostics (message, severity, code, line, column). metadata.warning is present when no diagnostics pass was recorded — then an empty list does NOT mean the code is clean.
-- **`gains_report`** — Estimate how many tokens code_fold / reading by range saves compared with reading whole files.
-  - Parameters: `path?`, `maxTokens?`
-  - Returns: items[]: per file fullTokensEstimate, foldedTokensBudget, avoidedTokensEstimate, compressionRatio. Estimates from line counts, not measurements.
 
 ### Finding things
 
-- **`semantic_search`** — Find symbols and files from a natural-language description when you do not know their names. Ranked by keyword match, vector similarity (when the index has embeddings) and importance signals.
-  - Parameters: `query`, `filters?`, `limit?`, `mode?`, `minScore?`, `useEmbeddings?`
-  - Returns: items[]: symbols/files with relevanceScore 0–1 and metadata.signals explaining the ranking. metadata.searchMode says what actually ran ("keyword-only" when the index has no vectors — see degradedReason); an empty result with that mode means "no keyword hit", not "nothing relevant exists".
-- **`discover_context`** — Start here for an unfamiliar task: give only a plain-language description and get candidate files/symbols with the reason each was chosen. Returns candidates, not source text — follow with assemble_context or code_read.
-  - Parameters: `task`, `limit?`, `expansionDepth?`, `seedLimit?`, `filesPerModule?`, `maxNodes?`, `maxPerFile?`, `includeTests?`
-  - Returns: items[]: candidates with relevanceScore and metadata.origin ("search", "blueprint", "graph") and graphHops; `excerpt` explains why it was selected.
+- **`find_context`** — Start here for a task in code you do not know: describe the task in plain words and get the files and symbols that matter, each with the reason it was chosen. One call replaces a round of Grep/Glob guesses, because it follows imports and call edges from the first hits. Set includeSource (or pass files/symbols you already know) to get the relevant source assembled within a token budget.
+  - Parameters: `task`, `includeSource?`, `files?`, `symbols?`, `maxTokens?`, `includeTests?`, `limit?`
+  - Returns: Candidates with a relevance score and why each was selected (search hit, architecture module, graph neighbour). With includeSource: the assembled source text of the targets, related files and tests.
+- **`search`** — Find code when you do not have an exact name. mode "meaning" (default) ranks symbols and files by a plain-language description, which Grep cannot do. mode "text" is a case-insensitive substring search that also reports the enclosing symbol of every hit. mode "pattern" matches syntax with metavariables (`console.log($A)`), independent of formatting. For a known identifier use find_symbol.
+  - Parameters: `query`, `mode?`, `path?`, `language?`, `kind?`, `limit?`
+  - Returns: Ranked matches with path and line. "meaning" adds a relevance score and says in `searchMode` whether vectors were used ("keyword-only" means the index has no embeddings). "text" adds the enclosing symbol. "pattern" adds the captured metavariables.
 - **`get_config_usage`** — Find where an environment variable or config key is read (process.env, config.get, .env files).
   - Parameters: `key*`, `path*`, `kind*`, `limit?`
   - Returns: items[]: usages with kind ("env", "config-get", "dotenv", "env-file-reference"), path, line and the source line in `excerpt`.
-- **`search_text`** — Exact (case-insensitive) text search through indexed source files — for strings, log messages, TODOs. For meaning-based search use semantic_search.
-  - Parameters: `query`, `path?`, `limit?`
-  - Returns: items[]: one per matching line with path, line (the real line), excerpt (the line) and metadata.column / enclosingSymbol (symbol id containing the match).
-- **`structural_search`** — Find code by syntax shape with metavariables (e.g. `console.log($A)`), which text search cannot express. Read-only.
-  - Parameters: `pattern`, `language`, `path?`, `maxResults?`, `ruleId?`
-  - Returns: items[]: matches with path, line and metadata.captures (metavariable → matched text), start/end offsets. Languages without a structural grammar fail explicitly.
 - **`structural_rule_test`** — Run a structural rule pack against the project (a lint-style check) without changing anything.
   - Parameters: `rules*`, `rulePath*`, `path?`, `maxResults?`
   - Returns: items[]: one per violation (kind "rule:<severity>", name = rule message, metadata.ruleId). metadata.passed is true when there are no violations; a malformed pack returns INVALID_RULE_PACK.
 
 ### Navigating symbols and dependencies
 
-- **`find_symbol`** — Locate a function, class, method or constant by (part of) its name. Use symbol_find instead when you need an exact-name lookup.
+- **`find_symbol`** — Jump to the definition of a function, class, method or constant from (part of) its name. Unlike Grep it returns definitions only, not every mention, with kind and signature.
   - Parameters: `name`, `kind?`, `language?`, `path?`, `exportedOnly?`, `limit?`
-  - Returns: items[]: one per symbol with id, name, kind, path, line and signature in `excerpt`. The `id` can be passed to explain_symbol, impact_analysis and get_dependencies. metadata: matchCount, truncated, limit.
-- **`get_dependencies`** — See what a file or symbol depends on (forward) or what depends on it (backward). For "what breaks if I change this" prefer impact_analysis, which ranks by confidence.
-  - Parameters: `id`, `direction`, `level?`, `depth?`, `kind?`, `limit?`
-  - Returns: items[]: related files, symbols or packages (kind "import", "package", "called-by"…), each with metadata.dependents. metadata: truncated, limit.
+  - Returns: One line per symbol: name, kind, path:line and signature. The `id` can be passed to explain_symbol and impact.
 - **`find_tests`** — Find the test files that exercise a file or symbol, to know what to run after a change.
   - Parameters: `path*`, `fileId*`, `symbolId*`, `limit?`
-  - Returns: items[]: test files with the reason they were linked. An empty list means no test is linked in the index (naming/import heuristics), not that none exists.
-- **`symbol_find`** — Exact-name symbol lookup (case-insensitive), deterministic order. Use find_symbol for partial/fuzzy matching.
-  - Parameters: `query`, `kind?`, `path?`, `limit?`
-  - Returns: items[]: symbols with id, kind, path, line, signature; metadata: matchCount, truncated, limit.
+  - Returns: Test files with the reason each was linked. An empty list means no test is linked in the index (naming/import heuristics), not that none exists.
 
 ### Understanding code
 
-- **`get_file_summary`** — Get the role, public API, imports and exports of one file in a few lines, before deciding whether to read it. Cheaper than code_read.
-  - Parameters: `path*`, `fileId*`
-  - Returns: items[]: the file's symbols (id, kind, line, signature). `context`: a text card with role, language, line count, summary, public API, imports and exports.
-- **`assemble_context`** — Build one token-budgeted bundle of the files and symbols needed for a coding task, starting from files/symbols you already know. Use discover_context first when you do not know where to start.
-  - Parameters: `task`, `targetFiles?`, `targetSymbols?`, `maxTokens?`, `includeTests?`, `includeRecentChanges?`, `dependencyDepth?`, `explain?`
-  - Returns: items[]: ranked files/symbols with metadata.section ("targetFiles", "relatedFiles", "tests"…) and graphHops. `context`: the assembled text within maxTokens. Targets and tests get a guaranteed share of the budget.
-- **`explain_symbol`** — Everything known about one symbol in a single call (signature, complexity, callers, callees, tests, git, diagnostics) with the confidence of each part.
+- **`explain_symbol`** — Everything the index knows about one symbol in a single call: signature, who calls it, what it calls, members, tests, complexity and recent git activity. Use it instead of reading the file and grepping for callers.
   - Parameters: `id*`, `name*`, `path?`, `limit?`, `minConfidence?`
-  - Returns: items[0].metadata: signature, visibility, calls[], calledBy[], members[], complexity, referenceCount, plus per-part trust/basis; `truncated` lists which sections were cut. Diagnostics are empty unless the index was built with --lsp-diagnostics: check diagnosticsRun before reading an empty list as "clean".
-- **`symbol_inspect`** — Identity card of one symbol: stable symbolKey, range, signature hash, confidence. Lighter than explain_symbol.
-  - Parameters: `id*`, `name*`, `path?`
-  - Returns: items[]: matching symbols with metadata.symbolKey, endLine, confidence, exported. NOT_FOUND when nothing matches.
-- **`code_outline`** — Structural outline (all symbols, in order) of one file. Use compact:true to save about two thirds of the tokens.
-  - Parameters: `path*`, `fileId*`, `includeRanges?`, `compact?`
-  - Returns: items[]: symbols with kind, line, signature and metadata.endLine/range; compact:true keeps only name, kind, lines and signature.
+  - Returns: Signature, visibility, calls, calledBy, members, complexity and reference count, each with the confidence of the underlying edges. `truncated` lists sections that were cut. Diagnostics are empty unless the index was built with --lsp-diagnostics.
+- **`file_outline`** — Look at a file before deciding to read it. "summary" (default) gives its role, public API, imports and exports in a few lines; "symbols" lists every symbol with its line range; "folded" returns the source with bodies collapsed. All three cost a fraction of reading the file.
+  - Parameters: `path`, `detail?`, `maxTokens?`
+  - Returns: "summary": a text card plus the public symbols. "symbols": name, kind, lines and signature per symbol. "folded": the source where omitted ranges are replaced by "… <line>".
 - **`syntax_tree_dump`** — Debug aid: dump the parse tree of a file to see why a structural pattern does or does not match.
   - Parameters: `path`, `language`
   - Returns: items[0].excerpt: JSON tree of the file as the structural engine sees it.
 
 ### Reading source
 
-- **`code_read`** — Read actual source text, bounded. Use after the index tools told you where to look; use code_fold first for a cheaper structural view.
-  - Parameters: `path*`, `fileId*`, `handle*`, `start?`, `end?`, `maxResultBytes?`
-  - Returns: items[0].excerpt: the text; metadata: handle (re-readable, bound to the file version), start/end (UTF-16 offsets), truncated, returnedTokens. Errors: NOT_FOUND, OUT_OF_RANGE, STALE_HANDLE (file changed since the handle was issued).
-- **`code_fold`** — Read a file with bodies collapsed ("… 13") so you see its structure for a fraction of the tokens; then code_read the part you need.
-  - Parameters: `path*`, `fileId*`, `level?`, `maxTokens?`, `comments?`
-  - Returns: items[0].excerpt: folded source where omitted ranges are replaced by "… <line>"; metadata has a handle and token counts.
+- **`read_code`** — Read source lines of an indexed file by line range. Use it after find_symbol, search or file_outline told you which lines matter; the line numbers those tools print can be passed straight in.
+  - Parameters: `path`, `startLine?`, `endLine?`
+  - Returns: The requested lines, numbered. Without a range only the first 200 lines are returned. Errors: NOT_FOUND (unknown path), OUT_OF_RANGE (startLine is past the end of the file).
 
 ### Impact, risk and history
 
-- **`impact_analysis`** — Before changing a file or symbol, list what depends on it (reverse dependencies), ranked by confidence. Use simulate_mutation for a rename/move/delete you are about to do.
-  - Parameters: `id`, `level?`, `depth?`, `limit?`, `minConfidence?`
-  - Returns: items[]: impacted files/symbols with relevanceScore and metadata.depth, pathConfidence and `via` (how the edge was found). metadata: truncated/droppedByLimit/traversalExhausted tell whether the list is complete. An unknown id returns success:false.
-- **`get_recent_changes`** — See the latest commits for the project (or one file) to learn what changed recently and who touched it.
-  - Parameters: `workspaceRoot?`, `path?`, `limit?`, `since?`
-  - Returns: items[]: commits (id = full hash, name = subject, excerpt = date | subject, source = author). metadata.isGitRepository separates "not a git repo" from "no commits"; examinedCommits and truncated describe the window.
-- **`simulate_mutation`** — Dry-run a rename, delete or move in the index and list the references it would break. Writes nothing; run it before edit_plan.
-  - Parameters: `actionType`, `targetSymbolId`, `newName?`, `newPath?`
-  - Returns: metadata.diff: affectedSymbolsCount, brokenReferences[] (callerFile, callerLine, relation) and isSafe. items[] lists the broken references.
+- **`impact`** — Before changing a file or symbol, see what would be affected. By default it lists what depends on the target, ranked by how certain each link is (Grep finds mentions, not dependents). direction "dependencies" lists what the target itself uses. With `change` it dry-runs a rename, move or delete and lists the references that would break; nothing is written.
+  - Parameters: `target`, `direction?`, `change?`, `newName?`, `newPath?`, `depth?`, `limit?`
+  - Returns: Affected files and symbols with depth, confidence and how each link was found; `truncated` says whether the list is complete. With `change`: the broken references (file, line, relation) and whether the change is safe.
+- **`git_history`** — view "recent" (default): the latest commits for the project or one file, to learn what changed and who touched it. view "hotspots": files that change often and are complex, which deserve extra care or tests.
+  - Parameters: `view?`, `path?`, `since?`, `limit?`
+  - Returns: "recent": commits with hash, date, subject and author; `isGitRepository` separates "not a git repo" from "no commits". "hotspots": files with commit count and score components.
 - **`detect_architecture_violations`** — Audit the whole project for layer bypasses (e.g. controller → repository), circular dependencies and similar rule violations.
   - Parameters: `checkCyclesOnly?`
   - Returns: items[]: one per violation (ruleId, severity, description, suggestion). metadata.report groups circularDependencies and layerViolations; totalViolations is the count.
-- **`get_git_hotspots`** — Find risky files: frequently changed and complex. Good targets for extra review or tests.
-  - Parameters: `limit?`
-  - Returns: metadata.hotspots[] with score components; `context` states how many were found. Empty means no history data (not a git repo, or no commits), not "no risk".
 
 ### Guarded edits (opt-in)
 

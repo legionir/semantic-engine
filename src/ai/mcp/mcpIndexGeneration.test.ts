@@ -26,6 +26,9 @@ import { parseArgs } from '../../cli/args';
 import { createLoggerFromEnv } from '../../host/Logger';
 import { runIndex } from '../../cli/commands/index-command';
 
+/* These suites assert on the raw result object, so ask for the JSON envelope. */
+process.env['SEMANTIC_ENGINE_MCP_STRUCTURED'] = 'on';
+
 /*
 | The consumer package lives in a different repository. `STRUCTURED_AI_ROOT` points at
 | its `structured-ai` folder (CI checks the repository out beside this one); without it

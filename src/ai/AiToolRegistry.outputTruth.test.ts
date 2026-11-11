@@ -129,8 +129,10 @@ describe('git log parsing', () => {
 describe('MCP instructions', () => {
   it('explain how to start and how to read results', () => {
     expect(MCP_INSTRUCTIONS).toMatch(/project_info/);
-    expect(MCP_INSTRUCTIONS).toMatch(/truncated/);
-    expect(MCP_INSTRUCTIONS).toMatch(/indexGeneration/);
+    expect(MCP_INSTRUCTIONS).toMatch(/more exist/);
+    expect(MCP_INSTRUCTIONS).toMatch(/index generation/);
+    /* a model only switches tools when told what it gains over its built-in ones */
+    expect(MCP_INSTRUCTIONS).toMatch(/Grep/);
   });
 });
 
