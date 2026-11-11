@@ -130,9 +130,10 @@ export function createChatRoutes(
         }
 
         const body = (ctx.body || {}) as { message: string; history?: ChatMessage[] };
-        const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
+        /* the last 16 turns, each capped, so one pasted log cannot fill the model's context */
+        const history = Array.isArray(body.history) ? body.history.slice(-16) : [];
         const messages: ChatMessage[] = [
-          ...history.filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role, content: String(m.content ?? '') })),
+          ...history.filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role, content: String(m.content ?? '').slice(0, 8000) })),
           { role: 'user', content: body.message },
         ];
 

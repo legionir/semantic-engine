@@ -267,7 +267,7 @@ export class ContextDiscoverer {
         id: item.id,
         origin: 'search',
         weight: Math.max(score, 0.1),
-        reason: `semantic_search matched "${input.task}" (score ${score})`,
+        reason: `search matched "${input.task}" (score ${score})`,
       });
 
       /*
@@ -299,7 +299,7 @@ export class ContextDiscoverer {
         origin: 'search',
         // وزن کمی کمتر از خودِ نماد: فایل به‌واسطه وارد شده.
         weight: Math.max(score * 0.8, 0.1),
-        reason: `owns ${owner.name}, which semantic_search matched`,
+        reason: `owns ${owner.name}, which search matched`,
       });
     }
 

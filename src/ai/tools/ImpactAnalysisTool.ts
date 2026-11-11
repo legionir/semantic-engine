@@ -143,7 +143,7 @@ export class ImpactAnalysisTool implements AiTool<ImpactAnalysisInput> {
       if (seeds.length === 0 && !this.isModule(input.id) && !this.isPackage(input.id)) {
         return {
           success: false,
-          error: `No file, symbol, module or package found for id or path: ${input.id}. Use find_symbol or project_list_files to get a valid id.`,
+          error: `No file, symbol, module or package found for id or path: ${input.id}. Use find_symbol or list_files to get a valid target.`,
           items: [],
         };
       }

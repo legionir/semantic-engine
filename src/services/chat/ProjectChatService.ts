@@ -13,6 +13,7 @@
  */
 
 import { AiToolRegistry } from '../../ai/AiToolRegistry';
+import { renderToolResult } from '../../ai/mcp/renderToolResult';
 import { assertFetchableUrl, assertResolvedFetchableUrl } from '../providers/EmbeddingProviderService';
 
 export interface ChatLlmConfig {
@@ -22,7 +23,7 @@ export interface ChatLlmConfig {
   readonly temperature?: number;
   /** میلی‌ثانیه؛ پیش‌فرض ۶۰٬۰۰۰. */
   readonly timeoutMs?: number;
-  /** حداکثر دورِ فراخوانی ابزار پیش از توقف. پیش‌فرض ۶. */
+  /** حداکثر دورِ فراخوانی ابزار پیش از توقف. پیش‌فرض ۱۰. */
   readonly maxToolRounds?: number;
 }
 
@@ -85,12 +86,14 @@ Your job is to answer questions about THIS specific project accurately and hones
   (which tests cover a target), 'git_history' (recent commits or hotspots).
 - 'project_info' lists the indexed languages and how deep the analysis goes for
   each; use it to judge how far to trust graph answers.
-- Read the whole result, including notes and warnings. "more exist" or
+- Results come back as readable text: one item per line (name [kind] path:line),
+  then notes. Read all of it, including notes and warnings. "more exist" or
   "truncated" means the list was cut: narrow the query or raise 'limit' before
   concluding anything. "No results" is not proof of absence when support for the
   language is shallow, and a search that says keyword-only is not semantic.
 - If a call fails, read the error and adapt (a different tool or argument)
-  instead of repeating the same call.
+  instead of repeating the same call. A result that ends with "[truncated ...]"
+  was cut to fit: ask for a narrower range or query.
 
 # Workflow you MUST follow
 1. Decide which tool answers the question. Chain tools when needed
@@ -128,7 +131,8 @@ export class ProjectChatService {
     userMessages: ChatMessage[]
   ): Promise<ChatResult> {
     const tools = this.describeTools(registry);
-    const maxRounds = llm.maxToolRounds ?? 6;
+    const offered = new Set(registry.list().filter(t => !CHAT_TOOL_DENYLIST.has(t.name)).map(t => t.name));
+    const maxRounds = llm.maxToolRounds ?? 10;
 
     const messages: ChatMessage[] = [
       { role: 'system', content: SYSTEM_PROMPT },
@@ -155,20 +159,28 @@ export class ProjectChatService {
       for (const call of toolCalls) {
         const name = call.function?.name;
         let input: Record<string, unknown> = {};
+        let argumentsError: string | null = null;
         try {
           input = call.function?.arguments ? JSON.parse(call.function.arguments) : {};
         } catch {
-          input = {};
+          /* an empty object here would run the tool on arguments the model never wrote */
+          argumentsError = 'the arguments were not valid JSON; send them again as one JSON object';
         }
 
         let resultText: string;
         let ok = false;
-        try {
-          const output = await registry.execute(name, input);
-          ok = output.success;
-          resultText = this.summarizeToolOutput(output);
-        } catch (error) {
-          resultText = `tool error: ${error instanceof Error ? error.message : String(error)}`;
+        if (argumentsError) {
+          resultText = `ERROR: ${argumentsError}`;
+        } else if (!offered.has(name)) {
+          resultText = `ERROR: there is no tool named "${name}". Available tools: ${[...offered].join(', ')}`;
+        } else {
+          try {
+            const output = await registry.execute(name, input);
+            ok = output.success;
+            resultText = renderToolResult(output);
+          } catch (error) {
+            resultText = `ERROR: ${error instanceof Error ? error.message : String(error)}`;
+          }
         }
 
         toolTrace.push({ tool: name, input, ok, summary: truncate(resultText, 160) });
@@ -176,12 +188,18 @@ export class ProjectChatService {
           role: 'tool',
           tool_call_id: call.id,
           name,
-          content: truncate(resultText, 6000),
+          content: fitForModel(resultText),
         });
       }
     }
 
     // به سقف دور رسیدیم؛ یک درخواست پایانی بدون ابزار برای جمع‌بندی.
+    messages.push({
+      role: 'user',
+      content:
+        'You have used all the tool calls you are allowed for this question. Answer now from the results you already have, ' +
+        'and say plainly which part of the question you could not verify.',
+    });
     const finalCompletion = await this.callLlm(llm, messages, undefined);
     const finalMsg = finalCompletion?.choices?.[0]?.message?.content;
     return {
@@ -199,7 +217,7 @@ export class ProjectChatService {
    */
   private describeTools(registry: AiToolRegistry): unknown[] {
     const OUTPUT_HINT =
-      ' Returns { success, items[], context?, error? }; on success read items/context, on failure read error.';
+      ' Returns readable text: the items one per line, then notes and warnings that change how to read them; a failure starts with ERROR.';
     return registry
       .list()
       .filter(t => !CHAT_TOOL_DENYLIST.has(t.name))
@@ -214,22 +232,6 @@ export class ProjectChatService {
               : { type: 'object', properties: {} },
         },
       }));
-  }
-
-  private summarizeToolOutput(output: {
-    success: boolean;
-    error?: string;
-    items: readonly unknown[];
-    context?: string;
-  }): string {
-    if (!output.success) return `failed: ${output.error ?? 'unknown error'}`;
-    const parts: string[] = [];
-    if (output.context) parts.push(output.context);
-    if (output.items && output.items.length > 0) {
-      parts.push(JSON.stringify(output.items.slice(0, 20)));
-    }
-    if (parts.length === 0) return 'no results';
-    return parts.join('\n');
   }
 
   private async callLlm(
@@ -275,6 +277,15 @@ export class ProjectChatService {
       clearTimeout(timer);
     }
   }
+}
+
+/** Longest tool result handed to the model in one message. */
+const MAX_TOOL_RESULT_CHARS = 12000;
+
+/** Cuts a long result and says so, so the model does not take a prefix for the whole answer. */
+function fitForModel(text: string): string {
+  if (text.length <= MAX_TOOL_RESULT_CHARS) return text;
+  return `${text.slice(0, MAX_TOOL_RESULT_CHARS)}\n[truncated: ${text.length - MAX_TOOL_RESULT_CHARS} more characters were left out; ask for a narrower range or query]`;
 }
 
 function truncate(s: string, max: number): string {

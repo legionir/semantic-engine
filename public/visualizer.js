@@ -1136,7 +1136,7 @@ async function chatRequest(message) {
   const res = await fetch(withToken(`/api/v1/projects/${state.projectId}/chat`), {
     method: "POST",
     headers: Object.assign({ "Content-Type": "application/json" }, seHeaders()),
-    body: JSON.stringify({ message, history: state.chatHistory.slice(-8) }),
+    body: JSON.stringify({ message, history: state.chatHistory.slice(-16) }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);

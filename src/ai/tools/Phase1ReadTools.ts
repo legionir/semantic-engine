@@ -16,7 +16,7 @@ function fail(error: string): AiToolOutput { return { success: false, error, ite
 /** Says what was looked up and how a valid path is written, so the caller can correct itself. */
 function notFoundSource(input: Record<string, unknown>, fromHandle?: string): string {
   const asked = fromHandle ?? (typeof input.path === 'string' ? input.path : typeof input.fileId === 'string' ? input.fileId : undefined);
-  return `NOT_FOUND: source file${asked !== undefined ? ` '${asked}'` : ''} is not in the index; use a path relative to the project root with forward slashes, exactly as project_list_files prints it`;
+  return `NOT_FOUND: source file${asked !== undefined ? ` '${asked}'` : ''} is not in the index; use a path relative to the project root with forward slashes, exactly as list_files prints it`;
 }
 
 function fileOf(reader: ProjectIndexReader, input: Record<string, unknown>): FileEntry | undefined {

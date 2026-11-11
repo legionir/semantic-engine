@@ -62,7 +62,7 @@ describe('ProjectChatService', () => {
 
     const search = calls[0].body.tools.find((t: any) => t.function.name === 'semantic_search');
     expect(search.function.parameters.required).toEqual(['query']);
-    expect(search.function.description).toMatch(/items/); // output-shape hint present
+    expect(search.function.description).toMatch(/notes and warnings/); // output-shape hint present
   });
 
   it('ships a strong, guard-railed system prompt', async () => {
@@ -123,5 +123,71 @@ describe('ProjectChatService', () => {
     const named = toolNamesInPrompt().filter(name => name.includes('_') || offered.has(name) || ['search', 'impact'].includes(name));
     expect(named.length).toBeGreaterThan(5);
     expect(named.filter(name => !offered.has(name))).toEqual([]);
+  });
+
+  describe('what the model is given back from a tool', () => {
+    const registryReturning = (execute: (name: string, input: unknown) => unknown): AiToolRegistry =>
+      ({
+        list: () => [{ name: 'search', description: 'Search', inputSchema: { type: 'object', properties: {} } }],
+        execute: async (name: string, input: unknown) => execute(name, input),
+      }) as unknown as AiToolRegistry;
+    const ask = (registry: AiToolRegistry, calls: unknown[], extra: unknown[] = []) => {
+      const { calls: sent } = mockFetchSequence([
+        { choices: [{ message: { content: '', tool_calls: calls } }] },
+        ...extra,
+        { choices: [{ message: { content: 'ok', tool_calls: [] } }] },
+      ]);
+      return { sent, run: () => new ProjectChatService().chat(registry, LLM, [{ role: 'user', content: 'q' }]) };
+    };
+    const call = (args: string, name = 'search') => [{ id: 'c1', type: 'function', function: { name, arguments: args } }];
+    const toolMessage = (sent: any[]) => sent[1].body.messages.find((m: any) => m.role === 'tool').content as string;
+
+    it('hands over the same readable text MCP clients get, notes and warnings included', async () => {
+      const registry = registryReturning(() => ({
+        success: true,
+        items: [{ id: 's1', name: 'alpha', kind: 'function', path: 'a.ts', line: 3 }],
+        metadata: { truncated: true, matchCount: 40, note: 'keyword-only: no embeddings in this index' },
+      }));
+      const { sent, run } = ask(registry, call('{"query":"alpha"}'));
+      await run();
+      const text = toolMessage(sent);
+      expect(text).toContain('alpha [function] a.ts:3');
+      expect(text).toContain('more exist');
+      expect(text).toContain('note: keyword-only');
+    });
+
+    it('does not run a tool on arguments that are not JSON', async () => {
+      const execute = jest.fn();
+      const { sent, run } = ask(registryReturning(execute), call('{"query": '));
+      await run();
+      expect(execute).not.toHaveBeenCalled();
+      expect(toolMessage(sent)).toMatch(/not valid JSON/);
+    });
+
+    it('answers a call to a tool that is not offered with the names that are', async () => {
+      const execute = jest.fn();
+      const { sent, run } = ask(registryReturning(execute), call('{}', 'impact_analysis'));
+      await run();
+      expect(execute).not.toHaveBeenCalled();
+      expect(toolMessage(sent)).toMatch(/no tool named "impact_analysis"\. Available tools: search/);
+    });
+
+    it('says when it cut a long result', async () => {
+      const registry = registryReturning(() => ({ success: true, items: [], context: 'x'.repeat(20000) }));
+      const { sent, run } = ask(registry, call('{}'));
+      await run();
+      expect(toolMessage(sent)).toMatch(/\[truncated: \d+ more characters/);
+    });
+
+    it('at the round limit asks for an answer and says what could not be verified', async () => {
+      const registry = registryReturning(() => ({ success: true, items: [], context: 'r' }));
+      const loop = { choices: [{ message: { content: '', tool_calls: call('{}') } }] };
+      const { calls } = mockFetchSequence([loop, loop, { choices: [{ message: { content: 'final', tool_calls: [] } }] }]);
+      const result = await new ProjectChatService().chat(registry, { ...LLM, maxToolRounds: 2 }, [{ role: 'user', content: 'q' }]);
+      expect(result.reply).toBe('final');
+      const last = calls[calls.length - 1].body;
+      expect(last.tools).toBeUndefined();
+      expect(last.messages[last.messages.length - 1].content).toMatch(/which part of the question you could not verify/);
+    });
   });
 });

@@ -162,6 +162,6 @@ describe('closing the remaining audit items', () => {
 
   it('code_read errors say what was asked and how to correct it', async () => {
     const missing = await reg(false).execute('code_read', { path: '../x.ts' });
-    expect(missing.error).toMatch(/^NOT_FOUND: source file '\.\.\/x\.ts' is not in the index.*project_list_files/);
+    expect(missing.error).toMatch(/^NOT_FOUND: source file '\.\.\/x\.ts' is not in the index.*list_files/);
   });
 });
