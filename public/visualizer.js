@@ -237,24 +237,6 @@ async function loadNeighborhood(nodeId) {
   }
 }
 
-async function loadImpact(nodeId) {
-  try {
-    const res = await fetch(withToken(`/api/v1/projects/${state.projectId}/analysis/impact`), {
-      method: "POST",
-      headers: Object.assign({ "Content-Type": "application/json" }, seHeaders()),
-      body: JSON.stringify({ symbolId: nodeId }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.state === "failed") throw new Error(data.reason || `HTTP ${res.status}`);
-    setGraphData(data.nodes || [], data.edges || []);
-    showViewState(data.state || (data.nodes?.length ? "ready" : "empty"), data.reason);
-    selectNode(nodeId);
-  } catch (error) {
-    setGraphData([], []);
-    showViewState("failed", error instanceof Error ? error.message : String(error));
-  }
-}
-
 function showViewState(viewState, reason) {
   state.viewState = viewState;
   state.viewReason = reason || "";

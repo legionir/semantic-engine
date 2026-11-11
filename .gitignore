@@ -30,3 +30,6 @@ test-fixture/
 tmp-phase4-test/
 tmp-snapshot/
 /consumer/
+
+# agent tooling state
+.claude-flow/

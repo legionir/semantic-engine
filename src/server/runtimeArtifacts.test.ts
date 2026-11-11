@@ -24,7 +24,7 @@ describe('HttpServer — process state stays out of the source tree', () => {
     fs.rmSync(base, { recursive: true, force: true });
   });
 
-  it('writes jobs and telemetry under <dataRoot>/runtime', async () => {
+  it('writes nothing into the projects root when a data root is configured', async () => {
     const dataRoot = path.join(base, 'data');
     const server = new HttpServer({
       port: 0,
@@ -37,7 +37,6 @@ describe('HttpServer — process state stays out of the source tree', () => {
     await server.start();
     await server.stop();
 
-    expect(fs.existsSync(path.join(dataRoot, 'runtime', 'telemetry', 'spans.json'))).toBe(true);
     expect(fs.existsSync(path.join(projectsRoot, '.agent'))).toBe(false);
     expect(fs.readdirSync(projectsRoot)).toEqual([]);
   });

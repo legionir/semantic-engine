@@ -95,45 +95,8 @@ export function createAuthRoutes(
 
   return [
     { method: 'GET', pattern: '/api/v1/roles', requireAuth: false, handler: getRolesHandler },
-    { method: 'GET', pattern: '/api/v2/auth/roles', requireAuth: false, handler: getRolesHandler },
     { method: 'GET', pattern: '/api/v1/auth/api-keys', requireAuth: true, permission: 'auth:manage', handler: async () => ({ status: 200, json: { keys: apiKeyStore.listKeys() } }) },
-    { method: 'GET', pattern: '/api/v2/auth/keys', requireAuth: true, permission: 'auth:manage', handler: async () => ({ status: 200, json: { keys: apiKeyStore.listKeys() } }) },
     { method: 'POST', pattern: '/api/v1/auth/api-keys', requireAuth: true, permission: 'auth:manage', handler: createKeyHandler },
-    { method: 'POST', pattern: '/api/v2/auth/keys', requireAuth: true, permission: 'auth:manage', handler: createKeyHandler },
-    {
-      method: 'POST',
-      pattern: '/api/v1/users',
-      requireAuth: true,
-      permission: 'auth:manage',
-      // F-0023 — no user store exists; a 201 was a fake success with no side
-      // effect. Answer 501 until persistence lands.
-      handler: async () => ({
-        status: 501,
-        json: { error: 'User management is not implemented; no store persists these records' },
-      }),
-    },
-    {
-      method: 'POST',
-      pattern: '/api/v1/roles',
-      requireAuth: true,
-      permission: 'auth:manage',
-      // F-0023 — roles are a fixed enum in code; nothing to persist. 501, not 201.
-      handler: async () => ({
-        status: 501,
-        json: { error: 'Role creation is not implemented; roles are a fixed set' },
-      }),
-    },
-    {
-      method: 'POST',
-      pattern: '/api/v1/permissions',
-      requireAuth: true,
-      permission: 'auth:manage',
-      // F-0023 — permissions are a fixed enum in code; nothing to persist. 501, not 201.
-      handler: async () => ({
-        status: 501,
-        json: { error: 'Permission creation is not implemented; permissions are a fixed set' },
-      }),
-    },
     {
       method: 'DELETE',
       pattern: '/api/v1/auth/api-keys/:keyId',
@@ -146,19 +109,6 @@ export function createAuthRoutes(
         return { status: 200, json: { revoked: true, keyId } };
       },
     },
-    {
-      method: 'DELETE',
-      pattern: '/api/v2/auth/keys/:keyId',
-      requireAuth: true,
-      permission: 'auth:manage',
-      handler: async ctx => {
-        const keyId = ctx.params.keyId;
-        const success = apiKeyStore.revokeKey(keyId);
-        if (!success) return { status: 404, json: { error: `Key '${keyId}' not found` } };
-        return { status: 200, json: { revoked: true, keyId } };
-      },
-    },
     { method: 'POST', pattern: '/api/v1/auth/verify', requireAuth: false, handler: verifyHandler },
-    { method: 'POST', pattern: '/api/v2/auth/verify', requireAuth: false, handler: verifyHandler },
   ];
 }

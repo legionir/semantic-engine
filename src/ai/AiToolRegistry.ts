@@ -33,10 +33,7 @@ import {
   ProjectListFilesTool,
   DiagnosticsGetTool,
   SearchTextTool,
-  SymbolInspectTool,
-  GainsReportTool,
   CodeOutlineTool,
-  SymbolFindTool,
 } from './tools/Phase1ReadTools';
 import { StructuralSearchTool, RuleTestTool, SyntaxTreeDumpTool, EditPlanTool, EditApprovalTool, EditApplyTool, EditRollbackTool, EditStatusTool } from './tools/Phase2StructuralTools';
 import { TransactionalEditEngine } from '../core/codeintel/Phase2Transactions';
@@ -181,10 +178,7 @@ export class AiToolRegistry {
     this.register(new ProjectListFilesTool(this.options.reader));
     this.register(new DiagnosticsGetTool(this.options.reader));
     this.register(new SearchTextTool(this.options.reader, this.options.workspaceRoot));
-    this.register(new SymbolInspectTool(this.options.reader));
-    this.register(new GainsReportTool(this.options.reader, this.options.workspaceRoot));
     this.register(new CodeOutlineTool(this.options.reader));
-    this.register(new SymbolFindTool(this.options.reader));
     for (const tool of createAgentTools((name, input) => this.execute(name, input), this.options.reader)) {
       this.register(tool);
     }

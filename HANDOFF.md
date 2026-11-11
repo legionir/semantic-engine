@@ -372,7 +372,7 @@ API key store فعلاً in-memory است. برای multi-replica deployment ب�
 ### stdio
 
 - implementation: `src/ai/mcp/SemanticEngineMcpServer.ts`
-- entry: `src/ai/mcp/cli.ts`
+- entry: `semantic-engine serve --stdio` (`src/cli/commands/serve-command.ts`)
 - input/output از stdin/stdout طبق MCP SDK
 
 ### HTTP

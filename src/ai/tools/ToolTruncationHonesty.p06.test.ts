@@ -14,7 +14,7 @@ import { ExplainSymbolTool } from './ExplainSymbolTool';
 import { FindSymbolTool } from './FindSymbolTool';
 import { GetRecentChangesTool } from './GetRecentChangesTool';
 import { ImpactAnalysisTool } from './ImpactAnalysisTool';
-import { ProjectListFilesTool, SearchTextTool, SymbolFindTool } from './Phase1ReadTools';
+import { ProjectListFilesTool, SearchTextTool } from './Phase1ReadTools';
 import { ProjectIndexReader } from '../ProjectIndexReader';
 import {
   ProjectIndex,
@@ -120,18 +120,6 @@ describe('P-06: remaining paged surfaces must declare their cap', () => {
 
     const whole = await new ProjectListFilesTool(reader).execute({ limit: 10 });
     expect(whole.metadata).toEqual(expect.objectContaining({ truncated: false, matchCount: 4 }));
-  });
-
-  test('symbol_find reports exact matchCount with a true slice flag', async () => {
-    const symbols = Array.from({ length: 5 }, (_, i) => symbolEntry(`s${i}`, 'f1', `Same${i}`));
-    const reader = new ProjectIndexReader(buildIndex(root, [fileEntry('f1', 'src/a.ts')], symbols));
-    const capped = await new SymbolFindTool(reader).execute({ query: 'Same', limit: 2 });
-    expect(capped.items).toHaveLength(2);
-    expect(capped.metadata).toEqual(expect.objectContaining({ truncated: true, matchCount: 5, limit: 2 }));
-
-    // A full page must not claim truncation when the scan proved otherwise.
-    const exact = await new SymbolFindTool(reader).execute({ query: 'Same', limit: 5 });
-    expect(exact.metadata).toEqual(expect.objectContaining({ truncated: false, matchCount: 5 }));
   });
 
   test('search_text declares at-least count when the scan stops at the cap', async () => {
@@ -301,7 +289,6 @@ describe('P-06 contract lock: every limit-bearing tool keeps truncated with a co
       new SemanticSearchTool(reader),
       new ExplainSymbolTool(reader),
       new ProjectListFilesTool(reader),
-      new SymbolFindTool(reader),
     ];
     for (const tool of tools) {
       const out = await tool.execute({

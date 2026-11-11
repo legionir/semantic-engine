@@ -166,22 +166,6 @@ export class SearchTextTool extends SourceTool implements AiTool {
   }
 }
 
-export class SymbolInspectTool implements AiTool {
-  readonly name = 'symbol_inspect';
-  readonly description = 'Inspect a symbol identity, range, signature and provenance from the index.';
-  readonly inputSchema = { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, path: { type: 'string' } }, anyOf: [{ required: ['id'] }, { required: ['name'] }] };
-  constructor(private readonly reader: ProjectIndexReader) {}
-  async execute(input: AiToolInput): Promise<AiToolOutput> { let symbols: readonly SymbolEntry[] = []; if (typeof input.id === 'string') { const one = this.reader.getSymbolById(input.id); symbols = one ? [one] : []; } else if (typeof input.name === 'string') symbols = this.reader.getSymbolsByName(input.name); if (typeof input.path === 'string') { const file = this.reader.getFileByPath(input.path); symbols = symbols.filter(s => s.fileId === file?.id); } if (symbols.length === 0) return fail('NOT_FOUND: symbol'); const items = [...symbols].sort((a, b) => a.fileId.localeCompare(b.fileId) || a.line - b.line).map(s => { const file = this.reader.getFileById(s.fileId); return { id: s.id, name: s.name, kind: s.kind, path: file?.path, line: s.line, source: s.source, excerpt: s.signature ?? s.name, metadata: { symbolKey: `${file?.path ?? s.fileId}::${sanitizeKeyPart(s.fullyQualifiedName ?? s.name)}::${sanitizeKeyPart(s.kind)}`, signatureHash: s.signature ? hash8(s.signature) : undefined, endLine: s.endLine, confidence: s.confidence, exported: s.exported ?? false } }; }); return { success: true, items }; }
-}
-
-export class GainsReportTool implements AiTool {
-  readonly name = 'gains_report';
-  readonly description = 'Report deterministic fold/read token savings against full indexed source estimates.';
-  readonly inputSchema = { type: 'object', properties: { path: { type: 'string' }, maxTokens: { type: 'integer', minimum: 1 } } };
-  constructor(private readonly reader: ProjectIndexReader, private readonly workspaceRoot?: string) {}
-  async execute(input: AiToolInput): Promise<AiToolOutput> { const files = typeof input.path === 'string' ? [this.reader.getFileByPath(input.path)].filter((f): f is FileEntry => !!f) : [...this.reader.getAllFiles()].sort((a, b) => a.path.localeCompare(b.path)); const rows = files.map(f => { const full = Math.max(1, Math.ceil((f.lines * 40) / 4)); const budget = typeof input.maxTokens === 'number' ? input.maxTokens : Math.max(1, Math.ceil(full * 0.35)); return { id: f.id, name: f.path, kind: 'gain', path: f.path, line: 1, source: 'index-estimate', metadata: { fullTokensEstimate: full, foldedTokensBudget: budget, avoidedTokensEstimate: Math.max(0, full - budget), compressionRatio: Math.max(0, 1 - budget / full), workspaceRootConfigured: !!this.workspaceRoot } }; }); return { success: true, items: rows, metadata: { fileCount: rows.length, returnedTokens: rows.length * 10 } }; }
-}
-
 export class CodeOutlineTool implements AiTool {
   readonly name = 'code_outline';
   readonly description = 'Return indexed symbols as a deterministic structural outline.';
@@ -195,20 +179,6 @@ export class CodeOutlineTool implements AiTool {
       return { success: true, items, metadata: { returnedTokens: symbols.reduce((n, s) => n + tokens(s.signature ?? s.name), 0), truncated: false, compact: true } };
     }
     return { success: true, items: symbols.map((s, ordinal) => ({ id: s.id, name: s.name, kind: s.kind, path: file.path, line: s.line, source: s.source, excerpt: s.signature ?? s.name, metadata: { symbolKey: `${file.path}::${sanitizeKeyPart(s.fullyQualifiedName ?? s.name)}::${sanitizeKeyPart(s.kind)}${symbols.filter(x => x.name === s.name && x.kind === s.kind).length > 1 ? `#${ordinal}` : ''}`, endLine: s.endLine, ...(input.includeRanges === false ? {} : { range: { startLine: s.line, endLine: s.endLine } }), partial: false, confidence: s.confidence } })), metadata: { returnedTokens: symbols.reduce((n, s) => n + tokens(s.signature ?? s.name), 0), truncated: false } };
-  }
-}
-
-export class SymbolFindTool implements AiTool {
-  readonly name = 'symbol_find';
-  readonly description = 'Find indexed symbols by exact or case-insensitive name, deterministically.';
-  readonly inputSchema = { type: 'object', properties: { query: { type: 'string', minLength: 1 }, kind: { type: 'string' }, path: { type: 'string' }, limit: { type: 'integer', minimum: 1, maximum: 1000 } }, required: ['query'] };
-  constructor(private readonly reader: ProjectIndexReader) {}
-  async execute(input: AiToolInput): Promise<AiToolOutput> {
-    const query = typeof input.query === 'string' ? input.query.trim().toLowerCase() : ''; if (!query) return fail('INVALID_ARGUMENT: query is required');
-    const kind = typeof input.kind === 'string' ? input.kind : undefined; const pathFilter = typeof input.path === 'string' ? this.reader.getFileByPath(input.path)?.id : undefined;
-    const limit = typeof input.limit === 'number' ? input.limit : 100;
-    const symbols = [...this.reader.getAllSymbols()].filter(s => s.name.toLowerCase().includes(query) && (!kind || s.kind === kind) && (!pathFilter || s.fileId === pathFilter)).sort((a, b) => a.name.localeCompare(b.name) || a.fileId.localeCompare(b.fileId) || a.line - b.line); const limited = symbols.slice(0, limit);
-    return { success: true, items: limited.map(s => { const f = this.reader.getFileById(s.fileId); return { id: s.id, name: s.name, kind: s.kind, path: f?.path, line: s.line, source: s.source, excerpt: s.signature ?? s.name, metadata: { endLine: s.endLine, confidence: s.confidence } }; }), metadata: { returnedTokens: limited.reduce((n, s) => n + tokens(s.name), 0), truncated: symbols.length > limit, matchCount: symbols.length, limit } };
   }
 }
 

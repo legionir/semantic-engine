@@ -49,12 +49,9 @@ export function createHistoryRoutes(
 
   return [
     { method: 'GET', pattern: '/api/v1/projects/:id/history/hotspots', requireAuth: true, handler: hotspotsHandler },
-    { method: 'GET', pattern: '/api/v2/projects/:id/history/hotspots', requireAuth: true, handler: hotspotsHandler },
     { method: 'GET', pattern: '/api/v1/projects/:id/history/co-churn/:filePath', requireAuth: true, handler: coChurnHandler },
-    { method: 'GET', pattern: '/api/v2/projects/:id/history/co-churn/:filePath', requireAuth: true, handler: coChurnHandler },
     // F-0011 — record-commit writes to project history state: explicit
     // project:write instead of the method default.
     { method: 'POST', pattern: '/api/v1/projects/:id/history/record-commit', requireAuth: true, permission: 'project:write', handler: recordCommitHandler },
-    { method: 'POST', pattern: '/api/v2/projects/:id/history/record-commit', requireAuth: true, permission: 'project:write', handler: recordCommitHandler },
   ];
 }

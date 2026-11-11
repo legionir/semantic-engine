@@ -135,7 +135,7 @@ describe('ProjectService — project identity and registration', () => {
   });
 });
 
-describe('ProjectService — update, remove and indexProject contract', () => {
+describe('ProjectService — update and remove contract', () => {
   let base: string;
 
   beforeEach(() => {
@@ -174,15 +174,6 @@ describe('ProjectService — update, remove and indexProject contract', () => {
     expect(service.listProjects()).toHaveLength(0);
     expect(service.removeProject('gone')).toBe(false);
     expect(new ProjectRegistry({ dataRoot }).get('gone')).toBeUndefined();
-    service.dispose();
-  });
-
-  it('indexProject states that it reloaded artifacts and did not re-index', async () => {
-    const service = new ProjectService(base);
-    const project = service.registerProject(makeProject(base, 'a', 'app'), 'idx', 'Idx');
-    const result = await service.indexProject(project.id);
-    expect(result).toMatchObject({ mode: 'reload', reindexed: false });
-    await expect(service.indexProject('missing')).rejects.toThrow(/not found/);
     service.dispose();
   });
 });

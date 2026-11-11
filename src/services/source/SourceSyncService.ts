@@ -77,47 +77,6 @@ export interface SyncResult {
 export class SourceSyncService {
   private readonly guard = new SourceSecurityGuard();
 
-  async syncFromLocal(projectId: string, projectRoot: string): Promise<SyncResult> {
-    if (!fs.existsSync(projectRoot)) {
-      throw new Error(`Project root does not exist: ${projectRoot}`);
-    }
-
-    let filesSynced = 0;
-    let totalBytes = 0;
-
-    const traverse = (dir: string) => {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === 'dist') continue;
-        const fullPath = path.join(dir, entry.name);
-        const rel = path.relative(projectRoot, fullPath);
-
-        const check = this.guard.validateRelativePath(projectRoot, rel);
-        if (!check.ok) continue;
-
-        if (entry.isDirectory()) {
-          traverse(fullPath);
-        } else if (entry.isFile()) {
-          const stat = fs.statSync(fullPath);
-          if (this.guard.validateFileSize(stat.size).ok) {
-            filesSynced++;
-            totalBytes += stat.size;
-          }
-        }
-      }
-    };
-
-    traverse(projectRoot);
-
-    return {
-      projectId,
-      source: 'local',
-      filesSynced,
-      totalBytes,
-      timestamp: Date.now(),
-    };
-  }
-
   async syncFromGit(projectId: string, targetDir: string, options: GitSyncOptions): Promise<SyncResult> {
     let repo: URL;
     try {

@@ -54,10 +54,7 @@ export const INTERNAL_TOOL_NAMES: readonly string[] = [
   'code_fold',
   'project_list_files',
   'search_text',
-  'symbol_inspect',
-  'gains_report',
   'code_outline',
-  'symbol_find',
   'structural_search',
 ];
 

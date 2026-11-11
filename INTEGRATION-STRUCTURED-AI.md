@@ -1,5 +1,7 @@
 # یکپارچه‌سازی Semantic Engine در structured-ai
 
+> **Outdated tool names.** The MCP surface was reduced to 11 tools (`project_info`, `find_context`, `search`, `find_symbol`, `explain_symbol`, `file_outline`, `read_code`, `list_files`, `impact`, `find_tests`, `git_history`). The names in the mapping table below (`semantic_search`, `get_file_summary`, `impact_analysis`, ...) are no longer callable over MCP, and results are readable text unless the server runs with `SEMANTIC_ENGINE_MCP_STRUCTURED=on`. The Structured AI client must be updated before this integration works again. See `docs/AI-TOOLS.md`.
+
 **تاریخ:** ۱۸ اوت ۲۰۲۶
 **پیش‌نیاز:** تکمیل `MIGRATION-STANDALONE.md` (استقلال از VS Code) و `LSP-ARCHITECTURE.md`
 **اسناد مرتبط:** `AUDIT-2026-08.md`

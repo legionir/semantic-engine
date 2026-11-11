@@ -604,47 +604,7 @@
         }
       }
     },
-    "/api/v1/users": {
-      "post": {
-        "summary": "Create a user",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Invalid request (JSON body with string `error`)"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
     "/api/v1/roles": {
-      "post": {
-        "summary": "Create a role",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Invalid request (JSON body with string `error`)"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
       "get": {
         "summary": "List platform roles and their default permissions",
         "responses": {
@@ -654,64 +614,9 @@
         }
       }
     },
-    "/api/v1/permissions": {
-      "post": {
-        "summary": "Create a permission",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Invalid request (JSON body with string `error`)"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
     "/api/v1/auth/api-keys/{keyId}": {
       "delete": {
         "summary": "Revoke an API key",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "keyId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Invalid request (JSON body with string `error`)"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Not found (JSON body with string `error`)"
-          }
-        }
-      }
-    },
-    "/api/v2/auth/keys/{keyId}": {
-      "delete": {
-        "summary": "Revoke an API key (v2)",
         "security": [
           {
             "bearerAuth": []
@@ -1146,27 +1051,6 @@
         }
       }
     },
-    "/api/v2/projects/import-bundle": {
-      "post": {
-        "summary": "Import a project bundle (v2)",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Invalid request (JSON body with string `error`)"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
     "/api/v1/projects/{id}/visualization/dependencies": {
       "get": {
         "summary": "File-level dependency graph",
@@ -1338,53 +1222,7 @@
         ]
       }
     },
-    "/api/v2/projects/{id}/analysis/architecture-violations": {
-      "get": {
-        "summary": "Detect layered-architecture violations",
-        "responses": {
-          "200": {
-            "description": "Violations for the project"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
     "/api/v1/projects/{id}/analysis/dependency-cycles": {
-      "get": {
-        "summary": "Find circular dependencies (Tarjan SCC)",
-        "responses": {
-          "200": {
-            "description": "Dependency cycles"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/api/v2/projects/{id}/analysis/dependency-cycles": {
       "get": {
         "summary": "Find circular dependencies (Tarjan SCC)",
         "responses": {
@@ -1430,29 +1268,6 @@
         ]
       }
     },
-    "/api/v2/projects/{id}/analysis/impact": {
-      "post": {
-        "summary": "Estimate blast radius of a change",
-        "responses": {
-          "200": {
-            "description": "Impact analysis result"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
     "/api/v1/projects/{id}/analysis/simulate-mutation": {
       "post": {
         "summary": "Simulate a mutation without applying it",
@@ -1476,53 +1291,7 @@
         ]
       }
     },
-    "/api/v2/projects/{id}/analysis/simulate-mutation": {
-      "post": {
-        "summary": "Simulate a mutation without applying it",
-        "responses": {
-          "200": {
-            "description": "Simulated mutation diff"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
     "/api/v1/projects/{id}/history/hotspots": {
-      "get": {
-        "summary": "List file churn hotspots",
-        "responses": {
-          "200": {
-            "description": "Hotspot ranking"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/api/v2/projects/{id}/history/hotspots": {
       "get": {
         "summary": "List file churn hotspots",
         "responses": {
@@ -1576,64 +1345,7 @@
         ]
       }
     },
-    "/api/v2/projects/{id}/history/co-churn/{filePath}": {
-      "get": {
-        "summary": "Files that change together with the path",
-        "responses": {
-          "200": {
-            "description": "Co-churn partners"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filePath",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
     "/api/v1/projects/{id}/history/record-commit": {
-      "post": {
-        "summary": "Record a commit change set for history mining",
-        "responses": {
-          "200": {
-            "description": "Commit recorded"
-          },
-          "404": {
-            "description": "Project not found"
-          },
-          "413": {
-            "description": "Change set exceeds the per-call file limit"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/api/v2/projects/{id}/history/record-commit": {
       "post": {
         "summary": "Record a commit change set for history mining",
         "responses": {
@@ -1705,62 +1417,6 @@
         ]
       }
     },
-    "/api/v2/projects/{id}/source/sync-git": {
-      "post": {
-        "summary": "Sync project source from a git remote",
-        "responses": {
-          "200": {
-            "description": "Source sync result"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/api/v2/projects/{id}/source/upload": {
-      "post": {
-        "summary": "Upload project source files",
-        "responses": {
-          "200": {
-            "description": "Upload result"
-          },
-          "404": {
-            "description": "Project not found"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/api/v2/auth/roles": {
-      "get": {
-        "summary": "List platform roles and their default permissions",
-        "responses": {
-          "200": {
-            "description": "Roles and permissions"
-          }
-        }
-      }
-    },
     "/api/v1/auth/api-keys": {
       "get": {
         "summary": "List API keys (hashed, no secrets)",
@@ -1782,44 +1438,7 @@
         }
       }
     },
-    "/api/v2/auth/keys": {
-      "get": {
-        "summary": "List API keys (hashed, no secrets)",
-        "responses": {
-          "200": {
-            "description": "API key records"
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a scoped API key",
-        "responses": {
-          "201": {
-            "description": "Created key with raw token (shown once)"
-          },
-          "400": {
-            "description": "Invalid request body"
-          }
-        }
-      }
-    },
     "/api/v1/auth/verify": {
-      "post": {
-        "summary": "Verify a token (public, rate-limited)",
-        "responses": {
-          "200": {
-            "description": "Token validity"
-          },
-          "401": {
-            "description": "Invalid or expired token"
-          },
-          "429": {
-            "description": "Too many verification attempts"
-          }
-        }
-      }
-    },
-    "/api/v2/auth/verify": {
       "post": {
         "summary": "Verify a token (public, rate-limited)",
         "responses": {

@@ -105,9 +105,7 @@ export function createSourceRoutes(
 
   return [
     { method: 'POST', pattern: '/api/v1/projects/:id/source/sync', requireAuth: true, permission: 'project:write', handler: syncGitHandler },
-    { method: 'POST', pattern: '/api/v2/projects/:id/source/sync-git', requireAuth: true, permission: 'project:write', handler: syncGitHandler },
     { method: 'POST', pattern: '/api/v1/projects/:id/source/upload', requireAuth: true, permission: 'project:write', handler: uploadHandler },
-    { method: 'POST', pattern: '/api/v2/projects/:id/source/upload', requireAuth: true, permission: 'project:write', handler: uploadHandler },
     {
       method: 'PUT',
       pattern: '/api/v1/projects/:id/files/:filePath',
@@ -137,19 +135,6 @@ export function createSourceRoutes(
     {
       method: 'POST',
       pattern: '/api/v1/projects/import-bundle',
-      requireAuth: true,
-      permission: 'project:admin',
-      handler: async ctx => {
-        const body = (ctx.body || {}) as { projectId?: string; name?: string; files?: Record<string, string> };
-        if (!body.projectId || !body.files) {
-          return { status: 400, json: { error: 'projectId and files are required' } };
-        }
-        return importBundleAsNewProject(body.projectId, body.name, body.files);
-      },
-    },
-    {
-      method: 'POST',
-      pattern: '/api/v2/projects/import-bundle',
       requireAuth: true,
       permission: 'project:admin',
       handler: async ctx => {

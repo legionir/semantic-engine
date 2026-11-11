@@ -17,9 +17,6 @@ import { SseManager } from './SseManager';
 import { WebSocketManager } from './WebSocketManager';
 import { JobManager } from '../runtime/JobManager';
 import { ApiKeyStore } from '../security/rbac/ApiKeyStore';
-import { AuditLogger } from '../security/audit/AuditLogger';
-import { MetricsCollector } from '../observability/MetricsCollector';
-import { OpenTelemetryTracer } from '../observability/OpenTelemetryTracer';
 import { ProjectService } from '../services/ProjectService';
 import { ProjectRegistry } from '../core/config/ProjectRegistry';
 import { RUNTIME_DIR } from '../core/config/ProjectPaths';
@@ -66,9 +63,6 @@ export class HttpServer {
   readonly sse: SseManager;
   readonly ws: WebSocketManager;
   readonly apiKeyStore: ApiKeyStore;
-  readonly auditLogger: AuditLogger;
-  readonly metricsCollector: MetricsCollector;
-  readonly tracer: OpenTelemetryTracer;
   // F-0012 — removed dead `jobQueue` (InMemoryQueueAdapter) and
   // `indexingWorker` (IndexingWorker): they were constructed but never
   // started or enqueued into, and `/ready` advertised a subsystem that did
@@ -97,9 +91,6 @@ export class HttpServer {
     this.sse = new SseManager();
     this.ws = new WebSocketManager();
     this.apiKeyStore = new ApiKeyStore(config.token);
-    this.auditLogger = new AuditLogger();
-    this.metricsCollector = new MetricsCollector();
-    this.tracer = new OpenTelemetryTracer();
     /*
     | state پروسه هرگز داخل checkout نوشته نمی‌شود (قبلاً
     | `<projectsRoot>/.agent/jobs.json` بود و ریپو را dirty می‌کرد). جای آن
@@ -295,9 +286,6 @@ export class HttpServer {
     this.projects.dispose();
     this.sse.close();
     this.ws.close();
-    if (this.runtimeDir) {
-      await this.tracer.flush(path.join(this.runtimeDir, 'telemetry', 'spans.json'));
-    }
     if (this.server) {
       await new Promise<void>(resolve => {
         this.server?.close(() => resolve());

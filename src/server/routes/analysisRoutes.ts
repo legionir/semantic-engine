@@ -67,12 +67,8 @@ export function createAnalysisRoutes(
     // Impact is a read: semantic:query. Simulate-mutation is a dry-run of a
     // mutation: gated behind semantic:mutate.
     { method: 'POST', pattern: '/api/v1/projects/:id/analysis/impact', requireAuth: true, permission: 'semantic:query', handler: impactHandler },
-    { method: 'POST', pattern: '/api/v2/projects/:id/analysis/impact', requireAuth: true, permission: 'semantic:query', handler: impactHandler },
     { method: 'GET', pattern: '/api/v1/projects/:id/analysis/architecture-violations', requireAuth: true, handler: violationsHandler },
-    { method: 'GET', pattern: '/api/v2/projects/:id/analysis/architecture-violations', requireAuth: true, handler: violationsHandler },
     { method: 'GET', pattern: '/api/v1/projects/:id/analysis/dependency-cycles', requireAuth: true, handler: cyclesHandler },
-    { method: 'GET', pattern: '/api/v2/projects/:id/analysis/dependency-cycles', requireAuth: true, handler: cyclesHandler },
     { method: 'POST', pattern: '/api/v1/projects/:id/analysis/simulate-mutation', requireAuth: true, permission: 'semantic:mutate', handler: mutationHandler },
-    { method: 'POST', pattern: '/api/v2/projects/:id/analysis/simulate-mutation', requireAuth: true, permission: 'semantic:mutate', handler: mutationHandler },
   ];
 }

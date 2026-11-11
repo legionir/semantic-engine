@@ -22,7 +22,6 @@
  */
 
 import { makeEdgeId } from '../graphs/EdgeProvenance';
-import { OpenTelemetryTracer } from './OpenTelemetryTracer';
 
 describe('P-05 regressions', () => {
   describe('SE-P-002 — edge id distinguishes occurrence 0 from absent', () => {
@@ -36,37 +35,6 @@ describe('P-05 regressions', () => {
     });
     it('is deterministic for identical identities', () => {
       expect(makeEdgeId({ ...base, occurrence: 0 })).toBe(makeEdgeId({ ...base, occurrence: 0 }));
-    });
-  });
-
-  describe('SE-F-034 — traceparent validation per W3C', () => {
-    const tracer = new OpenTelemetryTracer();
-    const valid = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
-
-    it('accepts a spec-valid header', () => {
-      expect(tracer.parseTraceparent(valid)).toEqual({
-        traceId: '4bf92f3577b34da6a3ce929d0e0e4736',
-        parentSpanId: '00f067aa0ba902b7',
-      });
-    });
-
-    it('rejects malformed headers instead of harvesting garbage ids', () => {
-      expect(tracer.parseTraceparent('junk-x-y-z')).toBeNull();
-      expect(tracer.parseTraceparent('00-dead-01')).toBeNull();               // wrong lengths
-      expect(tracer.parseTraceparent('00-zz92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01')).toBeNull(); // non-hex
-      expect(tracer.parseTraceparent('00-00000000000000000000000000000000-00f067aa0ba902b7-01')).toBeNull(); // all-zero trace-id
-      expect(tracer.parseTraceparent('ff-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01')).toBeNull(); // invalid version ff
-    });
-
-    it('startSpan ignores a malformed parent and mints a fresh valid trace', () => {
-      const span = tracer.startSpan('x', 'not-a-traceparent');
-      expect(span.traceId).toMatch(/^[0-9a-f]{32}$/);
-      expect(span.parentSpanId).toBeUndefined();
-    });
-
-    it('round-trips what createTraceparent produces', () => {
-      const header = tracer.createTraceparent();
-      expect(tracer.parseTraceparent(header)).not.toBeNull();
     });
   });
 });

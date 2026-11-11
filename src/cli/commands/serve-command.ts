@@ -290,7 +290,6 @@ async function runPlatform(
           title: 'API',
           rows: [
             { label: 'REST v1', value: `${started.url}/api/v1/`},
-            { label: 'REST v2', value: `${started.url}/api/v2/` },
             { label: 'Health', value: `${started.url}/health   metrics ${started.url}/metrics` },
           ],
         },

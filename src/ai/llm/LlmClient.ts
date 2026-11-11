@@ -2,7 +2,6 @@
  * LlmClient — abstraction برای فراخوانی مدل‌های زبانی بزرگ.
  *
  * Implementations:
- * - OpenAILlmClient: هر provider سازگار با OpenAI API (OpenAI، OpenRouter، local Llama.cpp server، Ollama با OpenAI-compatible endpoint)
  */
 
 export interface LlmMessage {

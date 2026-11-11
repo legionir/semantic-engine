@@ -62,31 +62,17 @@ describe('F-0009 — auth/verify enumeration oracle is rate-limited', () => {
 /**
  * F-0023 — the IAM `POST /users`, `/roles`, `/permissions` handlers were no-op
  * stubs that returned 201 with fabricated bodies but persisted nothing. A
- * success without a side effect is a lie; they must answer 501.
+ * success without a side effect is a lie. They answered 501 for a while and
+ * are now removed: nothing calls them and there is no store behind them.
  */
-describe('F-0023 — IAM stub routes never report a fake success', () => {
-  const handlerFor = (pattern: string) => {
-    const store = new ApiKeyStore();
-    const route = createAuthRoutes(store).find(r => r.method === 'POST' && r.pattern === pattern);
-    if (!route) throw new Error(`route not found: ${pattern}`);
-    return route;
-  };
+describe('F-0023 — IAM stub routes are gone rather than faking a success', () => {
+  const routes = createAuthRoutes(new ApiKeyStore());
 
-  const ctx = {
-    req: { socket: {} },
-    method: 'POST',
-    params: {},
-    query: {},
-    body: { username: 'u', roleName: 'r', permission: 'p' },
-    authenticated: true,
-    auth: { authenticated: true, permissions: ['auth:manage'], resourceScope: '*' },
-  } as unknown as HttpRequestContext;
+  it.each(['/api/v1/users', '/api/v1/permissions'])('%s is not offered (it only ever answered a stub)', pattern => {
+    expect(routes.some(route => route.pattern === pattern)).toBe(false);
+  });
 
-  it.each(['/api/v1/users', '/api/v1/roles', '/api/v1/permissions'])(
-    '%s answers 501 (no fake 201)',
-    async pattern => {
-      const res = await handlerFor(pattern).handler(ctx);
-      expect(res?.status).toBe(501);
-    }
-  );
+  it('no route creates a role: roles are a fixed set', () => {
+    expect(routes.some(route => route.pattern === '/api/v1/roles' && route.method === 'POST')).toBe(false);
+  });
 });
