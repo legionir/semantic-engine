@@ -193,6 +193,8 @@ async function main() {
     await page.selectOption('#field-cacheMode', 'full');
     await page.selectOption('#field-artifactLocation', 'external');
     await page.fill('#field-debounceMs', '700');
+    // the preview is answered by the gateway after a short debounce
+    await page.waitForFunction(() => document.querySelector('#command-preview').textContent.includes('--debounce 700'), null, { timeout: 10_000 });
     const preview = await page.textContent('#command-preview');
     for (const flag of ['--max-depth 6', '--max-file-size-mb 2', "--ignore '**/*.md'", '--no-gitignore', '--no-skip-hidden', '--full', '--artifact-location external', '--debounce 700']) {
       check(`command preview contains ${flag}`, preview.includes(flag), preview);

@@ -28,15 +28,16 @@
 
   <!-- View Switcher Tabs -->
   <nav class="views-nav">
-    <button type="button" class="view-tab active" data-view="architecture">🏗 Architecture</button>
-    <button type="button" class="view-tab" data-view="module">📦 Modules</button>
+    <button type="button" class="view-tab active" data-view="architecture">🏗 Architecture & Modules</button>
     <button type="button" class="view-tab" data-view="dependencies">🔗 Dependencies & Calls</button>
-    <button type="button" class="view-tab" data-view="workflow">⚡ Workflows</button>
-    <button type="button" class="view-tab" data-view="impact">💥 Impact Analysis</button>
-    <button type="button" class="view-tab" data-view="business-mapping">💼 Business → Code</button>
+    <button type="button" class="view-tab" data-view="business-mapping">💼 Business → Code & Workflows</button>
     <button type="button" class="view-tab" data-view="test-intelligence">🧪 Test Map</button>
-    <button type="button" class="view-tab" data-view="hotspots">🔥 Git Hotspots</button>
   </nav>
+  <div class="mode-switch" id="depModes" role="group" aria-label="Dependencies display mode" hidden>
+    <button type="button" class="mode-btn active" data-mode="graph" aria-pressed="true">Graph</button>
+    <button type="button" class="mode-btn" data-mode="impact" aria-pressed="false" title="Selecting a node runs impact analysis">Impact</button>
+    <button type="button" class="mode-btn" data-mode="hotspots" aria-pressed="false" title="Highlights the most-connected files">Hotspots</button>
+  </div>
 
   <!-- Search to Graph Bar -->
   <div class="search-box">

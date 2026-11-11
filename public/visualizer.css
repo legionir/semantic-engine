@@ -52,6 +52,15 @@
   color: #c9d1d9;
 }
 
+.mode-switch { display: flex; gap: 2px; padding: 2px; border: 1px solid #30363d; border-radius: 6px; }
+.mode-switch[hidden] { display: none; }
+.mode-btn {
+  background: transparent; border: 0; color: #8b949e; padding: 4px 10px;
+  border-radius: 4px; font-size: 12px; cursor: pointer;
+}
+.mode-btn.active { background: #1f6feb22; color: #58a6ff; }
+.graph-node.hotspot rect, .graph-node.hotspot circle, .graph-node.hotspot polygon { stroke: #f0883e; stroke-width: 4px; }
+
 .view-tab.active {
   background: #1f6feb22;
   border-color: #1f6feb;

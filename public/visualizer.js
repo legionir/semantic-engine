@@ -22,6 +22,7 @@ function withToken(url) {
 
 const state = {
   currentView: "architecture",
+  depMode: "graph", // graph | impact | hotspots — only on the Dependencies view
   projectId: params.get("project") || "current",
   nodes: [],
   edges: [],
@@ -81,6 +82,20 @@ function bindEvents() {
       tab.classList.add("active");
       state.currentView = tab.dataset.view;
       loadView(state.currentView);
+    });
+  });
+
+  // Dependencies display modes: plain graph, impact on selection, hotspots.
+  document.querySelectorAll(".mode-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.depMode = btn.dataset.mode;
+      document.querySelectorAll(".mode-btn").forEach(b => {
+        const on = b === btn;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-pressed", String(on));
+      });
+      applyHotspotMarks();
+      if (state.depMode === "impact" && state.selectedNodeId) analyzeImpact(state.selectedNodeId);
     });
   });
 
@@ -174,18 +189,17 @@ function bindEvents() {
 // هر تب به یک نمای واقعاً متفاوت از بک‌اند وصل می‌شود (SE-VIZ-02).
 const VIEW_ENDPOINTS = {
   architecture: id => `/api/v1/projects/${id}/visualization/architecture`,   // ماژول‌محور
-  module: id => `/api/v1/projects/${id}/visualization/architecture`,          // ماژول‌ها + drill
+  module: id => `/api/v1/projects/${id}/visualization/architecture`,          // drill from Architecture
   dependencies: id => `/api/v1/projects/${id}/visualization/dependencies`,    // فایل‌محور کامل
-  workflow: id => `/api/v1/projects/${id}/visualization/business-mapping`,    // جریان‌ها/بیزنس
+  workflow: id => `/api/v1/projects/${id}/visualization/business-mapping`,    // opened from Business → Code
   "business-mapping": id => `/api/v1/projects/${id}/visualization/business-mapping`,
   "test-intelligence": id => `/api/v1/projects/${id}/visualization/test-map`,
-  impact: id => `/api/v1/projects/${id}/visualization/dependencies`,          // پایه برای impact روی نود
-  hotspots: id => `/api/v1/projects/${id}/visualization/dependencies`,
 };
 
 async function loadView(viewType) {
   projectTitleEl.textContent = `Loading ${viewType} view…`;
   updateBreadcrumb(viewType);
+  document.getElementById("depModes").hidden = viewType !== "dependencies";
 
   // Preview data is deliberately opt-in and visibly labelled; it is never a
   // fallback for an empty or failed project request.
@@ -517,6 +531,7 @@ function renderGraph() {
   });
 
   svg.appendChild(g);
+  applyHotspotMarks();
 }
 
 // ── Node dragging ─────────────────────────────────────────────────────────
@@ -569,6 +584,7 @@ function selectNode(nodeId) {
 
   applyFocusMode(nodeId);
   openInspector(node);
+  if (state.currentView === "dependencies" && state.depMode === "impact") analyzeImpact(nodeId);
   // نودِ انتخاب‌شده را با یک انیمیشن نرم به مرکز بیاور
   centerNode(node);
 }
@@ -999,6 +1015,24 @@ function onWheel(e) {
 function truncate(str, len = 20) {
   if (!str) return "";
   return str.length <= len ? str : str.slice(0, len - 1) + "…";
+}
+
+// Hotspots mode: the ten most-connected nodes (fan-in + fan-out) get an outline.
+// This is structural coupling from the index, not git churn.
+function applyHotspotMarks() {
+  const degree = new Map();
+  state.edges.forEach(e => {
+    degree.set(e.source, (degree.get(e.source) || 0) + 1);
+    degree.set(e.target, (degree.get(e.target) || 0) + 1);
+  });
+  const top = new Set(
+    state.depMode === "hotspots" && state.currentView === "dependencies"
+      ? [...degree.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([id]) => id)
+      : []
+  );
+  document.querySelectorAll(".graph-node").forEach(el => {
+    el.classList.toggle("hotspot", top.has(el.id.replace(/^node-/, "")));
+  });
 }
 
 // ── Impact analysis (SE-VIZ-05) ──────────────────────────────────────────
