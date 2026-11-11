@@ -2,7 +2,8 @@
  * ProjectChatService — پرامپت، فهرست ابزارها و حلقهٔ tool-calling (SE-CHAT-03).
  */
 
-import { ProjectChatService } from './ProjectChatService';
+import { ProjectChatService, toolNamesInPrompt } from './ProjectChatService';
+import { AiToolRegistry as RealRegistry } from '../../ai/AiToolRegistry';
 import type { AiToolRegistry } from '../../ai/AiToolRegistry';
 
 /** یک رجیستری ساختگی که فقط list/execute لازم را دارد. */
@@ -109,5 +110,18 @@ describe('ProjectChatService', () => {
     const result = await new ProjectChatService().chat(reg, LLM, [{ role: 'user', content: 'where is the secret read?' }]);
     expect(executed).toBe('get_config_usage');
     expect(result.toolTrace[0].ok).toBe(true);
+  });
+
+  it('only names tools that the registry really offers to it', () => {
+    const registry = new RealRegistry({
+      reader: { projectIndex: { files: [], symbols: [], graphs: { callGraph: [], typeGraph: [], dependencyGraph: [] } }, getAllFiles: () => [] } as never,
+      workspaceRoot: '/tmp',
+      artifactRoot: '/tmp',
+      projectHash: 'x',
+    });
+    const offered = new Set(registry.list().map(t => t.name));
+    const named = toolNamesInPrompt().filter(name => name.includes('_') || offered.has(name) || ['search', 'impact'].includes(name));
+    expect(named.length).toBeGreaterThan(5);
+    expect(named.filter(name => !offered.has(name))).toEqual([]);
   });
 });

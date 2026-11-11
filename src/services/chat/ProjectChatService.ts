@@ -1,7 +1,7 @@
 /**
  * ProjectChatService — گفت‌وگوی زبانی دربارهٔ پروژه با یک LLM سازگار
  * با OpenAI، که **فقط از طریق ابزارهای ایندکس** (همان ابزارهای MCP:
- * find_symbol, semantic_search, impact_analysis, ...) به پروژه دسترسی
+ * find_symbol, search, impact, ...) به پروژه دسترسی
  * دارد — نه به دیتابیس یا فایل‌سیستم به‌طور مستقیم (SE-CHAT-01).
  *
  * حلقهٔ کار:
@@ -72,24 +72,29 @@ Your job is to answer questions about THIS specific project accurately and hones
    you actually received in this conversation.
 
 # How the tools work (READ THIS)
-- Most detail tools identify code by an **id** (symbolId or fileId), NOT by a
-  raw name. The correct workflow is almost always TWO steps:
-    (a) discover the id with 'semantic_search' or 'find_symbol', THEN
-    (b) act on that id with 'explain_symbol', 'impact_analysis',
-        'get_dependencies', 'find_tests', etc.
-  Do not pass a human name where an id is required — resolve it first.
-- 'get_dependencies' requires a 'direction' ("forward" = what this depends on;
-  "backward" = what depends on this) and 'depth' is capped at 3.
-- 'impact_analysis' needs an 'id' and an optional 'level' (file|symbol|any).
-- Every tool returns JSON shaped like:
-      { "success": boolean, "items": [ ... ], "context"?: string, "error"?: string }
-  Read 'items' for the results and 'context' for a prose summary. If
-  "success" is false, read "error" and adapt (e.g. resolve an id first) instead
-  of repeating the same call.
+- Tools accept what you have: a file path, a symbol name, "path::name" or an id
+  taken from an earlier result. You do not need to resolve ids first.
+- Locate: 'find_context' (a task in plain words), 'find_symbol' (a known name),
+  'search' (mode "meaning" by description, "text" for an exact string, "pattern"
+  for a syntax shape).
+- Understand: 'explain_symbol' (callers, callees, members, tests),
+  'file_outline' (what a file contains), 'read_code' (only the lines you need,
+  with startLine/endLine from earlier results).
+- Change safety: 'impact' (what depends on a target; direction "dependencies"
+  for what it uses; 'change' dry-runs a rename, move or delete), 'find_tests'
+  (which tests cover a target), 'git_history' (recent commits or hotspots).
+- 'project_info' lists the indexed languages and how deep the analysis goes for
+  each; use it to judge how far to trust graph answers.
+- Read the whole result, including notes and warnings. "more exist" or
+  "truncated" means the list was cut: narrow the query or raise 'limit' before
+  concluding anything. "No results" is not proof of absence when support for the
+  language is shallow, and a search that says keyword-only is not semantic.
+- If a call fails, read the error and adapt (a different tool or argument)
+  instead of repeating the same call.
 
 # Workflow you MUST follow
 1. Decide which tool answers the question. Chain tools when needed
-   (e.g. semantic_search -> explain_symbol -> impact_analysis).
+   (e.g. find_context -> explain_symbol -> impact).
 2. Call tools with precise arguments. Prefer narrow queries and reasonable
    limits over dumping everything.
 3. Base the answer strictly on what came back. Cite the file paths / symbol
@@ -108,6 +113,13 @@ Your job is to answer questions about THIS specific project accurately and hones
  * حذف شده، پس این‌جا هم چیزی برای رد کردن نیست.
  */
 const CHAT_TOOL_DENYLIST = new Set<string>();
+
+/** The prompt names tools; a test checks every name it uses exists in the registry. */
+export function toolNamesInPrompt(): string[] {
+  const names = new Set<string>();
+  for (const match of SYSTEM_PROMPT.matchAll(/'([a-z]+(?:_[a-z]+)*)'/g)) names.add(match[1]!);
+  return [...names];
+}
 
 export class ProjectChatService {
   async chat(
