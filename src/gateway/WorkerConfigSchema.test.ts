@@ -215,29 +215,31 @@ describe('WorkerConfigSchema — every rule has a test', () => {
   it('validates embedding provider requirements', () => {
     const unknown = validateWorkerConfig({
       ...base(),
-      embedding: { enabled: true, provider: 'cohere' },
+      embedding: { provider: 'cohere' },
     } as never);
     expect(unknown.ok).toBe(false);
     if (!unknown.ok) expect(unknown.errors.join()).toMatch(/embedding.provider/);
 
     const noUrl = validateWorkerConfig({
       ...base(),
-      embedding: { enabled: true, provider: 'ollama' },
+      indexing: { vectors: true },
+      embedding: { provider: 'ollama' },
     } as never);
     expect(noUrl.ok).toBe(false);
     if (!noUrl.ok) expect(noUrl.errors.join()).toMatch(/needs embedding.baseUrl/);
 
     const noModel = validateWorkerConfig({
       ...base(),
-      embedding: { enabled: true, provider: 'openai-compatible', baseUrl: 'http://127.0.0.1:11434' },
+      indexing: { vectors: true },
+      embedding: { provider: 'openai-compatible', baseUrl: 'http://127.0.0.1:11434' },
     } as never);
     expect(noModel.ok).toBe(false);
     if (!noModel.ok) expect(noModel.errors.join()).toMatch(/needs embedding.model/);
 
     const defaultModel = validateWorkerConfig({
       ...base(),
+      indexing: { vectors: true },
       embedding: {
-        enabled: true,
         provider: 'openai-compatible',
         baseUrl: 'http://127.0.0.1:11434',
         useDefaultModel: true,
@@ -251,6 +253,18 @@ describe('WorkerConfigSchema — every rule has a test', () => {
       embedding: { apiKeyEnvVar: 'sk-live-123' },
     } as never);
     expect(badEnvName.ok).toBe(false);
+  });
+
+  it('derives embedding.enabled from the one vectors switch', () => {
+    const make = (patch: Record<string, unknown>) => createWorkerConfig({ ...base(), ...patch } as never);
+    /* vectors off: never, whatever an old stored config says */
+    expect(make({ embedding: { enabled: true, provider: 'ollama', baseUrl: 'http://x', model: 'm' } }).embedding.enabled).toBe(false);
+    /* vectors on, nothing named: the model chosen in Settings */
+    expect(make({ indexing: { vectors: true } }).embedding.enabled).toBe(false);
+    expect(make({ indexing: { vectors: true }, embedding: { enabled: true } }).embedding.enabled).toBe(false);
+    /* vectors on with a provider or a local model: the project's own */
+    expect(make({ indexing: { vectors: true }, embedding: { provider: 'ollama' } }).embedding.enabled).toBe(true);
+    expect(make({ indexing: { vectors: true }, embedding: { model: 'bge-small' } }).embedding.enabled).toBe(true);
   });
 
   it('reports every problem at once', () => {

@@ -372,12 +372,14 @@ const WorkerConsole = (function () {
         }
 
         function updatePreview() {
+            ui.syncEmbeddingSection(host);
             const values = formValues();
             const errors = ui.validateForm(values);
             const errorNode = host.querySelector("#wc-errors");
             if (!formBlocked) errorNode.textContent = errors.map(function (e) { return e.field + ": " + e.message; }).join(" — ");
-            let text = ui.commandPreview(ui.formToConfig(values));
-            if (values.vectors && !values.embeddingEnabled) {
+            const config = ui.formToConfig(values);
+            let text = ui.commandPreview(config);
+            if (values.vectors && !ui.ownEmbedding(config)) {
                 text += "\n# embeddings: " + (describeEmbedding(settings) || "the model chosen in Settings") + " (used because this project sets none of its own)";
             }
             host.querySelector("#wc-preview").textContent = text;

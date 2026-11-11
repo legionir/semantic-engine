@@ -99,6 +99,17 @@ export const DEFAULT_WORKER_CONFIG: Omit<
   },
 };
 
+/**
+ * One switch decides vectors: `indexing.vectors`. `embedding.enabled` is not a
+ * setting any more — it is derived, and means "this project names its own
+ * embedding model" (a remote provider, or a specific local model). With vectors
+ * on and nothing named, the worker uses the model chosen in Settings. A stored
+ * config that still carries its own `enabled` value is read the same way.
+ */
+export function ownEmbedding(vectors: boolean, provider: string, model: string | undefined): boolean {
+  return vectors && (provider !== 'local' || (model ?? '').trim() !== '');
+}
+
 /** پر کردن پیش‌فرض‌ها؛ هیچ اعتبارسنجی اینجا انجام نمی‌شود. */
 export function createWorkerConfig(input: WorkerConfigInput): ProjectWorkerConfig {
   const base = DEFAULT_WORKER_CONFIG;
@@ -110,6 +121,8 @@ export function createWorkerConfig(input: WorkerConfigInput): ProjectWorkerConfi
   const service = input.service ?? {};
   const security = input.security ?? {};
   const embedding = input.embedding ?? {};
+  const vectors = indexing.vectors ?? base.indexing.vectors;
+  const provider = embedding.provider ?? base.embedding.provider;
 
   return {
     projectId: String(input.projectId ?? ''),
@@ -133,7 +146,7 @@ export function createWorkerConfig(input: WorkerConfigInput): ProjectWorkerConfi
     },
     cache: { mode: cache.mode ?? base.cache.mode },
     indexing: {
-      vectors: indexing.vectors ?? base.indexing.vectors,
+      vectors,
       blueprint: indexing.blueprint ?? base.indexing.blueprint,
       git: indexing.git ?? base.indexing.git,
       treeSitter: indexing.treeSitter ?? base.indexing.treeSitter,
@@ -161,8 +174,8 @@ export function createWorkerConfig(input: WorkerConfigInput): ProjectWorkerConfi
       ...(security.tokenEnvVar !== undefined ? { tokenEnvVar: security.tokenEnvVar } : {}),
     },
     embedding: {
-      enabled: embedding.enabled ?? base.embedding.enabled,
-      provider: embedding.provider ?? base.embedding.provider,
+      enabled: ownEmbedding(vectors, provider, embedding.model),
+      provider,
       ...(embedding.model !== undefined ? { model: embedding.model } : {}),
       ...(embedding.baseUrl !== undefined ? { baseUrl: embedding.baseUrl } : {}),
       ...(embedding.apiKeyEnvVar !== undefined ? { apiKeyEnvVar: embedding.apiKeyEnvVar } : {}),
@@ -439,7 +452,6 @@ export const WORKER_CONFIG_JSON_SCHEMA = {
       type: 'object',
       additionalProperties: false,
       properties: {
-        enabled: { type: 'boolean', default: false },
         provider: { type: 'string', enum: [...EMBEDDING_PROVIDERS], default: 'local' },
         model: { type: 'string' },
         baseUrl: { type: 'string' },

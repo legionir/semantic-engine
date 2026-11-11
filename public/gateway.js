@@ -37,7 +37,7 @@ const GatewayUi = (function () {
         { name: "autoStart", section: "project", type: "checkbox", configPath: "autoStart", label: "Start with the Gateway" },
         { name: "watch", section: "watch", type: "checkbox", configPath: "watch", label: "Keep the index up to date" },
 
-        { name: "vectors", section: "indexing", type: "checkbox", configPath: "indexing.vectors", label: "Build vectors for semantic search" },
+        { name: "vectors", section: "indexing", type: "checkbox", configPath: "indexing.vectors", label: "Semantic search vectors" },
         { name: "blueprint", section: "indexing", type: "checkbox", configPath: "indexing.blueprint", label: "Build blueprint" },
         { name: "git", section: "indexing", type: "checkbox", configPath: "indexing.git", label: "Collect Git metadata" },
         { name: "treeSitter", section: "indexing", type: "checkbox", configPath: "indexing.treeSitter", label: "Use Tree-sitter" },
@@ -61,8 +61,7 @@ const GatewayUi = (function () {
         { name: "allowRemote", section: "security", type: "checkbox", configPath: "security.allowRemote", label: "Allow remote connections" },
         { name: "tokenEnvVar", section: "security", type: "text", configPath: "security.tokenEnvVar", label: "Token environment variable" },
 
-        { name: "embeddingEnabled", section: "embedding", type: "checkbox", configPath: "embedding.enabled", label: "Use a custom embedding model (otherwise the built-in one)" },
-        { name: "embeddingProvider", section: "embedding", type: "select", configPath: "embedding.provider", label: "Provider", options: ["local", "ollama", "openai-compatible"] },
+        { name: "embeddingProvider", section: "embedding", type: "select", configPath: "embedding.provider", label: "Provider (local with no model = the model chosen in Settings)", options: ["local", "ollama", "openai-compatible"] },
         { name: "embeddingModel", section: "embedding", type: "text", configPath: "embedding.model", label: "Model" },
         { name: "embeddingBaseUrl", section: "embedding", type: "text", configPath: "embedding.baseUrl", label: "Base URL" },
         { name: "embeddingApiKeyEnv", section: "embedding", type: "text", configPath: "embedding.apiKeyEnvVar", label: "API key environment variable" },
@@ -126,7 +125,6 @@ const GatewayUi = (function () {
         web: false,
         gatewayManaged: false,
         allowRemote: false,
-        embeddingEnabled: false,
         embeddingProvider: "local",
         embeddingNormalize: true
     };
@@ -211,6 +209,27 @@ const GatewayUi = (function () {
         }
         node[keys[keys.length - 1]] = value;
         return target;
+    }
+
+    /*
+    | One switch decides vectors (`indexing.vectors`). The embedding section only
+    | matters while it is on, and a project "has its own model" when it names a
+    | remote provider or a specific local model — the same rule as
+    | WorkerConfigSchema.ownEmbedding.
+    */
+    function ownEmbedding(config) {
+        const indexing = (config && config.indexing) || {};
+        const embedding = (config && config.embedding) || {};
+        const provider = embedding.provider || "local";
+        return Boolean(indexing.vectors) &&
+            (provider !== "local" || String(embedding.model || "").trim() !== "");
+    }
+
+    /* The embedding section follows the vectors switch. */
+    function syncEmbeddingSection(root) {
+        const toggle = root.querySelector('[name="vectors"]');
+        const section = root.querySelector('fieldset[data-section="embedding"]');
+        if (toggle && section) section.hidden = !toggle.checked;
     }
 
     /* مقادیر خام فرم → ProjectWorkerConfig. */
@@ -312,7 +331,7 @@ const GatewayUi = (function () {
         }
 
         const provider = values.embeddingProvider;
-        if (values.embeddingEnabled && provider && provider !== "local") {
+        if (values.vectors && provider && provider !== "local") {
             if (!/^https?:\/\//i.test(String(values.embeddingBaseUrl || ""))) {
                 errors.push({ field: "embeddingBaseUrl", message: "must be an http(s) URL" });
             }
@@ -396,7 +415,7 @@ const GatewayUi = (function () {
         if (security.allowRemote) argv.push("--allow-remote");
 
         const embedding = config.embedding || {};
-        if (embedding.enabled) {
+        if (ownEmbedding(config)) {
             push("embedding-provider", embedding.provider);
             push("embedding-model", embedding.model);
             push("embedding-base-url", embedding.baseUrl);
@@ -514,7 +533,8 @@ const GatewayUi = (function () {
                     "</label>";
             }).join("");
 
-            return '<fieldset class="section" data-section="' + escape(section) + '">' +
+            const hidden = section === "embedding" && !values.vectors ? " hidden" : "";
+            return '<fieldset class="section" data-section="' + escape(section) + '"' + hidden + ">" +
                 "<legend>" + escape(section) + "</legend>" + fields + "</fieldset>";
         }).join("");
     }
@@ -1037,6 +1057,8 @@ const GatewayUi = (function () {
         renderWorkerRow,
         renderSummaryCards,
         renderFormFields,
+        ownEmbedding,
+        syncEmbeddingSection,
         buildSaveRequest,
         DEFAULT_FORM_VALUES,
         HEALTH_SECTIONS,
@@ -1264,6 +1286,7 @@ if (typeof document !== "undefined" && document.getElementById("worker-rows")) {
         }
 
         function updatePreview() {
+            GatewayUi.syncEmbeddingSection(els.formFields);
             const values = formValues();
             if (!formBlocked) els.formErrors.textContent = "";
             const errors = GatewayUi.validateForm(values);

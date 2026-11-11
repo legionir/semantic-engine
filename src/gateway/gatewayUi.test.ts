@@ -92,7 +92,7 @@ describe('gateway console — form ↔ WorkerConfig schema', () => {
       watchOptions: { debounceMs: 250, blueprintMode: 'threshold', skipInitialIndex: true },
       service: { transport: 'socket', host: '127.0.0.1', socketPath: '/run/app.sock', web: true },
       security: { gatewayManaged: true, allowRemote: false, tokenEnvVar: 'SE_TOKEN' },
-      embedding: { enabled: true, provider: 'ollama', baseUrl: 'http://127.0.0.1:11434', normalize: true },
+      embedding: { provider: 'ollama', baseUrl: 'http://127.0.0.1:11434', normalize: true },
     } as unknown as ProjectWorkerConfig;
 
     const values = ui.configToForm(config);
@@ -118,7 +118,6 @@ describe('gateway console — validation', () => {
     rootPath: '/srv/app',
     debounceMs: 500,
     transport: 'loopback',
-    embeddingEnabled: false,
     embeddingProvider: 'local',
   };
 
@@ -135,8 +134,8 @@ describe('gateway console — validation', () => {
     ['socketPath', { transport: 'socket', socketPath: '' }, /required when the transport is socket/],
     ['allowRemote', { gatewayManaged: true, allowRemote: true, tokenEnvVar: 'T' }, /must not allow remote/],
     ['tokenEnvVar', { gatewayManaged: true, tokenEnvVar: '' }, /needs a token environment variable/],
-    ['embeddingBaseUrl', { embeddingEnabled: true, embeddingProvider: 'ollama', embeddingBaseUrl: 'localhost' }, /http\(s\) URL/],
-    ['embeddingModel', { embeddingEnabled: true, embeddingProvider: 'openai-compatible', embeddingBaseUrl: 'http://x', embeddingModel: '' }, /model is required/],
+    ['embeddingBaseUrl', { vectors: true, embeddingProvider: 'ollama', embeddingBaseUrl: 'localhost' }, /http\(s\) URL/],
+    ['embeddingModel', { vectors: true, embeddingProvider: 'openai-compatible', embeddingBaseUrl: 'http://x', embeddingModel: '' }, /model is required/],
   ])('rejects %s', (_field, patch, pattern) => {
     const errors = ui.validateForm({ ...valid, ...patch });
     expect(errors.length).toBeGreaterThan(0);
@@ -158,7 +157,7 @@ describe('gateway console — preview and rendering', () => {
     watchOptions: { debounceMs: 250, blueprintMode: 'threshold' },
     service: { transport: 'loopback', host: '127.0.0.1' },
     security: { gatewayManaged: true, tokenEnvVar: 'SE_TOKEN' },
-    embedding: { enabled: true, provider: 'ollama', baseUrl: 'http://127.0.0.1:11434', normalize: true },
+    embedding: { provider: 'ollama', baseUrl: 'http://127.0.0.1:11434', normalize: true },
   };
 
   it('previews the same flags the worker accepts', () => {
@@ -311,7 +310,7 @@ describe('gateway console — SE-F-057 save request contract', () => {
     watchOptions: { debounceMs: 250, blueprintMode: 'threshold', skipInitialIndex: true },
     service: { transport: 'socket', host: '127.0.0.1', socketPath: '/run/app.sock', http: true, stdio: false, web: true },
     security: { gatewayManaged: true, allowRemote: false, tokenEnvVar: 'SE_TOKEN' },
-    embedding: { enabled: true, provider: 'ollama', baseUrl: 'http://127.0.0.1:11434', normalize: true },
+    embedding: { provider: 'ollama', baseUrl: 'http://127.0.0.1:11434', normalize: true },
   });
 
   it('create is a POST on the collection carrying the ENTIRE config', () => {
@@ -331,7 +330,7 @@ describe('gateway console — SE-F-057 save request contract', () => {
     );
     expect(req.body['service']).toEqual(expect.objectContaining({ transport: 'socket', socketPath: '/run/app.sock' }));
     expect(req.body['security']).toEqual(expect.objectContaining({ gatewayManaged: true, tokenEnvVar: 'SE_TOKEN' }));
-    expect(req.body['embedding']).toEqual(expect.objectContaining({ enabled: true, provider: 'ollama' }));
+    expect(req.body['embedding']).toEqual(expect.objectContaining({ provider: 'ollama' }));
     expect(req.body['scan']).toEqual(
       expect.objectContaining({ useGitignore: false, skipHiddenDirectories: false, maxDepth: 6, maxFileSizeMb: 2, ignore: '**/*.snap,vendor/**' })
     );

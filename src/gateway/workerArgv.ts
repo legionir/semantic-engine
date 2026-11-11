@@ -59,7 +59,7 @@ export function workerArgv(config: ProjectWorkerConfig): string[] {
   /* Scan flags are sent only when they differ from the default, so a value in the
      data directory's config.json is not overridden by an untouched form. */
   /* A config persisted before these sections existed has none of them. */
-  const { scan, diagnostics, cache } = createWorkerConfig(config);
+  const { scan, diagnostics, cache, embedding } = createWorkerConfig(config);
   if (!scan.useGitignore) argv.push('--no-gitignore');
   if (!scan.skipHiddenDirectories) argv.push('--no-skip-hidden');
   if (scan.maxDepth > 0) optionalValue(argv, 'max-depth', scan.maxDepth);
@@ -90,7 +90,8 @@ export function workerArgv(config: ProjectWorkerConfig): string[] {
   if (config.security.gatewayManaged) argv.push('--gateway-managed');
   if (config.security.allowRemote) argv.push('--allow-remote');
 
-  const { embedding } = config;
+  /* `enabled` is derived from indexing.vectors (see ownEmbedding), so the
+     embedding flags never travel with --no-vectors. */
   if (embedding.enabled) {
     optionalValue(argv, 'embedding-provider', embedding.provider);
     optionalValue(argv, 'embedding-model', embedding.model);

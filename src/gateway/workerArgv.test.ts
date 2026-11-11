@@ -153,8 +153,8 @@ describe('workerArgv — deterministic, whitelisted, secret-free', () => {
     {
       name: 'embedding → --embedding-*',
       patch: {
+        indexing: { vectors: true },
         embedding: {
-          enabled: true,
           provider: 'openai-compatible',
           model: 'text-embedding-3-small',
           baseUrl: 'http://127.0.0.1:11434',
@@ -193,7 +193,8 @@ describe('workerArgv — deterministic, whitelisted, secret-free', () => {
     const argv = workerArgv(
       config({
         security: { gatewayManaged: true, tokenEnvVar: 'SE_WORKER_TOKEN' },
-        embedding: { enabled: true, provider: 'ollama', baseUrl: 'http://x', model: 'm', apiKeyEnvVar: 'K' },
+        indexing: { vectors: true },
+        embedding: { provider: 'ollama', baseUrl: 'http://x', model: 'm', apiKeyEnvVar: 'K' },
       })
     );
 
